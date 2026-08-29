@@ -417,7 +417,7 @@ The development environment will require the appropriate versions of:
 
 ```bash
 git clone <repository-url>
-cd FleetFlow
+cd Intelligent-Fleet-Management-and-Logistics-Operations-Optimization-Platform
 ```
 
 ### Backend
