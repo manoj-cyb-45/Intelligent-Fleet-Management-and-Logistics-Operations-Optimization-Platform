@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user, require_roles
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import (
+    get_current_user,
+    require_roles,
+)
 from app.auth.jwt import create_access_token
-from app.auth.schemas import LoginRequest, LoginResponse
+from app.auth.schemas import (
+    LoginRequest,
+    LoginResponse,
+)
 from app.auth.security import verify_password
 from app.database.database import get_db
 from app.models import User
@@ -24,12 +29,16 @@ def login(
     request: LoginRequest,
     db: Session = Depends(get_db),
 ):
+
     user = (
         db.query(User)
-        .filter(User.user_id == request.user_id)
+        .filter(
+            User.user_id == request.user_id
+        )
         .first()
     )
 
+    # Do not reveal whether the user ID exists.
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -66,13 +75,18 @@ def login(
 
 @router.get("/me")
 def get_me(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(
+        get_current_user
+    ),
 ):
     return current_user
 
+
 @router.get("/driver-test")
 def driver_test(
-    current_user: dict = Depends(require_roles("DRIVER")),
+    current_user: dict = Depends(
+        require_roles("DRIVER")
+    ),
 ):
     return {
         "message": "Driver access granted",
