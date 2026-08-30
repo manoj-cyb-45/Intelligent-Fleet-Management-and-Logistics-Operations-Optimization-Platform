@@ -1,0 +1,2 @@
+DATABASE_URL=postgresql+psycopg://postgres:{your_database_password}@localhost:5432/fleetflow_db
+JWT_SECRET_KEY=4ALGLQxCTRb4aXGDs5enfIvj4wlJP1Y-1LE6ogm87IQ
