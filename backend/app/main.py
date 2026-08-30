@@ -6,6 +6,8 @@ from app.vehicles.routes import router as vehicles_router
 from app.drivers.routes import router as drivers_router
 from app.shipments.routes import router as shipments_router
 from app.alerts.routes import router as alerts_router
+from app.maintenance.routes import router as maintenance_router
+from app.fuel.routes import router as fuel_router
 
 app = FastAPI(
     title="FleetFlow API",
@@ -18,6 +20,8 @@ app.include_router(vehicles_router)
 app.include_router(drivers_router)
 app.include_router(shipments_router)
 app.include_router(alerts_router)
+app.include_router(maintenance_router)
+app.include_router(fuel_router)
 
 @app.get("/health")
 def health_check():
