@@ -1,10 +1,9 @@
-from datetime import datetime
+from datetime import date
 
 from pydantic import BaseModel, Field
 
 
 class MaintenanceCreate(BaseModel):
-
     vehicle_id: str = Field(
         min_length=3,
         max_length=20,
@@ -17,9 +16,9 @@ class MaintenanceCreate(BaseModel):
 
     description: str | None = None
 
-    maintenance_date: datetime
+    maintenance_date: date
 
-    due_date: datetime | None = None
+    due_date: date | None = None
 
     cost: float = Field(
         default=0.0,
@@ -30,7 +29,6 @@ class MaintenanceCreate(BaseModel):
 
 
 class MaintenanceResponse(BaseModel):
-
     maintenance_id: int
 
     vehicle_id: str
@@ -39,9 +37,9 @@ class MaintenanceResponse(BaseModel):
 
     description: str | None
 
-    maintenance_date: datetime
+    maintenance_date: date
 
-    due_date: datetime | None
+    due_date: date | None
 
     cost: float
 

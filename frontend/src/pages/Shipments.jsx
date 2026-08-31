@@ -130,16 +130,32 @@ function Shipments() {
   // =========================================================
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+  const { name, value } = event.target;
 
+  if (
+    name === "status" &&
+    (value === "DELIVERED" || value === "CANCELLED")
+  ) {
     setShipmentForm((previous) => ({
       ...previous,
-      [name]: value,
+      status: value,
+      expected_delivery_at: "",
     }));
 
     setError("");
     setSuccessMessage("");
-  };
+
+    return;
+  }
+
+  setShipmentForm((previous) => ({
+    ...previous,
+    [name]: value,
+  }));
+
+  setError("");
+  setSuccessMessage("");
+};
 
   // =========================================================
   // OPEN ADD
@@ -172,14 +188,14 @@ function Shipments() {
       description: shipment.description || "",
       origin: shipment.origin || "",
       destination: shipment.destination || "",
-      due_date: formatDateTimeForInput(shipment.due_date),
+      due_date: formatDateForInput(shipment.due_date),
       vehicle_id: shipment.vehicle_id || "",
       driver_id: shipment.driver_id || "",
       status: shipment.status || "PENDING",
       current_location: shipment.current_location || "",
       delivery_progress: shipment.delivery_progress ?? 0,
       expected_delivery_at: shipment.expected_delivery_at
-        ? formatDateTimeForInput(shipment.expected_delivery_at)
+        ? formatDateForInput(shipment.expected_delivery_at)
         : "",
     });
 
@@ -329,7 +345,7 @@ function Shipments() {
         description: shipmentForm.description.trim() || null,
         origin: shipmentForm.origin.trim(),
         destination: shipmentForm.destination.trim(),
-        due_date: new Date(shipmentForm.due_date).toISOString(),
+        due_date: shipmentForm.due_date ? `${shipmentForm.due_date}T00:00:00` : null,
         vehicle_id: shipmentForm.vehicle_id,
         driver_id: shipmentForm.driver_id,
       };
@@ -381,9 +397,7 @@ function Shipments() {
           shipmentForm.delivery_progress
         ),
         expected_delivery_at: shipmentForm.expected_delivery_at
-          ? new Date(
-              shipmentForm.expected_delivery_at
-            ).toISOString()
+          ? `${shipmentForm.expected_delivery_at}T00:00:00`
           : null,
       };
 
@@ -730,29 +744,28 @@ function Shipments() {
 
                     {/* ACTIONS */}
 
-                    <td className="px-5 py-5">
-                      <div className="flex gap-2">
-                        {!isDriver && (
-                          <button
-                            onClick={() =>
-                              openEditModal(shipment)
-                            }
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                          >
-                            Edit
-                          </button>
-                        )}
+                      <td className="px-5 py-5">
+                        <div className="flex gap-2">
 
-                        <button
-                          onClick={() =>
-                            openHistory(shipment)
-                          }
-                          className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-                        >
-                          History
-                        </button>
-                      </div>
-                    </td>
+                          {shipment.status !== "DELIVERED" &&
+                            shipment.status !== "CANCELLED" && (
+                              <button
+                                onClick={() => openEditModal(shipment)}
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                              >
+                                Edit
+                              </button>
+                            )}
+
+                          <button
+                            onClick={() => openHistory(shipment)}
+                            className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                          >
+                            History
+                          </button>
+
+                        </div>
+                      </td>
                   </tr>
                 ))}
               </tbody>
@@ -827,12 +840,13 @@ function Shipments() {
 
                 <FormInput
                   label="Due Date *"
-                  type="datetime-local"
+                  type="date"
                   name="due_date"
                   value={shipmentForm.due_date}
                   onChange={handleChange}
+                  min={getTodayDate()}
                   required
-                />
+                />  
 
                 <FormSelect
                   label="Vehicle *"
@@ -933,6 +947,7 @@ function Shipments() {
               className="mt-6"
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
                 <FormSelect
                   label="Status *"
                   name="status"
@@ -977,13 +992,19 @@ function Shipments() {
                   required
                 />
 
-                <FormInput
-                  label="Expected Delivery"
-                  type="datetime-local"
-                  name="expected_delivery_at"
-                  value={shipmentForm.expected_delivery_at}
-                  onChange={handleChange}
-                />
+                {shipmentForm.status !== "DELIVERED" &&
+                  shipmentForm.status !== "CANCELLED" && (
+                    <FormInput
+                      label="Expected Delivery"
+                      type="date"
+                      name="expected_delivery_at"
+                      value={shipmentForm.expected_delivery_at}
+                      onChange={handleChange}
+                      min={getTodayDate()}
+                      required={false}
+                    />
+                  )}
+
               </div>
 
               <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
@@ -1205,6 +1226,21 @@ function FormInput({
         min={min}
         max={max}
         disabled={disabled}
+        onClick={(event) => {
+          if (type === "date" && !disabled) {
+            event.currentTarget.showPicker?.();
+          }
+        }}
+        onKeyDown={(event) => {
+          if (type === "date") {
+            event.preventDefault();
+          }
+        }}
+        onPaste={(event) => {
+          if (type === "date") {
+            event.preventDefault();
+          }
+        }}
         className={`w-full rounded-lg border border-slate-700 px-4 py-3 outline-none ${
           disabled
             ? "cursor-not-allowed bg-slate-800 text-slate-500"
@@ -1301,6 +1337,23 @@ function InfoItem({
 // =========================================================
 // DATE FORMAT
 // =========================================================
+function getTodayDate() {
+  const today = new Date();
+
+  const year = today.getFullYear();
+
+  const month = String(
+    today.getMonth() + 1
+  ).padStart(2, "0");
+
+  const day = String(
+    today.getDate()
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
 
 function formatDate(value) {
   if (!value) {
@@ -1335,12 +1388,17 @@ function formatDateTime(value) {
 }
 
 // =========================================================
-// DATETIME-LOCAL FORMAT
+// DATE INPUT FORMAT
 // =========================================================
 
-function formatDateTimeForInput(value) {
+function formatDateForInput(value) {
   if (!value) {
     return "";
+  }
+
+  // Handle a date-only value directly.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
   }
 
   const date = new Date(value);
@@ -1359,15 +1417,7 @@ function formatDateTimeForInput(value) {
     date.getDate()
   ).padStart(2, "0");
 
-  const hours = String(
-    date.getHours()
-  ).padStart(2, "0");
-
-  const minutes = String(
-    date.getMinutes()
-  ).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${year}-${month}-${day}`;
 }
 
 export default Shipments;

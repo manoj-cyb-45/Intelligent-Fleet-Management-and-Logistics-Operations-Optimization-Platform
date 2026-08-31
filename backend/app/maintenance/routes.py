@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, time
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -35,16 +35,22 @@ ALLOWED_MAINTENANCE_STATUSES = {
 # HELPERS
 # =========================================================
 
-def build_maintenance_response(
-    record: MaintenanceRecord,
-):
+def build_maintenance_response(record: MaintenanceRecord):
     return MaintenanceResponse(
         maintenance_id=record.maintenance_id,
         vehicle_id=record.vehicle_id,
         maintenance_type=record.maintenance_type,
         description=record.description,
-        maintenance_date=record.maintenance_date,
-        due_date=record.due_date,
+        maintenance_date=(
+            record.maintenance_date.date()
+            if isinstance(record.maintenance_date, datetime)
+            else record.maintenance_date
+        ),
+        due_date=(
+            record.due_date.date()
+            if isinstance(record.due_date, datetime)
+            else record.due_date
+        ),
         cost=record.cost,
         status=record.status,
     )
@@ -103,7 +109,7 @@ def release_vehicle_assignment(
 
     if assignment:
         assignment.status = "COMPLETED"
-        assignment.end_date = datetime.utcnow()
+        assignment.end_date = datetime.now()
 
         db.add(assignment)
 
@@ -120,32 +126,142 @@ def validate_status(
         )
 
 
+# =========================================================
+# DATE HELPERS
+# =========================================================
+
+def date_to_datetime(
+    value: date | datetime | None,
+):
+    """
+    Convert a date into a datetime at midnight.
+
+    The database may still use a DATETIME column.
+    This lets us use date-only values in the API
+    without requiring an immediate database migration.
+    """
+
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        return value
+
+    return datetime.combine(
+        value,
+        time.min,
+    )
+
+
+def database_date(
+    value: date | datetime | None,
+):
+    """
+    Convert a database datetime/date into a date.
+    """
+
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        return value.date()
+
+    return value
+
+
+# =========================================================
+# DATE VALIDATION
+# =========================================================
+
+def validate_maintenance_dates(
+    maintenance_date: date,
+    due_date: date | None,
+    maintenance_status: str,
+):
+    """
+    Validate maintenance dates.
+
+    SCHEDULED:
+        - Maintenance date must be a future date.
+        - Due date, when supplied, must not be in the past.
+        - Due date cannot be before maintenance date.
+
+    Other statuses:
+        - Past dates are allowed because these records can
+          represent completed or historical maintenance.
+        - Due date cannot be before maintenance date.
+    """
+
+    today = date.today()
+
+    # -----------------------------------------------------
+    # MAINTENANCE DATE
+    # -----------------------------------------------------
+
+    if maintenance_status == "SCHEDULED":
+        if maintenance_date <= today:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Scheduled maintenance date must be "
+                    "a future date"
+                ),
+            )
+
+    # -----------------------------------------------------
+    # DUE DATE
+    # -----------------------------------------------------
+
+    if due_date is not None:
+
+        if due_date < maintenance_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Maintenance due date cannot be "
+                    "before the maintenance date"
+                ),
+            )
+
+        if (
+            maintenance_status == "SCHEDULED"
+            and due_date <= today
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Maintenance due date must be "
+                    "a future date"
+                ),
+            )
+
+
+# =========================================================
+# VEHICLE VALIDATION
+# =========================================================
+
 def validate_vehicle_for_maintenance(
     db: Session,
     vehicle: Vehicle,
     maintenance_status: str,
 ):
     """
-    Validate whether the vehicle can enter/leave maintenance.
+    Validate whether the vehicle can enter maintenance.
 
     SCHEDULED:
-        Does not change vehicle state.
+        Vehicle remains in its current state.
 
     IN_PROGRESS:
         Vehicle becomes MAINTENANCE.
-        An active driver assignment is released.
+        Active driver assignment is released.
 
-        However, an IN_TRANSIT shipment blocks the operation
-        because changing the vehicle to MAINTENANCE while its
-        shipment remains IN_TRANSIT would create inconsistent
-        fleet state.
+        An IN_TRANSIT shipment blocks the operation.
 
     COMPLETED:
         Vehicle becomes AVAILABLE.
 
     CANCELLED:
-        Vehicle becomes AVAILABLE only when the maintenance
-        record was controlling the vehicle.
+        Vehicle state is handled by the calling function.
     """
 
     if maintenance_status == "IN_PROGRESS":
@@ -192,7 +308,8 @@ def create_maintenance(
     vehicle = (
         db.query(Vehicle)
         .filter(
-            Vehicle.vehicle_id == maintenance_data.vehicle_id
+            Vehicle.vehicle_id
+            == maintenance_data.vehicle_id
         )
         .first()
     )
@@ -209,6 +326,16 @@ def create_maintenance(
 
     validate_status(
         maintenance_data.status
+    )
+
+    # -----------------------------------------------------
+    # VALIDATE DATES
+    # -----------------------------------------------------
+
+    validate_maintenance_dates(
+        maintenance_data.maintenance_date,
+        maintenance_data.due_date,
+        maintenance_data.status,
     )
 
     # -----------------------------------------------------
@@ -229,8 +356,17 @@ def create_maintenance(
         vehicle_id=maintenance_data.vehicle_id,
         maintenance_type=maintenance_data.maintenance_type,
         description=maintenance_data.description,
-        maintenance_date=maintenance_data.maintenance_date,
-        due_date=maintenance_data.due_date,
+
+        # Database can remain DATETIME.
+        # Store selected date at midnight.
+        maintenance_date=date_to_datetime(
+            maintenance_data.maintenance_date
+        ),
+
+        due_date=date_to_datetime(
+            maintenance_data.due_date
+        ),
+
         cost=maintenance_data.cost,
         status=maintenance_data.status,
     )
@@ -238,18 +374,11 @@ def create_maintenance(
     db.add(record)
 
     # -----------------------------------------------------
-    # VEHICLE STATE SYNCHRONIZATION
+    # VEHICLE STATE
     # -----------------------------------------------------
 
     if maintenance_data.status == "IN_PROGRESS":
 
-        # Release any active driver assignment.
-        #
-        # This makes:
-        #
-        # Vehicle -> MAINTENANCE
-        # Driver  -> no assigned vehicle
-        #
         release_vehicle_assignment(
             db,
             vehicle.vehicle_id,
@@ -271,8 +400,7 @@ def create_maintenance(
 
         db.add(vehicle)
 
-    # SCHEDULED intentionally does not change
-    # the current vehicle state.
+    # SCHEDULED does not change vehicle state.
 
     db.commit()
     db.refresh(record)
@@ -284,6 +412,10 @@ def create_maintenance(
 # LIST MAINTENANCE
 # =========================================================
 
+@router.get(
+    "",
+    response_model=list[MaintenanceResponse],
+)
 @router.get(
     "",
     response_model=list[MaintenanceResponse],
@@ -300,11 +432,55 @@ def list_maintenance(
 ):
     records = (
         db.query(MaintenanceRecord)
-        .order_by(
-            MaintenanceRecord.maintenance_date.desc()
-        )
         .all()
     )
+
+    today = datetime.now().date()
+
+    upcoming = []
+    past = []
+
+    for record in records:
+
+        maintenance_date = record.maintenance_date
+
+        if isinstance(maintenance_date, datetime):
+            maintenance_date = maintenance_date.date()
+
+        if maintenance_date >= today:
+            upcoming.append(record)
+        else:
+            past.append(record)
+
+    # Upcoming maintenance:
+    # nearest date first
+    upcoming.sort(
+        key=lambda record: (
+            record.maintenance_date.date()
+            if isinstance(
+                record.maintenance_date,
+                datetime
+            )
+            else record.maintenance_date
+        )
+    )
+
+    # Past maintenance:
+    # most recent date first
+    past.sort(
+        key=lambda record: (
+            record.maintenance_date.date()
+            if isinstance(
+                record.maintenance_date,
+                datetime
+            )
+            else record.maintenance_date
+        ),
+        reverse=True,
+    )
+
+    # Upcoming first, then past
+    records = upcoming + past
 
     return [
         build_maintenance_response(record)
@@ -369,7 +545,7 @@ def update_maintenance(
     ),
 ):
     # -----------------------------------------------------
-    # FIND MAINTENANCE RECORD
+    # FIND RECORD
     # -----------------------------------------------------
 
     record = (
@@ -415,6 +591,16 @@ def update_maintenance(
     )
 
     # -----------------------------------------------------
+    # VALIDATE DATES
+    # -----------------------------------------------------
+
+    validate_maintenance_dates(
+        maintenance_data.maintenance_date,
+        maintenance_data.due_date,
+        maintenance_data.status,
+    )
+
+    # -----------------------------------------------------
     # STORE OLD VALUES
     # -----------------------------------------------------
 
@@ -422,26 +608,33 @@ def update_maintenance(
     old_status = record.status
 
     # -----------------------------------------------------
-    # IF CHANGING VEHICLE
+    # FIND OLD VEHICLE
     # -----------------------------------------------------
+
+    old_vehicle = None
 
     if old_vehicle_id != maintenance_data.vehicle_id:
 
         old_vehicle = (
             db.query(Vehicle)
             .filter(
-                Vehicle.vehicle_id == old_vehicle_id
+                Vehicle.vehicle_id
+                == old_vehicle_id
             )
             .first()
         )
 
+        # If this maintenance record was controlling
+        # the old vehicle, release it.
+
         if old_vehicle and old_status == "IN_PROGRESS":
 
-            # If this maintenance record was putting the
-            # old vehicle into maintenance, release it.
             old_vehicle.current_status = "AVAILABLE"
 
             db.add(old_vehicle)
+
+    else:
+        old_vehicle = new_vehicle
 
     # -----------------------------------------------------
     # VALIDATE NEW VEHICLE
@@ -469,11 +662,11 @@ def update_maintenance(
         maintenance_data.description
     )
 
-    record.maintenance_date = (
+    record.maintenance_date = date_to_datetime(
         maintenance_data.maintenance_date
     )
 
-    record.due_date = (
+    record.due_date = date_to_datetime(
         maintenance_data.due_date
     )
 
@@ -493,7 +686,6 @@ def update_maintenance(
 
     if maintenance_data.status == "IN_PROGRESS":
 
-        # Release active driver assignment.
         release_vehicle_assignment(
             db,
             new_vehicle.vehicle_id,
@@ -519,8 +711,6 @@ def update_maintenance(
 
     elif maintenance_data.status == "CANCELLED":
 
-        # Only return it to AVAILABLE if the previous
-        # state of this maintenance record was IN_PROGRESS.
         if old_status == "IN_PROGRESS":
 
             new_vehicle.current_status = "AVAILABLE"
@@ -533,9 +723,14 @@ def update_maintenance(
 
     elif maintenance_data.status == "SCHEDULED":
 
-        # Scheduled maintenance does not immediately
-        # remove the vehicle from service.
-        pass
+        # If this record was previously controlling the
+        # vehicle, return the vehicle to AVAILABLE.
+
+        if old_status == "IN_PROGRESS":
+
+            new_vehicle.current_status = "AVAILABLE"
+
+            db.add(new_vehicle)
 
     db.commit()
     db.refresh(record)

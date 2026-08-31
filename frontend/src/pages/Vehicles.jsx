@@ -1,7 +1,31 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 function Vehicles() {
+  const { user } = useAuth();
+
+  // Use AuthContext first, with localStorage as a fallback.
+  // This keeps the UI correct even if the auth state is still
+  // being restored after login/refresh.
+  let storedUser = null;
+
+  try {
+    storedUser = JSON.parse(
+      localStorage.getItem("user") || "null"
+    );
+  } catch {
+    storedUser = null;
+  }
+
+  const role = String(
+    user?.role || storedUser?.role || ""
+  )
+    .trim()
+    .toUpperCase();
+
+  const isDispatcher = role === "DISPATCHER";
+
   // =========================================================
   // STATE
   // =========================================================
@@ -20,6 +44,7 @@ function Vehicles() {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+
 
   const emptyForm = {
     vehicle_id: "",
@@ -201,6 +226,10 @@ function Vehicles() {
   // =========================================================
 
   const openAddModal = () => {
+    if (isDispatcher) {
+      return;
+    }
+
     setVehicleForm({
       ...emptyForm,
     });
@@ -218,6 +247,10 @@ function Vehicles() {
   // =========================================================
 
   const openEditModal = (vehicle) => {
+    if (isDispatcher) {
+      return;
+    }
+
     const assignedDriver =
       getAssignedDriver(vehicle);
 
@@ -392,6 +425,13 @@ function Vehicles() {
   const handleAddVehicle = async (event) => {
     event.preventDefault();
 
+    if (isDispatcher) {
+      setError(
+        "Dispatchers can view vehicles but cannot add vehicles."
+      );
+      return;
+    }
+
     setError("");
     setSuccessMessage("");
 
@@ -473,6 +513,13 @@ function Vehicles() {
     event
   ) => {
     event.preventDefault();
+
+    if (isDispatcher) {
+      setError(
+        "Dispatchers can view vehicles but cannot edit vehicles."
+      );
+      return;
+    }
 
     if (!selectedVehicle) {
       return;
@@ -595,6 +642,13 @@ function Vehicles() {
   const handleDeleteVehicle = async (
     vehicle
   ) => {
+    if (isDispatcher) {
+      setError(
+        "Dispatchers can view vehicles but cannot delete vehicles."
+      );
+      return;
+    }
+
     if (
       vehicle.current_status ===
       "IN_TRANSIT"
@@ -703,12 +757,14 @@ function Vehicles() {
             </span>
           </div>
 
-          <button
-            onClick={openAddModal}
-            className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-          >
-            + Add Vehicle
-          </button>
+          {!isDispatcher && (
+              <button
+                onClick={openAddModal}
+                className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                + Add Vehicle
+              </button>
+            )}
         </div>
       </div>
 
@@ -751,12 +807,14 @@ function Vehicles() {
             No vehicles found.
           </p>
 
-          <button
-            onClick={openAddModal}
-            className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            + Add First Vehicle
-          </button>
+          {!isDispatcher && (
+              <button
+                onClick={openAddModal}
+                className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                + Add First Vehicle
+              </button>
+            )}
         </div>
       ) : (
         <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -951,42 +1009,40 @@ function Vehicles() {
 
                         {/* ACTIONS */}
 
-                        <td className="px-5 py-5">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() =>
-                                openEditModal(
-                                  vehicle
-                                )
-                              }
-                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                            >
-                              Edit
-                            </button>
+                       <td className="px-5 py-5">
+                          {!isDispatcher && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  openEditModal(vehicle)
+                                }
+                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                              >
+                                Edit
+                              </button>
 
-                            <button
-                              onClick={() =>
-                                handleDeleteVehicle(
-                                  vehicle
-                                )
-                              }
-                              disabled={
-                                deleting ||
-                                isInTransit ||
-                                hasAssignment
-                              }
-                              title={
-                                isInTransit
-                                  ? "IN_TRANSIT vehicles cannot be deleted"
-                                  : hasAssignment
-                                    ? "Unassign driver first"
-                                    : "Delete vehicle"
-                              }
-                              className="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                              <button
+                                onClick={() =>
+                                  handleDeleteVehicle(vehicle)
+                                }
+                                disabled={
+                                  deleting ||
+                                  isInTransit ||
+                                  hasAssignment
+                                }
+                                title={
+                                  isInTransit
+                                    ? "IN_TRANSIT vehicles cannot be deleted"
+                                    : hasAssignment
+                                      ? "Unassign driver first"
+                                      : "Delete vehicle"
+                                }
+                                className="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );

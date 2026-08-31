@@ -235,7 +235,7 @@ function Fuel() {
     setFuelForm({
       ...emptyForm,
       fuel_date:
-        getCurrentDateTime(),
+        getCurrentDate(),
     });
 
     setSelectedRecord(null);
@@ -270,7 +270,7 @@ function Fuel() {
         record.vehicle_id || "",
 
       fuel_date:
-        formatDateTimeForInput(
+        formatDateForInput(
           record.fuel_date
         ),
 
@@ -467,9 +467,7 @@ function Fuel() {
           fuelForm.vehicle_id,
 
         fuel_date:
-          new Date(
-            fuelForm.fuel_date
-          ).toISOString(),
+          `${fuelForm.fuel_date}T00:00:00`,
 
         fuel_type:
           fuelForm.fuel_type,
@@ -568,9 +566,7 @@ function Fuel() {
           fuelForm.vehicle_id,
 
         fuel_date:
-          new Date(
-            fuelForm.fuel_date
-          ).toISOString(),
+          `${fuelForm.fuel_date}T00:00:00`,
 
         fuel_type:
           fuelForm.fuel_type,
@@ -1263,17 +1259,13 @@ function FuelModal({
 
             <FormInput
               label="Fuel Date *"
-              type="datetime-local"
+              type="date"
               name="fuel_date"
-              value={
-                form.fuel_date
-              }
-              onChange={
-                onChange
-              }
+              value={form.fuel_date}
+              onChange={onChange}
+              min={new Date().toISOString().split("T")[0]}
               required
             />
-
             {/* =================================================
                 FUEL TYPE
                 ================================================= */}
@@ -1596,10 +1588,18 @@ function FormInput({
   max,
   step,
 }) {
+  const handleClick = (event) => {
+    if (type === "date") {
+      try {
+        event.currentTarget.showPicker();
+      } catch (error) {
+        // Browser may already have opened the picker
+      }
+    }
+  };
+
   return (
-
     <div>
-
       <label className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </label>
@@ -1609,14 +1609,14 @@ function FormInput({
         name={name}
         value={value}
         onChange={onChange}
+        onClick={handleClick}
         placeholder={placeholder}
         required={required}
         min={min}
         max={max}
         step={step}
-        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500 [color-scheme:dark]"
       />
-
     </div>
   );
 }
@@ -1644,9 +1644,18 @@ function formatDate(
     return "Not set";
   }
 
-  return date.toLocaleString(
-    "en-IN"
-  );
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+
+  const year =
+    date.getFullYear();
+
+  return `${day}/${month}/${year}`;
 }
 
 
@@ -1654,7 +1663,7 @@ function formatDate(
 // DATETIME LOCAL
 // =========================================================
 
-function formatDateTimeForInput(
+function formatDateForInput(
   value
 ) {
   if (!value) {
@@ -1675,27 +1684,15 @@ function formatDateTimeForInput(
   const year =
     date.getFullYear();
 
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
 
-  const day =
-    String(
-      date.getDate()
-    ).padStart(2, "0");
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
 
-  const hours =
-    String(
-      date.getHours()
-    ).padStart(2, "0");
-
-  const minutes =
-    String(
-      date.getMinutes()
-    ).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${year}-${month}-${day}`;
 }
 
 
@@ -1703,34 +1700,22 @@ function formatDateTimeForInput(
 // CURRENT DATETIME
 // =========================================================
 
-function getCurrentDateTime() {
+function getCurrentDate() {
   const now =
     new Date();
 
   const year =
     now.getFullYear();
 
-  const month =
-    String(
-      now.getMonth() + 1
-    ).padStart(2, "0");
+  const month = String(
+    now.getMonth() + 1
+  ).padStart(2, "0");
 
-  const day =
-    String(
-      now.getDate()
-    ).padStart(2, "0");
+  const day = String(
+    now.getDate()
+  ).padStart(2, "0");
 
-  const hours =
-    String(
-      now.getHours()
-    ).padStart(2, "0");
-
-  const minutes =
-    String(
-      now.getMinutes()
-    ).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${year}-${month}-${day}`;
 }
 
 
