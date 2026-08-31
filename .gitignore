@@ -29,3 +29,9 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local database backup
+backend/fleetflow_backup.sql
+
+# Local demo data seeding script
+backend/seed_demo_data.py
