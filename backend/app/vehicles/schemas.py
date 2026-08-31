@@ -7,6 +7,7 @@ class VehicleCreate(BaseModel):
     vehicle_type: str = Field(min_length=1, max_length=50)
     capacity: float = Field(gt=0)
     fuel_type: str = Field(min_length=1, max_length=30)
+    current_status: str = "AVAILABLE"
     current_location: str | None = None
     fuel_level: float | None = Field(default=None, ge=0, le=100)
     mileage: float | None = Field(default=None, ge=0)

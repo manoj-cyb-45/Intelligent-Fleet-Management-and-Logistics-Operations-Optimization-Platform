@@ -150,13 +150,14 @@ def get_driver(
     ),
 ):
     driver = (
-        db.query(User)
-        .filter(
-            User.user_id == driver_id,
-            User.role == "DRIVER",
-        )
-        .first()
+    db.query(User)
+    .filter(
+        User.user_id == driver_id,
+        User.role == "DRIVER",
+        User.account_status == "ACTIVE",
     )
+    .first()
+)
 
     if not driver:
         raise HTTPException(
