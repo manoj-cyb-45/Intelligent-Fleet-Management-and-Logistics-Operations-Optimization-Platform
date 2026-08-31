@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -63,8 +64,10 @@ def get_active_assignment_for_vehicle(
     return (
         db.query(DriverVehicleAssignment)
         .filter(
-            DriverVehicleAssignment.vehicle_id == vehicle_id,
-            DriverVehicleAssignment.status == "ACTIVE",
+            DriverVehicleAssignment.vehicle_id
+            == vehicle_id,
+            DriverVehicleAssignment.status
+            == "ACTIVE",
         )
         .first()
     )
@@ -77,8 +80,10 @@ def get_active_assignment_for_driver(
     return (
         db.query(DriverVehicleAssignment)
         .filter(
-            DriverVehicleAssignment.driver_id == driver_id,
-            DriverVehicleAssignment.status == "ACTIVE",
+            DriverVehicleAssignment.driver_id
+            == driver_id,
+            DriverVehicleAssignment.status
+            == "ACTIVE",
         )
         .first()
     )
@@ -113,6 +118,46 @@ def get_transit_shipment_for_driver(
 
 
 # =========================================================
+# AUTOMATIC SHIPMENT / TRACKING IDs
+# =========================================================
+
+def get_next_number(db: Session, field):
+    values = db.query(field).all()
+    highest = 0
+
+    for (value,) in values:
+        if not value:
+            continue
+
+        match = re.search(r"(\d+)$", str(value))
+        if match:
+            highest = max(highest, int(match.group(1)))
+
+    return highest + 1
+
+
+def generate_shipment_ids(db: Session):
+    number = get_next_number(db, Shipment.shipment_id)
+
+    shipment_id = f"SH{number:03d}"
+    tracking_number = f"TRK{number:03d}"
+
+    while (
+        db.query(Shipment)
+        .filter(
+            (Shipment.shipment_id == shipment_id)
+            | (Shipment.tracking_number == tracking_number)
+        )
+        .first()
+    ):
+        number += 1
+        shipment_id = f"SH{number:03d}"
+        tracking_number = f"TRK{number:03d}"
+
+    return shipment_id, tracking_number
+
+
+# =========================================================
 # CREATE SHIPMENT
 # =========================================================
 
@@ -144,41 +189,10 @@ def create_shipment(
         )
 
     # =====================================================
-    # CHECK DUPLICATE SHIPMENT ID
+    # GENERATE IDs
     # =====================================================
 
-    existing_shipment = (
-        db.query(Shipment)
-        .filter(
-            Shipment.shipment_id == shipment_data.shipment_id
-        )
-        .first()
-    )
-
-    if existing_shipment:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Shipment ID already exists",
-        )
-
-    # =====================================================
-    # CHECK DUPLICATE TRACKING NUMBER
-    # =====================================================
-
-    existing_tracking = (
-        db.query(Shipment)
-        .filter(
-            Shipment.tracking_number
-            == shipment_data.tracking_number
-        )
-        .first()
-    )
-
-    if existing_tracking:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Tracking number already exists",
-        )
+    shipment_id, tracking_number = generate_shipment_ids(db)
 
     # =====================================================
     # CHECK VEHICLE
@@ -206,7 +220,8 @@ def create_shipment(
     driver = (
         db.query(User)
         .filter(
-            User.user_id == shipment_data.driver_id,
+            User.user_id
+            == shipment_data.driver_id,
             User.role == "DRIVER",
         )
         .first()
@@ -223,8 +238,8 @@ def create_shipment(
     # =====================================================
 
     shipment = Shipment(
-        shipment_id=shipment_data.shipment_id,
-        tracking_number=shipment_data.tracking_number,
+        shipment_id=shipment_id,
+        tracking_number=tracking_number,
         description=shipment_data.description,
         origin=shipment_data.origin,
         destination=shipment_data.destination,
@@ -267,14 +282,17 @@ def create_shipment(
     db.add(history)
 
     # =====================================================
-    # SAVE
+    # SAVE TO DATABASE
     # =====================================================
 
     db.commit()
     db.refresh(shipment)
 
-    return build_shipment_response(shipment)
+    # =====================================================
+    # RETURN RESPONSE
+    # =====================================================
 
+    return build_shipment_response(shipment)
 
 # =========================================================
 # LIST SHIPMENTS
@@ -295,23 +313,29 @@ def list_shipments(
         )
     ),
 ):
+    query = db.query(Shipment)
+
+    if str(current_user.get("role", "")).upper() == "DRIVER":
+        query = query.filter(
+            Shipment.driver_id == current_user.get("user_id")
+        )
 
     shipments = (
-        db.query(Shipment)
-        .order_by(
-            Shipment.created_at.desc()
-        )
+        query
+        .order_by(Shipment.created_at.desc())
         .all()
     )
 
     return [
-        build_shipment_response(shipment)
+        build_shipment_response(
+            shipment
+        )
         for shipment in shipments
     ]
 
 
 # =========================================================
-# GET SINGLE SHIPMENT
+# GET SHIPMENT
 # =========================================================
 
 @router.get(
@@ -330,7 +354,6 @@ def get_shipment(
         )
     ),
 ):
-
     shipment = (
         db.query(Shipment)
         .filter(
@@ -345,7 +368,9 @@ def get_shipment(
             detail="Shipment not found",
         )
 
-    return build_shipment_response(shipment)
+    return build_shipment_response(
+        shipment
+    )
 
 
 # =========================================================
@@ -365,18 +390,15 @@ def update_shipment(
             "ADMIN",
             "MANAGER",
             "DISPATCHER",
+            "DRIVER",
         )
     ),
 ):
-
-    # =====================================================
-    # FIND SHIPMENT
-    # =====================================================
-
     shipment = (
         db.query(Shipment)
         .filter(
-            Shipment.shipment_id == shipment_id
+            Shipment.shipment_id
+            == shipment_id
         )
         .first()
     )
@@ -387,32 +409,17 @@ def update_shipment(
             detail="Shipment not found",
         )
 
-    # =====================================================
-    # SAVE OLD VALUES
-    # Used to decide whether history is actually needed
-    # =====================================================
+    # Drivers may update only their own assigned shipment.
+    if (
+        str(current_user.get("role", "")).upper() == "DRIVER"
+        and shipment.driver_id != current_user.get("user_id")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Drivers can update only their assigned shipments",
+        )
 
     old_status = shipment.status
-    old_location = shipment.current_location
-    old_progress = shipment.delivery_progress
-
-    # =====================================================
-    # EXPECTED DELIVERY DATE VALIDATION
-    # =====================================================
-
-    if shipment_data.expected_delivery_at is not None:
-
-        if (
-            shipment_data.expected_delivery_at.date()
-            < datetime.now().date()
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Expected delivery date cannot "
-                    "be in the past"
-                ),
-            )
 
     # =====================================================
     # STATUS
@@ -435,10 +442,6 @@ def update_shipment(
 
         new_status = shipment_data.status
 
-        # =================================================
-        # FIND VEHICLE
-        # =================================================
-
         vehicle = (
             db.query(Vehicle)
             .filter(
@@ -447,10 +450,6 @@ def update_shipment(
             )
             .first()
         )
-
-        # =================================================
-        # FIND DRIVER
-        # =================================================
 
         driver = (
             db.query(User)
@@ -463,7 +462,7 @@ def update_shipment(
         )
 
         # =================================================
-        # IN TRANSIT
+        # START SHIPMENT
         # =================================================
 
         if new_status == "IN_TRANSIT":
@@ -485,10 +484,6 @@ def update_shipment(
                         "return to IN_TRANSIT"
                     ),
                 )
-
-            # ---------------------------------------------
-            # YOUR EXISTING VEHICLE CHECKS
-            # ---------------------------------------------
 
             if vehicle:
 
@@ -526,10 +521,6 @@ def update_shipment(
                 vehicle.current_status = "IN_TRANSIT"
                 db.add(vehicle)
 
-            # ---------------------------------------------
-            # YOUR EXISTING DRIVER CHECKS
-            # ---------------------------------------------
-
             if driver:
 
                 if driver.account_status != "ACTIVE":
@@ -563,12 +554,6 @@ def update_shipment(
                         ),
                     )
 
-                # ---------------------------------------------
-                # AUTOMATIC PROGRESS
-                # ---------------------------------------------
-
-            shipment.delivery_progress = 50.0
-
             shipment.started_at = (
                 shipment.started_at
                 or datetime.utcnow()
@@ -580,13 +565,8 @@ def update_shipment(
 
         elif new_status == "DELIVERED":
 
-            # Delivered shipment must be at destination
-            shipment.current_location = (
-                shipment.destination
-            )
-
-            # Delivered means 100% completed
             shipment.delivery_progress = 100.0
+            shipment.current_location = shipment.destination
 
             if shipment.delivered_at is None:
                 shipment.delivered_at = datetime.utcnow()
@@ -595,6 +575,7 @@ def update_shipment(
                 vehicle.current_status = "AVAILABLE"
                 db.add(vehicle)
 
+            # Release active driver-vehicle assignment
             assignment = (
                 get_active_assignment_for_vehicle(
                     db,
@@ -603,8 +584,10 @@ def update_shipment(
             )
 
             if assignment:
+
                 assignment.status = "COMPLETED"
                 assignment.end_date = datetime.utcnow()
+
                 db.add(assignment)
 
         # =================================================
@@ -634,8 +617,10 @@ def update_shipment(
             )
 
             if assignment:
+
                 assignment.status = "COMPLETED"
                 assignment.end_date = datetime.utcnow()
+
                 db.add(assignment)
 
             alert = Alert(
@@ -660,6 +645,7 @@ def update_shipment(
         elif new_status == "PENDING":
 
             if old_status == "IN_TRANSIT":
+
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=(
@@ -682,13 +668,7 @@ def update_shipment(
     # LOCATION
     # =====================================================
 
-    # A delivered shipment must always remain at destination.
-    # Do not allow the frontend to overwrite the destination.
-
-    if (
-        shipment.status != "DELIVERED"
-        and shipment_data.current_location is not None
-    ):
+    if shipment_data.current_location is not None:
         shipment.current_location = (
             shipment_data.current_location
         )
@@ -697,46 +677,37 @@ def update_shipment(
     # PROGRESS
     # =====================================================
 
-    if shipment_data.delivery_progress is not None:
+    progress_by_status = {
+        "PENDING": 0.0,
+        "IN_TRANSIT": 50.0,
+        "DELIVERED": 100.0,
+        "CANCELLED": 0.0,
+    }
 
-        if shipment.status == "DELIVERED":
-            shipment.delivery_progress = 100.0
-
-        else:
-            shipment.delivery_progress = (
-                shipment_data.delivery_progress
-            )
+    shipment.delivery_progress = progress_by_status[
+        shipment.status
+    ]
 
     # =====================================================
     # EXPECTED DELIVERY
     # =====================================================
 
     if shipment_data.expected_delivery_at is not None:
+        if str(current_user.get("role", "")).upper() == "DRIVER":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Drivers cannot change expected delivery date",
+            )
+
+        if shipment_data.expected_delivery_at.date() < datetime.now().date():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Expected delivery date cannot be in the past",
+            )
+
         shipment.expected_delivery_at = (
             shipment_data.expected_delivery_at
         )
-
-    # =====================================================
-    # CHECK FOR MEANINGFUL CHANGES
-    # =====================================================
-
-    status_changed = (
-        old_status != shipment.status
-    )
-
-    location_changed = (
-        old_location != shipment.current_location
-    )
-
-    progress_changed = (
-        old_progress != shipment.delivery_progress
-    )
-
-    meaningful_change = (
-        status_changed
-        or location_changed
-        or progress_changed
-    )
 
     # =====================================================
     # UPDATED TIME
@@ -746,36 +717,32 @@ def update_shipment(
 
     # =====================================================
     # HISTORY
-    # Only create history when status, location,
-    # or progress actually changed.
     # =====================================================
 
-    if meaningful_change:
+    history = ShipmentHistory(
+        shipment_id=shipment.shipment_id,
+        status=shipment.status,
+        location=(
+            shipment.current_location
+            or shipment.origin
+        ),
+        event_time=datetime.utcnow(),
+        description=(
+            f"Shipment updated to "
+            f"{shipment.status}"
+        ),
+    )
 
-        history = ShipmentHistory(
-            shipment_id=shipment.shipment_id,
-            status=shipment.status,
-            location=(
-                shipment.current_location
-                or shipment.origin
-            ),
-            event_time=datetime.utcnow(),
-            description=(
-                f"Shipment updated to "
-                f"{shipment.status}"
-            ),
-        )
-
-        db.add(history)
-
-    # =====================================================
-    # SAVE
-    # =====================================================
+    db.add(history)
 
     db.commit()
     db.refresh(shipment)
 
-    return build_shipment_response(shipment)
+    return build_shipment_response(
+        shipment
+    )
+
+
 # =========================================================
 # SHIPMENT HISTORY
 # =========================================================
@@ -796,11 +763,11 @@ def get_shipment_history(
         )
     ),
 ):
-
     shipment = (
         db.query(Shipment)
         .filter(
-            Shipment.shipment_id == shipment_id
+            Shipment.shipment_id
+            == shipment_id
         )
         .first()
     )

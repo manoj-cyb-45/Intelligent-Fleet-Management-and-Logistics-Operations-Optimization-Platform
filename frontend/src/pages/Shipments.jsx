@@ -11,8 +11,6 @@ function Shipments() {
   // =========================================================
 
   const emptyForm = {
-    shipment_id: "",
-    tracking_number: "",
     description: "",
     origin: "",
     destination: "",
@@ -21,7 +19,6 @@ function Shipments() {
     driver_id: "",
     status: "PENDING",
     current_location: "",
-    delivery_progress: 0,
     expected_delivery_at: "",
   };
 
@@ -130,32 +127,16 @@ function Shipments() {
   // =========================================================
 
   const handleChange = (event) => {
-  const { name, value } = event.target;
+    const { name, value } = event.target;
 
-  if (
-    name === "status" &&
-    (value === "DELIVERED" || value === "CANCELLED")
-  ) {
     setShipmentForm((previous) => ({
       ...previous,
-      status: value,
-      expected_delivery_at: "",
+      [name]: value,
     }));
 
     setError("");
     setSuccessMessage("");
-
-    return;
-  }
-
-  setShipmentForm((previous) => ({
-    ...previous,
-    [name]: value,
-  }));
-
-  setError("");
-  setSuccessMessage("");
-};
+  };
 
   // =========================================================
   // OPEN ADD
@@ -183,19 +164,16 @@ function Shipments() {
     setSelectedShipment(shipment);
 
     setShipmentForm({
-      shipment_id: shipment.shipment_id || "",
-      tracking_number: shipment.tracking_number || "",
       description: shipment.description || "",
       origin: shipment.origin || "",
       destination: shipment.destination || "",
-      due_date: formatDateForInput(shipment.due_date),
+      due_date: formatDateTimeForInput(shipment.due_date),
       vehicle_id: shipment.vehicle_id || "",
       driver_id: shipment.driver_id || "",
       status: shipment.status || "PENDING",
       current_location: shipment.current_location || "",
-      delivery_progress: shipment.delivery_progress ?? 0,
       expected_delivery_at: shipment.expected_delivery_at
-        ? formatDateForInput(shipment.expected_delivery_at)
+        ? formatDateTimeForInput(shipment.expected_delivery_at)
         : "",
     });
 
@@ -277,16 +255,6 @@ function Shipments() {
   // =========================================================
 
   const validateForm = () => {
-    if (!shipmentForm.shipment_id.trim()) {
-      setError("Shipment ID is required.");
-      return false;
-    }
-
-    if (!shipmentForm.tracking_number.trim()) {
-      setError("Tracking number is required.");
-      return false;
-    }
-
     if (!shipmentForm.origin.trim()) {
       setError("Origin is required.");
       return false;
@@ -312,13 +280,6 @@ function Shipments() {
       return false;
     }
 
-    const progress = Number(shipmentForm.delivery_progress);
-
-    if (progress < 0 || progress > 100) {
-      setError("Delivery progress must be between 0 and 100.");
-      return false;
-    }
-
     return true;
   };
 
@@ -340,12 +301,10 @@ function Shipments() {
       setSaving(true);
 
       const payload = {
-        shipment_id: shipmentForm.shipment_id.trim(),
-        tracking_number: shipmentForm.tracking_number.trim(),
         description: shipmentForm.description.trim() || null,
         origin: shipmentForm.origin.trim(),
         destination: shipmentForm.destination.trim(),
-        due_date: shipmentForm.due_date ? `${shipmentForm.due_date}T00:00:00` : null,
+        due_date: shipmentForm.due_date,
         vehicle_id: shipmentForm.vehicle_id,
         driver_id: shipmentForm.driver_id,
       };
@@ -393,13 +352,16 @@ function Shipments() {
         status: shipmentForm.status,
         current_location:
           shipmentForm.current_location.trim() || null,
-        delivery_progress: Number(
-          shipmentForm.delivery_progress
-        ),
-        expected_delivery_at: shipmentForm.expected_delivery_at
-          ? `${shipmentForm.expected_delivery_at}T00:00:00`
-          : null,
       };
+
+      if (!isDriver) {
+        payload.expected_delivery_at =
+          shipmentForm.expected_delivery_at
+            ? new Date(
+                shipmentForm.expected_delivery_at
+              ).toISOString()
+            : null;
+      }
 
       await api.put(
         `/shipments/${selectedShipment.shipment_id}`,
@@ -744,28 +706,30 @@ function Shipments() {
 
                     {/* ACTIONS */}
 
-                      <td className="px-5 py-5">
-                        <div className="flex gap-2">
-
-                          {shipment.status !== "DELIVERED" &&
-                            shipment.status !== "CANCELLED" && (
-                              <button
-                                onClick={() => openEditModal(shipment)}
-                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                              >
-                                Edit
-                              </button>
-                            )}
-
+                    <td className="px-5 py-5">
+                      <div className="flex gap-2">
+                        {shipment.status !== "DELIVERED" &&
+                          shipment.status !== "CANCELLED" && (
                           <button
-                            onClick={() => openHistory(shipment)}
-                            className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                            onClick={() =>
+                              openEditModal(shipment)
+                            }
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                           >
-                            History
+                            Edit
                           </button>
+                        )}
 
-                        </div>
-                      </td>
+                        <button
+                          onClick={() =>
+                            openHistory(shipment)
+                          }
+                          className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                        >
+                          History
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -792,23 +756,6 @@ function Shipments() {
               className="mt-6"
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <FormInput
-                  label="Shipment ID *"
-                  name="shipment_id"
-                  value={shipmentForm.shipment_id}
-                  onChange={handleChange}
-                  placeholder="SHIP001"
-                  required
-                />
-
-                <FormInput
-                  label="Tracking Number *"
-                  name="tracking_number"
-                  value={shipmentForm.tracking_number}
-                  onChange={handleChange}
-                  placeholder="TRK001"
-                  required
-                />
 
                 <div className="md:col-span-2">
                   <FormInput
@@ -947,7 +894,6 @@ function Shipments() {
               className="mt-6"
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                 <FormSelect
                   label="Status *"
                   name="status"
@@ -981,30 +927,16 @@ function Shipments() {
                   placeholder="Current location"
                 />
 
-                <FormInput
-                  label="Delivery Progress (%)"
-                  type="number"
-                  name="delivery_progress"
-                  value={shipmentForm.delivery_progress}
-                  onChange={handleChange}
-                  min="0"
-                  max="100"
-                  required
-                />
-
-                {shipmentForm.status !== "DELIVERED" &&
-                  shipmentForm.status !== "CANCELLED" && (
-                    <FormInput
-                      label="Expected Delivery"
-                      type="date"
-                      name="expected_delivery_at"
-                      value={shipmentForm.expected_delivery_at}
-                      onChange={handleChange}
-                      min={getTodayDate()}
-                      required={false}
-                    />
-                  )}
-
+                {!isDriver && (
+                  <FormInput
+                    label="Expected Delivery"
+                    type="date"
+                    name="expected_delivery_at"
+                    value={shipmentForm.expected_delivery_at}
+                    onChange={handleChange}
+                    min={getTodayDate()}
+                  />
+                )}
               </div>
 
               <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
@@ -1036,6 +968,14 @@ function Shipments() {
                   </p>
                 )}
               </div>
+
+              {isDriver && (
+                <div className="mt-5 rounded-lg border border-blue-700 bg-blue-950/40 px-4 py-3">
+                  <p className="text-xs text-blue-300">
+                    Drivers can update the status and current location of their assigned shipment. Progress is calculated automatically from status.
+                  </p>
+                </div>
+              )}
 
               <ModalButtons
                 onCancel={closeModal}
@@ -1226,21 +1166,6 @@ function FormInput({
         min={min}
         max={max}
         disabled={disabled}
-        onClick={(event) => {
-          if (type === "date" && !disabled) {
-            event.currentTarget.showPicker?.();
-          }
-        }}
-        onKeyDown={(event) => {
-          if (type === "date") {
-            event.preventDefault();
-          }
-        }}
-        onPaste={(event) => {
-          if (type === "date") {
-            event.preventDefault();
-          }
-        }}
         className={`w-full rounded-lg border border-slate-700 px-4 py-3 outline-none ${
           disabled
             ? "cursor-not-allowed bg-slate-800 text-slate-500"
@@ -1388,17 +1313,12 @@ function formatDateTime(value) {
 }
 
 // =========================================================
-// DATE INPUT FORMAT
+// DATETIME-LOCAL FORMAT
 // =========================================================
 
-function formatDateForInput(value) {
+function formatDateTimeForInput(value) {
   if (!value) {
     return "";
-  }
-
-  // Handle a date-only value directly.
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
   }
 
   const date = new Date(value);
@@ -1417,7 +1337,15 @@ function formatDateForInput(value) {
     date.getDate()
   ).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
+  const hours = String(
+    date.getHours()
+  ).padStart(2, "0");
+
+  const minutes = String(
+    date.getMinutes()
+  ).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 export default Shipments;

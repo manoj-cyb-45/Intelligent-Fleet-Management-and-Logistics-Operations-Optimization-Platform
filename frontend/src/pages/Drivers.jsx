@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 function Drivers() {
   // =========================================================
   // CURRENT USER
   // =========================================================
 
-  const currentUser = JSON.parse(
-    localStorage.getItem("user") || "null"
-  );
+  const { user } = useAuth();
 
   const isDispatcher =
-    currentUser?.role === "DISPATCHER";
+    String(user?.role || "").trim().toUpperCase() ===
+    "DISPATCHER";
 
   // =========================================================
   // STATE
@@ -240,6 +240,10 @@ function Drivers() {
   // =========================================================
 
   const openAddModal = () => {
+    if (isDispatcher) {
+      return;
+    }
+
     setDriverForm({
       ...emptyForm,
     });
@@ -259,6 +263,10 @@ function Drivers() {
   // =========================================================
 
   const openEditModal = (driver) => {
+    if (isDispatcher) {
+      return;
+    }
+
     const currentVehicle =
       getCurrentVehicle(driver);
 
@@ -509,6 +517,11 @@ function Drivers() {
     event
   ) => {
     event.preventDefault();
+
+    if (isDispatcher) {
+      setError("Dispatchers can assign vehicles but cannot edit driver details.");
+      return;
+    }
 
     if (!selectedDriver) {
       return;
@@ -879,6 +892,11 @@ function Drivers() {
   const handleDeleteDriver = async (
     driver
   ) => {
+    if (isDispatcher) {
+      setError("Dispatchers cannot delete drivers.");
+      return;
+    }
+
     const currentVehicle =
       getCurrentVehicle(driver);
 

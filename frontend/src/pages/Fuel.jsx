@@ -1032,18 +1032,9 @@ function Fuel() {
                         {/* ACTIONS */}
 
                         <td className="whitespace-nowrap px-6 py-5">
-
-                          <button
-                            onClick={() =>
-                              openEditModal(
-                                record
-                              )
-                            }
-                            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                          >
-                            Edit
-                          </button>
-
+                          <span className="text-xs font-medium text-slate-400">
+                            Locked
+                          </span>
                         </td>
 
                       </tr>
@@ -1261,11 +1252,15 @@ function FuelModal({
               label="Fuel Date *"
               type="date"
               name="fuel_date"
-              value={form.fuel_date}
-              onChange={onChange}
-              min={new Date().toISOString().split("T")[0]}
+              value={
+                form.fuel_date
+              }
+              onChange={
+                onChange
+              }
               required
             />
+
             {/* =================================================
                 FUEL TYPE
                 ================================================= */}
@@ -1588,18 +1583,10 @@ function FormInput({
   max,
   step,
 }) {
-  const handleClick = (event) => {
-    if (type === "date") {
-      try {
-        event.currentTarget.showPicker();
-      } catch (error) {
-        // Browser may already have opened the picker
-      }
-    }
-  };
-
   return (
+
     <div>
+
       <label className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </label>
@@ -1609,14 +1596,14 @@ function FormInput({
         name={name}
         value={value}
         onChange={onChange}
-        onClick={handleClick}
         placeholder={placeholder}
         required={required}
         min={min}
         max={max}
         step={step}
-        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500 [color-scheme:dark]"
+        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
       />
+
     </div>
   );
 }

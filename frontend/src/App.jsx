@@ -857,7 +857,6 @@ const navigation = [
     roles: [
       "ADMIN",
       "MANAGER",
-      "DISPATCHER",
     ],
   },
 
@@ -1176,7 +1175,6 @@ function App() {
                       allowedRoles={[
                         "ADMIN",
                         "MANAGER",
-                        "DISPATCHER",
                       ]}
                     >
                       <Fuel />

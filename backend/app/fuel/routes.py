@@ -383,6 +383,10 @@ def update_fuel_record(
         )
     ),
 ):
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Fuel records cannot be edited once created.",
+    )
 
     fuel_record = (
         db.query(FuelRecord)

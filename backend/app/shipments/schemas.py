@@ -4,8 +4,6 @@ from pydantic import BaseModel, Field
 
 
 class ShipmentCreate(BaseModel):
-    shipment_id: str = Field(min_length=3, max_length=20)
-    tracking_number: str = Field(min_length=1, max_length=50)
     description: str | None = None
     origin: str = Field(min_length=1, max_length=255)
     destination: str = Field(min_length=1, max_length=255)
@@ -32,15 +30,12 @@ class ShipmentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 class ShipmentUpdate(BaseModel):
     status: str | None = None
     current_location: str | None = None
-    delivery_progress: float | None = Field(
-        default=None,
-        ge=0,
-        le=100,
-    )
     expected_delivery_at: datetime | None = None
+
 
 class ShipmentHistoryResponse(BaseModel):
     history_id: int

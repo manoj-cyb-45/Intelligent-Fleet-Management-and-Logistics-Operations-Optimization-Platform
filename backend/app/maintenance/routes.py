@@ -563,6 +563,12 @@ def update_maintenance(
             detail="Maintenance record not found",
         )
 
+    if record.status == "COMPLETED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Completed maintenance records cannot be edited.",
+        )
+
     # -----------------------------------------------------
     # FIND NEW VEHICLE
     # -----------------------------------------------------

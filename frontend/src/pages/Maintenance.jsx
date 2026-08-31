@@ -42,92 +42,43 @@ function Maintenance() {
   // =========================================================
 
   const loadData = async () => {
-  try {
-    setError("");
+    try {
+      setError("");
 
-    const [
-      maintenanceResponse,
-      vehicleResponse,
-    ] = await Promise.all([
-      api.get("/maintenance"),
-      api.get("/vehicles"),
-    ]);
+      const [
+        maintenanceResponse,
+        vehicleResponse,
+      ] = await Promise.all([
+        api.get("/maintenance"),
+        api.get("/vehicles"),
+      ]);
 
-    const maintenanceRecords = Array.isArray(
-      maintenanceResponse.data
-    )
-      ? maintenanceResponse.data
-      : [];
-
-    const today = getTodayDate();
-
-    const sortedRecords = [...maintenanceRecords].sort(
-      (a, b) => {
-        const dateA = String(
-          a.maintenance_date || ""
-        ).substring(0, 10);
-
-        const dateB = String(
-          b.maintenance_date || ""
-        ).substring(0, 10);
-
-        const aIsFutureOrToday =
-          dateA >= today;
-
-        const bIsFutureOrToday =
-          dateB >= today;
-
-        // Future/today first
-        if (
-          aIsFutureOrToday &&
-          !bIsFutureOrToday
-        ) {
-          return -1;
-        }
-
-        if (
-          !aIsFutureOrToday &&
-          bIsFutureOrToday
-        ) {
-          return 1;
-        }
-
-        // Future/today: nearest date first
-        if (
-          aIsFutureOrToday &&
-          bIsFutureOrToday
-        ) {
-          return dateA.localeCompare(dateB);
-        }
-
-        // Past: latest past date first
-        return dateB.localeCompare(dateA);
-      }
-    );
-
-    setRecords(sortedRecords);
-
-    setVehicles(
-      Array.isArray(vehicleResponse.data)
-        ? vehicleResponse.data
-        : []
-    );
-
-  } catch (err) {
-    console.error(
-      "Failed to load maintenance data:",
-      err
-    );
-
-    if (err.response?.data?.detail) {
-      setError(err.response.data.detail);
-    } else {
-      setError(
-        "Unable to load maintenance records."
+      setRecords(
+        Array.isArray(maintenanceResponse.data)
+          ? maintenanceResponse.data
+          : []
       );
+
+      setVehicles(
+        Array.isArray(vehicleResponse.data)
+          ? vehicleResponse.data
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Failed to load maintenance data:",
+        err
+      );
+
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError(
+          "Unable to load maintenance records."
+        );
+      }
     }
-  }
-};
+  };
 
   // =========================================================
   // INITIAL LOAD
@@ -198,9 +149,12 @@ function Maintenance() {
   // =========================================================
   // OPEN EDIT MODAL
   // =========================================================
+const openEditModal = (record) => {
+  if (record.status === "COMPLETED") {
+    return;
+  }
 
-  const openEditModal = (record) => {
-    setSelectedRecord(record);
+  setSelectedRecord(record);
 
     setMaintenanceForm({
       vehicle_id: record.vehicle_id || "",
@@ -802,18 +756,22 @@ function Maintenance() {
                       </td>
 
                       <td className="whitespace-nowrap px-6 py-5">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            openEditModal(
-                              record
-                            )
-                          }
-                          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                        >
-                          Edit
-                        </button>
-                      </td>
+                          {record.status !== "COMPLETED" ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openEditModal(record)
+                              }
+                              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                            >
+                              Edit
+                            </button>
+                          ) : (
+                            <span className="text-xs font-medium text-slate-400">
+                              Locked
+                            </span>
+                          )}
+                        </td>
                     </tr>
                   )
                 )}
