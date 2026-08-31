@@ -32,72 +32,97 @@ function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">
-            FleetFlow
-          </h1>
+    <div className="login-page">
+      <div className="login-background-glow login-glow-one" />
+      <div className="login-background-glow login-glow-two" />
 
-          <p className="mt-2 text-sm text-slate-500">
-            Fleet Management & Logistics Platform
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label
-              htmlFor="userId"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              User ID
-            </label>
-
-            <input
-              id="userId"
-              type="text"
-              value={userId}
-              onChange={(event) => setUserId(event.target.value)}
-              placeholder="Enter your user ID"
-              required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
+      <main className="login-shell">
+        <section className="login-brand-panel">
+          <div className="login-brand-mark">
+            <span className="login-brand-icon">F</span>
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Password
-            </label>
-
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter your password"
-              required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
+            <h1 className="login-brand-name">FleetFlow</h1>
+            <p className="login-brand-tagline">
+              Fleet Management &amp; Logistics Platform
+            </p>
           </div>
 
-          {error && (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
+          <div className="login-brand-divider" />
+
+          <div className="login-feature-list">
+            <div className="login-feature">
+              <span className="login-feature-dot" />
+              <span>Fleet operations in one place</span>
             </div>
-          )}
+            <div className="login-feature">
+              <span className="login-feature-dot" />
+              <span>Real-time shipment visibility</span>
+            </div>
+            <div className="login-feature">
+              <span className="login-feature-dot" />
+              <span>Maintenance &amp; fuel tracking</span>
+            </div>
+          </div>
+        </section>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-      </div>
+        <section className="login-card">
+          <div className="login-card-header">
+            <span className="login-eyebrow">SECURE ACCESS</span>
+            <h2>Welcome back</h2>
+            <p>Sign in to access your FleetFlow workspace.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="login-field">
+              <label htmlFor="userId">User ID</label>
+              <input
+                id="userId"
+                type="text"
+                value={userId}
+                onChange={(event) => setUserId(event.target.value)}
+                placeholder="Enter your user ID"
+                required
+                autoComplete="username"
+              />
+            </div>
+
+            <div className="login-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && (
+              <div className="login-error" role="alert">
+                <span className="login-error-icon">!</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="login-submit"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+              {!loading && <span className="login-submit-arrow">→</span>}
+            </button>
+          </form>
+
+          <p className="login-footer">
+            Authorized users only
+          </p>
+        </section>
+      </main>
     </div>
   );
 }
