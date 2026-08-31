@@ -415,121 +415,121 @@ const navigation = [
 function App() {
   const { user, logout } = useAuth();
 
-  if (!user) {
-    return <Login />;
-  }
-
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-100 text-slate-800">
-        <div className="flex min-h-screen">
-          <aside className="w-64 bg-slate-900 text-white">
-            <div className="border-b border-slate-700 px-6 py-6">
-              <h1 className="text-2xl font-bold">
-                FleetFlow
-              </h1>
+      {!user ? (
+        <Login />
+      ) : (
+        <div className="min-h-screen bg-slate-100 text-slate-800">
+          <div className="flex min-h-screen">
+            <aside className="w-64 bg-slate-900 text-white">
+              <div className="border-b border-slate-700 px-6 py-6">
+                <h1 className="text-2xl font-bold">
+                  FleetFlow
+                </h1>
 
-              <p className="mt-1 text-xs text-slate-400">
-                Fleet Management Platform
-              </p>
-            </div>
-
-            <nav className="space-y-1 p-4">
-              {navigation.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === "/"}
-                  className={({ isActive }) =>
-                    `block rounded-lg px-4 py-3 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-blue-600 text-white"
-                        : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                    }`
-                  }
-                >
-                  {item.name}
-                </NavLink>
-              ))}
-            </nav>
-          </aside>
-
-          <div className="flex min-w-0 flex-1 flex-col">
-            <header className="border-b border-slate-200 bg-white px-8 py-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">
-                    FleetFlow
-                  </p>
-
-                  <h2 className="text-xl font-semibold">
-                    Operations Center
-                  </h2>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-sm font-medium">
-                      {user.user_id}
-                    </p>
-
-                    <p className="text-xs text-slate-500">
-                      {user.role}
-                    </p>
-                  </div>
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
-                    {user.user_id?.charAt(0) || "U"}
-                  </div>
-
-                  <button
-                    onClick={logout}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                  >
-                    Logout
-                  </button>
-                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Fleet Management Platform
+                </p>
               </div>
-            </header>
 
-            <main className="flex-1 p-8">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
+              <nav className="space-y-1 p-4">
+                {navigation.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.path === "/"}
+                    className={({ isActive }) =>
+                      `block rounded-lg px-4 py-3 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                      }`
+                    }
+                  >
+                    {item.name}
+                  </NavLink>
+                ))}
+              </nav>
+            </aside>
 
-                <Route
-                  path="/vehicles"
-                  element={<Vehicles />}
-                />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <header className="border-b border-slate-200 bg-white px-8 py-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">
+                      FleetFlow
+                    </p>
 
-                <Route
-                  path="/drivers"
-                  element={<Drivers />}
-                />
+                    <h2 className="text-xl font-semibold">
+                      Operations Center
+                    </h2>
+                  </div>
 
-                <Route
-                  path="/shipments"
-                  element={<Shipments />}
-                />
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {user.user_id}
+                      </p>
 
-                <Route
-                  path="/maintenance"
-                  element={<Maintenance />}
-                />
+                      <p className="text-xs text-slate-500">
+                        {user.role}
+                      </p>
+                    </div>
 
-                <Route
-                  path="/fuel"
-                  element={<Fuel />}
-                />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
+                      {user.user_id?.charAt(0) || "U"}
+                    </div>
 
-                <Route
-                  path="/alerts"
-                  element={<Alerts />}
-                />
-              </Routes>
-            </main>
+                    <button
+                      onClick={logout}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              <main className="flex-1 p-8">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+
+                  <Route
+                    path="/vehicles"
+                    element={<Vehicles />}
+                  />
+
+                  <Route
+                    path="/drivers"
+                    element={<Drivers />}
+                  />
+
+                  <Route
+                    path="/shipments"
+                    element={<Shipments />}
+                  />
+
+                  <Route
+                    path="/maintenance"
+                    element={<Maintenance />}
+                  />
+
+                  <Route
+                    path="/fuel"
+                    element={<Fuel />}
+                  />
+
+                  <Route
+                    path="/alerts"
+                    element={<Alerts />}
+                  />
+                </Routes>
+              </main>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </BrowserRouter>
   );
 }
