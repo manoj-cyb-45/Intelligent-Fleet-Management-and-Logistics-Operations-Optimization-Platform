@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 function Shipments() {
+  const { user } = useAuth();
+  const isDriver = user?.role === "DRIVER";
+
   // =========================================================
   // STATE
   // =========================================================
@@ -29,30 +33,18 @@ function Shipments() {
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] =
-    useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const [showAddModal, setShowAddModal] =
-    useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-  const [showEditModal, setShowEditModal] =
-    useState(false);
+  const [selectedShipment, setSelectedShipment] = useState(null);
 
-  const [showHistoryModal, setShowHistoryModal] =
-    useState(false);
+  const [shipmentHistory, setShipmentHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
-  const [selectedShipment, setSelectedShipment] =
-    useState(null);
-
-  const [shipmentHistory, setShipmentHistory] =
-    useState([]);
-
-  const [historyLoading, setHistoryLoading] =
-    useState(false);
-
-  const [shipmentForm, setShipmentForm] =
-    useState(emptyForm);
-
+  const [shipmentForm, setShipmentForm] = useState(emptyForm);
 
   // =========================================================
   // LOAD DATA
@@ -62,6 +54,18 @@ function Shipments() {
     try {
       setError("");
 
+      // DRIVER can only access shipments
+      if (isDriver) {
+        const shipmentResponse = await api.get("/shipments");
+
+        setShipments(shipmentResponse.data);
+        setVehicles([]);
+        setDrivers([]);
+
+        return;
+      }
+
+      // ADMIN / MANAGER / DISPATCHER
       const [
         shipmentResponse,
         vehicleResponse,
@@ -72,36 +76,19 @@ function Shipments() {
         api.get("/drivers"),
       ]);
 
-      setShipments(
-        shipmentResponse.data
-      );
-
-      setVehicles(
-        vehicleResponse.data
-      );
-
-      setDrivers(
-        driverResponse.data
-      );
-
+      setShipments(shipmentResponse.data);
+      setVehicles(vehicleResponse.data);
+      setDrivers(driverResponse.data);
     } catch (err) {
-      console.error(
-        "Failed to load shipment data:",
-        err
-      );
+      console.error("Failed to load shipment data:", err);
 
       if (err.response?.data?.detail) {
-        setError(
-          err.response.data.detail
-        );
+        setError(err.response.data.detail);
       } else {
-        setError(
-          "Unable to load shipment data."
-        );
+        setError("Unable to load shipment data.");
       }
     }
   };
-
 
   useEffect(() => {
     const initialLoad = async () => {
@@ -113,8 +100,7 @@ function Shipments() {
     };
 
     initialLoad();
-  }, []);
-
+  }, [isDriver]);
 
   // =========================================================
   // STATUS CLASS
@@ -139,28 +125,21 @@ function Shipments() {
     }
   };
 
-
   // =========================================================
   // FORM CHANGE
   // =========================================================
 
   const handleChange = (event) => {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
 
-    setShipmentForm(
-      (previous) => ({
-        ...previous,
-        [name]: value,
-      })
-    );
+    setShipmentForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
 
     setError("");
     setSuccessMessage("");
   };
-
 
   // =========================================================
   // OPEN ADD
@@ -180,58 +159,28 @@ function Shipments() {
     setShowAddModal(true);
   };
 
-
   // =========================================================
   // OPEN EDIT
   // =========================================================
 
   const openEditModal = (shipment) => {
-    setSelectedShipment(
-      shipment
-    );
+    setSelectedShipment(shipment);
 
     setShipmentForm({
-      shipment_id:
-        shipment.shipment_id || "",
-
-      tracking_number:
-        shipment.tracking_number || "",
-
-      description:
-        shipment.description || "",
-
-      origin:
-        shipment.origin || "",
-
-      destination:
-        shipment.destination || "",
-
-      due_date:
-        formatDateTimeForInput(
-          shipment.due_date
-        ),
-
-      vehicle_id:
-        shipment.vehicle_id || "",
-
-      driver_id:
-        shipment.driver_id || "",
-
-      status:
-        shipment.status || "PENDING",
-
-      current_location:
-        shipment.current_location || "",
-
-      delivery_progress:
-        shipment.delivery_progress ?? 0,
-
-      expected_delivery_at:
-        shipment.expected_delivery_at
-          ? formatDateTimeForInput(
-              shipment.expected_delivery_at
-            )
-          : "",
+      shipment_id: shipment.shipment_id || "",
+      tracking_number: shipment.tracking_number || "",
+      description: shipment.description || "",
+      origin: shipment.origin || "",
+      destination: shipment.destination || "",
+      due_date: formatDateTimeForInput(shipment.due_date),
+      vehicle_id: shipment.vehicle_id || "",
+      driver_id: shipment.driver_id || "",
+      status: shipment.status || "PENDING",
+      current_location: shipment.current_location || "",
+      delivery_progress: shipment.delivery_progress ?? 0,
+      expected_delivery_at: shipment.expected_delivery_at
+        ? formatDateTimeForInput(shipment.expected_delivery_at)
+        : "",
     });
 
     setError("");
@@ -239,7 +188,6 @@ function Shipments() {
 
     setShowEditModal(true);
   };
-
 
   // =========================================================
   // CLOSE MODAL
@@ -260,184 +208,109 @@ function Shipments() {
     setError("");
   };
 
-
   // =========================================================
   // AVAILABLE VEHICLES
   // =========================================================
 
   const getAvailableVehicles = () => {
-    return vehicles.filter(
-      (vehicle) => {
-
-        if (
-          vehicle.current_status ===
-          "AVAILABLE"
-        ) {
-          return true;
-        }
-
-        if (
-          showEditModal &&
-          selectedShipment &&
-          vehicle.vehicle_id ===
-            selectedShipment.vehicle_id
-        ) {
-          return true;
-        }
-
-        return false;
+    return vehicles.filter((vehicle) => {
+      if (vehicle.current_status === "AVAILABLE") {
+        return true;
       }
-    );
-  };
 
+      if (
+        showEditModal &&
+        selectedShipment &&
+        vehicle.vehicle_id === selectedShipment.vehicle_id
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  };
 
   // =========================================================
   // AVAILABLE DRIVERS
   // =========================================================
 
   const getAvailableDrivers = () => {
-    return drivers.filter(
-      (driver) => {
-
-        if (
-          driver.account_status !==
-          "ACTIVE"
-        ) {
-          return false;
-        }
-
-        if (
-          !driver.assigned_vehicle_id
-        ) {
-          return true;
-        }
-
-        if (
-          showEditModal &&
-          selectedShipment &&
-          driver.driver_id ===
-            selectedShipment.driver_id
-        ) {
-          return true;
-        }
-
+    return drivers.filter((driver) => {
+      if (driver.account_status !== "ACTIVE") {
         return false;
       }
-    );
-  };
 
+      if (!driver.assigned_vehicle_id) {
+        return true;
+      }
+
+      if (
+        showEditModal &&
+        selectedShipment &&
+        driver.driver_id === selectedShipment.driver_id
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  };
 
   // =========================================================
   // VALIDATE FORM
   // =========================================================
 
   const validateForm = () => {
-
-    if (
-      !shipmentForm.shipment_id.trim()
-    ) {
-      setError(
-        "Shipment ID is required."
-      );
-
+    if (!shipmentForm.shipment_id.trim()) {
+      setError("Shipment ID is required.");
       return false;
     }
 
-
-    if (
-      !shipmentForm.tracking_number.trim()
-    ) {
-      setError(
-        "Tracking number is required."
-      );
-
+    if (!shipmentForm.tracking_number.trim()) {
+      setError("Tracking number is required.");
       return false;
     }
 
-
-    if (
-      !shipmentForm.origin.trim()
-    ) {
-      setError(
-        "Origin is required."
-      );
-
+    if (!shipmentForm.origin.trim()) {
+      setError("Origin is required.");
       return false;
     }
 
-
-    if (
-      !shipmentForm.destination.trim()
-    ) {
-      setError(
-        "Destination is required."
-      );
-
+    if (!shipmentForm.destination.trim()) {
+      setError("Destination is required.");
       return false;
     }
 
-
-    if (
-      !shipmentForm.due_date
-    ) {
-      setError(
-        "Due date is required."
-      );
-
+    if (!shipmentForm.due_date) {
+      setError("Due date is required.");
       return false;
     }
 
-
-    if (
-      !shipmentForm.vehicle_id
-    ) {
-      setError(
-        "Please select a vehicle."
-      );
-
+    if (!shipmentForm.vehicle_id) {
+      setError("Please select a vehicle.");
       return false;
     }
 
-
-    if (
-      !shipmentForm.driver_id
-    ) {
-      setError(
-        "Please select a driver."
-      );
-
+    if (!shipmentForm.driver_id) {
+      setError("Please select a driver.");
       return false;
     }
 
+    const progress = Number(shipmentForm.delivery_progress);
 
-    const progress =
-      Number(
-        shipmentForm.delivery_progress
-      );
-
-    if (
-      progress < 0 ||
-      progress > 100
-    ) {
-      setError(
-        "Delivery progress must be between 0 and 100."
-      );
-
+    if (progress < 0 || progress > 100) {
+      setError("Delivery progress must be between 0 and 100.");
       return false;
     }
-
 
     return true;
   };
-
 
   // =========================================================
   // ADD SHIPMENT
   // =========================================================
 
-  const handleAddShipment = async (
-    event
-  ) => {
+  const handleAddShipment = async (event) => {
     event.preventDefault();
 
     setError("");
@@ -451,83 +324,43 @@ function Shipments() {
       setSaving(true);
 
       const payload = {
-        shipment_id:
-          shipmentForm.shipment_id.trim(),
-
-        tracking_number:
-          shipmentForm.tracking_number.trim(),
-
-        description:
-          shipmentForm.description.trim() ||
-          null,
-
-        origin:
-          shipmentForm.origin.trim(),
-
-        destination:
-          shipmentForm.destination.trim(),
-
-        due_date:
-          new Date(
-            shipmentForm.due_date
-          ).toISOString(),
-
-        vehicle_id:
-          shipmentForm.vehicle_id,
-
-        driver_id:
-          shipmentForm.driver_id,
+        shipment_id: shipmentForm.shipment_id.trim(),
+        tracking_number: shipmentForm.tracking_number.trim(),
+        description: shipmentForm.description.trim() || null,
+        origin: shipmentForm.origin.trim(),
+        destination: shipmentForm.destination.trim(),
+        due_date: new Date(shipmentForm.due_date).toISOString(),
+        vehicle_id: shipmentForm.vehicle_id,
+        driver_id: shipmentForm.driver_id,
       };
 
-      await api.post(
-        "/shipments",
-        payload
-      );
+      await api.post("/shipments", payload);
 
       setShowAddModal(false);
 
-      setShipmentForm(
-        emptyForm
-      );
+      setShipmentForm(emptyForm);
 
-      setSuccessMessage(
-        "Shipment created successfully."
-      );
+      setSuccessMessage("Shipment created successfully.");
 
       await loadData();
-
     } catch (err) {
+      console.error("Failed to create shipment:", err);
 
-      console.error(
-        "Failed to create shipment:",
-        err
-      );
-
-      if (
-        err.response?.data?.detail
-      ) {
-        setError(
-          err.response.data.detail
-        );
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
       } else {
-        setError(
-          "Unable to create shipment."
-        );
+        setError("Unable to create shipment.");
       }
-
     } finally {
       setSaving(false);
     }
   };
 
-
   // =========================================================
   // UPDATE SHIPMENT
   // =========================================================
 
-  const handleUpdateShipment = async (
-    event
-  ) => {
+  const handleUpdateShipment = async (event) => {
     event.preventDefault();
 
     if (!selectedShipment) {
@@ -541,24 +374,17 @@ function Shipments() {
       setSaving(true);
 
       const payload = {
-        status:
-          shipmentForm.status,
-
+        status: shipmentForm.status,
         current_location:
-          shipmentForm.current_location.trim() ||
-          null,
-
-        delivery_progress:
-          Number(
-            shipmentForm.delivery_progress
-          ),
-
-        expected_delivery_at:
-          shipmentForm.expected_delivery_at
-            ? new Date(
-                shipmentForm.expected_delivery_at
-              ).toISOString()
-            : null,
+          shipmentForm.current_location.trim() || null,
+        delivery_progress: Number(
+          shipmentForm.delivery_progress
+        ),
+        expected_delivery_at: shipmentForm.expected_delivery_at
+          ? new Date(
+              shipmentForm.expected_delivery_at
+            ).toISOString()
+          : null,
       };
 
       await api.put(
@@ -570,52 +396,30 @@ function Shipments() {
 
       setSelectedShipment(null);
 
-      setShipmentForm(
-        emptyForm
-      );
+      setShipmentForm(emptyForm);
 
-      setSuccessMessage(
-        "Shipment updated successfully."
-      );
+      setSuccessMessage("Shipment updated successfully.");
 
       await loadData();
-
     } catch (err) {
+      console.error("Failed to update shipment:", err);
 
-      console.error(
-        "Failed to update shipment:",
-        err
-      );
-
-      if (
-        err.response?.data?.detail
-      ) {
-        setError(
-          err.response.data.detail
-        );
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
       } else {
-        setError(
-          "Unable to update shipment."
-        );
+        setError("Unable to update shipment.");
       }
-
     } finally {
       setSaving(false);
     }
   };
 
-
   // =========================================================
   // VIEW HISTORY
   // =========================================================
 
-  const openHistory = async (
-    shipment
-  ) => {
-
-    setSelectedShipment(
-      shipment
-    );
+  const openHistory = async (shipment) => {
+    setSelectedShipment(shipment);
 
     setShipmentHistory([]);
 
@@ -626,40 +430,26 @@ function Shipments() {
     setShowHistoryModal(true);
 
     try {
-
-      const response =
-        await api.get(
-          `/shipments/${shipment.shipment_id}/history`
-        );
-
-      setShipmentHistory(
-        response.data
+      const response = await api.get(
+        `/shipments/${shipment.shipment_id}/history`
       );
 
+      setShipmentHistory(response.data);
     } catch (err) {
-
       console.error(
         "Failed to load shipment history:",
         err
       );
 
-      if (
-        err.response?.data?.detail
-      ) {
-        setError(
-          err.response.data.detail
-        );
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
       } else {
-        setError(
-          "Unable to load shipment history."
-        );
+        setError("Unable to load shipment history.");
       }
-
     } finally {
       setHistoryLoading(false);
     }
   };
-
 
   // =========================================================
   // CLOSE HISTORY
@@ -673,7 +463,6 @@ function Shipments() {
     setShipmentHistory([]);
   };
 
-
   // =========================================================
   // LOADING
   // =========================================================
@@ -681,23 +470,18 @@ function Shipments() {
   if (loading) {
     return (
       <div>
-
         <h1 className="text-3xl font-bold text-slate-800">
           Shipments
         </h1>
 
         <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-
           <p className="text-slate-500">
             Loading shipments...
           </p>
-
         </div>
-
       </div>
     );
   }
-
 
   // =========================================================
   // PAGE
@@ -705,15 +489,12 @@ function Shipments() {
 
   return (
     <div>
-
       {/* =====================================================
           HEADER
           ===================================================== */}
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
         <div>
-
           <h1 className="text-3xl font-bold text-slate-800">
             Shipments
           </h1>
@@ -721,122 +502,89 @@ function Shipments() {
           <p className="mt-2 text-slate-500">
             Track and manage fleet shipments.
           </p>
-
         </div>
-
 
         <div className="flex items-center gap-3">
-
           <div className="rounded-lg bg-blue-50 px-4 py-2">
-
             <span className="text-sm font-medium text-blue-700">
-
               {shipments.length} shipment
-              {shipments.length !== 1
-                ? "s"
-                : ""}
-
+              {shipments.length !== 1 ? "s" : ""}
             </span>
-
           </div>
 
-
-          <button
-            onClick={openAddModal}
-            className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-          >
-            + Add Shipment
-          </button>
-
+          {!isDriver && (
+            <button
+              onClick={openAddModal}
+              className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            >
+              + Add Shipment
+            </button>
+          )}
         </div>
-
       </div>
-
 
       {/* =====================================================
           ERROR
           ===================================================== */}
 
       {error && (
-
         <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-5 py-3">
-
           <div className="flex items-center justify-between gap-4">
-
             <p className="text-sm font-medium text-red-700">
               {error}
             </p>
 
             <button
-              onClick={() =>
-                setError("")
-              }
+              onClick={() => setError("")}
               className="text-xs font-semibold text-red-600"
             >
               Dismiss
             </button>
-
           </div>
-
         </div>
-
       )}
-
 
       {/* =====================================================
           SUCCESS
           ===================================================== */}
 
       {successMessage && (
-
         <div className="mt-5 rounded-lg border border-green-200 bg-green-50 px-5 py-3">
-
           <p className="text-sm font-medium text-green-700">
             {successMessage}
           </p>
-
         </div>
-
       )}
-
 
       {/* =====================================================
           EMPTY STATE
           ===================================================== */}
 
       {shipments.length === 0 ? (
-
         <div className="mt-8 rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-
           <p className="text-slate-500">
             No shipments found.
           </p>
 
-          <button
-            onClick={openAddModal}
-            className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            + Add First Shipment
-          </button>
-
+          {!isDriver && (
+            <button
+              onClick={openAddModal}
+              className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              + Add First Shipment
+            </button>
+          )}
         </div>
-
       ) : (
-
         /* ===================================================
            TABLE
            =================================================== */
 
         <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-
           <div className="overflow-x-auto">
-
             <table className="min-w-[1450px] w-full divide-y divide-slate-200">
-
               <thead className="bg-slate-50">
-
                 <tr>
-
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Shipment
                   </th>
@@ -872,502 +620,324 @@ function Shipments() {
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Actions
                   </th>
-
                 </tr>
-
               </thead>
 
-
               <tbody className="divide-y divide-slate-200">
+                {shipments.map((shipment) => (
+                  <tr
+                    key={shipment.shipment_id}
+                    className="hover:bg-slate-50"
+                  >
+                    {/* SHIPMENT */}
 
-                {shipments.map(
-                  (shipment) => (
+                    <td className="px-5 py-5">
+                      <p className="font-semibold text-slate-800">
+                        {shipment.shipment_id}
+                      </p>
 
-                    <tr
-                      key={
-                        shipment.shipment_id
-                      }
-                      className="hover:bg-slate-50"
-                    >
+                      <p className="mt-1 text-xs text-slate-500">
+                        {shipment.tracking_number}
+                      </p>
+                    </td>
 
-                      {/* SHIPMENT */}
+                    {/* ROUTE */}
 
-                      <td className="px-5 py-5">
-
-                        <p className="font-semibold text-slate-800">
-                          {
-                            shipment.shipment_id
-                          }
+                    <td className="px-5 py-5">
+                      <div className="text-sm">
+                        <p className="font-medium text-slate-700">
+                          {shipment.origin}
                         </p>
 
-                        <p className="mt-1 text-xs text-slate-500">
-                          {
-                            shipment.tracking_number
-                          }
+                        <p className="my-1 text-xs text-slate-400">
+                          ↓
                         </p>
 
-                      </td>
+                        <p className="font-medium text-slate-700">
+                          {shipment.destination}
+                        </p>
+                      </div>
+                    </td>
 
+                    {/* STATUS */}
 
-                      {/* ROUTE */}
-
-                      <td className="px-5 py-5">
-
-                        <div className="text-sm">
-
-                          <p className="font-medium text-slate-700">
-                            {
-                              shipment.origin
-                            }
-                          </p>
-
-                          <p className="my-1 text-xs text-slate-400">
-                            ↓
-                          </p>
-
-                          <p className="font-medium text-slate-700">
-                            {
-                              shipment.destination
-                            }
-                          </p>
-
-                        </div>
-
-                      </td>
-
-
-                      {/* STATUS */}
-
-                      <td className="px-5 py-5">
-
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                            shipment.status
-                          )}`}
-                        >
-
-                          {shipment.status.replace(
-                            "_",
-                            " "
-                          )}
-
-                        </span>
-
-                      </td>
-
-
-                      {/* PROGRESS */}
-
-                      <td className="min-w-[180px] px-5 py-5">
-
-                        <div className="flex items-center gap-3">
-
-                          <div className="h-2 flex-1 rounded-full bg-slate-200">
-
-                            <div
-                              className="h-2 rounded-full bg-blue-600"
-                              style={{
-                                width: `${Math.min(
-                                  100,
-                                  Math.max(
-                                    0,
-                                    shipment.delivery_progress
-                                  )
-                                )}%`,
-                              }}
-                            />
-
-                          </div>
-
-                          <span className="text-xs font-semibold text-slate-600">
-
-                            {
-                              shipment.delivery_progress
-                            }%
-
-                          </span>
-
-                        </div>
-
-                      </td>
-
-
-                      {/* LOCATION */}
-
-                      <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-600">
-
-                        {
-                          shipment.current_location ||
-                          "Not available"
-                        }
-
-                      </td>
-
-
-                      {/* VEHICLE */}
-
-                      <td className="whitespace-nowrap px-5 py-5">
-
-                        <span className="font-medium text-slate-700">
-                          {
-                            shipment.vehicle_id
-                          }
-                        </span>
-
-                      </td>
-
-
-                      {/* DRIVER */}
-
-                      <td className="whitespace-nowrap px-5 py-5">
-
-                        <span className="font-medium text-slate-700">
-                          {
-                            shipment.driver_id
-                          }
-                        </span>
-
-                      </td>
-
-
-                      {/* DUE DATE */}
-
-                      <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-600">
-
-                        {formatDate(
-                          shipment.due_date
+                    <td className="px-5 py-5">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                          shipment.status
+                        )}`}
+                      >
+                        {shipment.status.replace(
+                          "_",
+                          " "
                         )}
+                      </span>
+                    </td>
 
-                      </td>
+                    {/* PROGRESS */}
 
+                    <td className="min-w-[180px] px-5 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 flex-1 rounded-full bg-slate-200">
+                          <div
+                            className="h-2 rounded-full bg-blue-600"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(
+                                  0,
+                                  shipment.delivery_progress
+                                )
+                              )}%`,
+                            }}
+                          />
+                        </div>
 
-                      {/* ACTIONS */}
+                        <span className="text-xs font-semibold text-slate-600">
+                          {shipment.delivery_progress}%
+                        </span>
+                      </div>
+                    </td>
 
-                      <td className="px-5 py-5">
+                    {/* LOCATION */}
 
-                        <div className="flex gap-2">
+                    <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-600">
+                      {shipment.current_location ||
+                        "Not available"}
+                    </td>
 
+                    {/* VEHICLE */}
+
+                    <td className="whitespace-nowrap px-5 py-5">
+                      <span className="font-medium text-slate-700">
+                        {shipment.vehicle_id}
+                      </span>
+                    </td>
+
+                    {/* DRIVER */}
+
+                    <td className="whitespace-nowrap px-5 py-5">
+                      <span className="font-medium text-slate-700">
+                        {shipment.driver_id}
+                      </span>
+                    </td>
+
+                    {/* DUE DATE */}
+
+                    <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-600">
+                      {formatDate(shipment.due_date)}
+                    </td>
+
+                    {/* ACTIONS */}
+
+                    <td className="px-5 py-5">
+                      <div className="flex gap-2">
+                        {!isDriver && (
                           <button
                             onClick={() =>
-                              openEditModal(
-                                shipment
-                              )
+                              openEditModal(shipment)
                             }
                             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                           >
                             Edit
                           </button>
+                        )}
 
-
-                          <button
-                            onClick={() =>
-                              openHistory(
-                                shipment
-                              )
-                            }
-                            className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-                          >
-                            History
-                          </button>
-
-                        </div>
-
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
+                        <button
+                          onClick={() =>
+                            openHistory(shipment)
+                          }
+                          className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                        >
+                          History
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
-
             </table>
-
           </div>
-
         </div>
-
       )}
-
 
       {/* =====================================================
           ADD MODAL
           ===================================================== */}
 
       {showAddModal && (
-
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-
           <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
-
-
             <ModalHeader
               title="Add Shipment"
               description="Create a new fleet shipment."
               onClose={closeModal}
             />
 
-
             <form
-              onSubmit={
-                handleAddShipment
-              }
+              onSubmit={handleAddShipment}
               className="mt-6"
             >
-
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
-
                 <FormInput
                   label="Shipment ID *"
                   name="shipment_id"
-                  value={
-                    shipmentForm.shipment_id
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.shipment_id}
+                  onChange={handleChange}
                   placeholder="SHIP001"
                   required
                 />
 
-
                 <FormInput
                   label="Tracking Number *"
                   name="tracking_number"
-                  value={
-                    shipmentForm.tracking_number
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.tracking_number}
+                  onChange={handleChange}
                   placeholder="TRK001"
                   required
                 />
 
-
                 <div className="md:col-span-2">
-
                   <FormInput
                     label="Description"
                     name="description"
-                    value={
-                      shipmentForm.description
-                    }
-                    onChange={
-                      handleChange
-                    }
+                    value={shipmentForm.description}
+                    onChange={handleChange}
                     placeholder="Shipment description"
                   />
-
                 </div>
-
 
                 <FormInput
                   label="Origin *"
                   name="origin"
-                  value={
-                    shipmentForm.origin
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.origin}
+                  onChange={handleChange}
                   placeholder="Coimbatore"
                   required
                 />
 
-
                 <FormInput
                   label="Destination *"
                   name="destination"
-                  value={
-                    shipmentForm.destination
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.destination}
+                  onChange={handleChange}
                   placeholder="Chennai"
                   required
                 />
-
 
                 <FormInput
                   label="Due Date *"
                   type="datetime-local"
                   name="due_date"
-                  value={
-                    shipmentForm.due_date
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.due_date}
+                  onChange={handleChange}
                   required
                 />
-
 
                 <FormSelect
                   label="Vehicle *"
                   name="vehicle_id"
-                  value={
-                    shipmentForm.vehicle_id
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.vehicle_id}
+                  onChange={handleChange}
                   options={getAvailableVehicles().map(
                     (vehicle) => ({
-                      value:
-                        vehicle.vehicle_id,
-                      label:
-                        `${vehicle.vehicle_id} — ${vehicle.current_status}`,
+                      value: vehicle.vehicle_id,
+                      label: `${vehicle.vehicle_id} — ${vehicle.current_status}`,
                     })
                   )}
                   emptyLabel="Select a vehicle"
                 />
 
-
                 <FormSelect
                   label="Driver *"
                   name="driver_id"
-                  value={
-                    shipmentForm.driver_id
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.driver_id}
+                  onChange={handleChange}
                   options={getAvailableDrivers().map(
                     (driver) => ({
-                      value:
-                        driver.driver_id,
-                      label:
-                        `${driver.name} — ${driver.driver_id}`,
+                      value: driver.driver_id,
+                      label: `${driver.name} — ${driver.driver_id}`,
                     })
                   )}
                   emptyLabel="Select a driver"
                 />
-
               </div>
 
-
-              {getAvailableVehicles()
-                .length === 0 && (
-
+              {getAvailableVehicles().length === 0 && (
                 <div className="mt-5 rounded-lg border border-yellow-700 bg-yellow-950/40 px-4 py-3">
-
                   <p className="text-sm text-yellow-300">
-                    No AVAILABLE vehicles are currently available for shipment assignment.
+                    No AVAILABLE vehicles are currently
+                    available for shipment assignment.
                   </p>
-
                 </div>
-
               )}
 
-
-              {getAvailableDrivers()
-                .length === 0 && (
-
+              {getAvailableDrivers().length === 0 && (
                 <div className="mt-3 rounded-lg border border-yellow-700 bg-yellow-950/40 px-4 py-3">
-
                   <p className="text-sm text-yellow-300">
-                    No ACTIVE unassigned drivers are currently available.
+                    No ACTIVE unassigned drivers are
+                    currently available.
                   </p>
-
                 </div>
-
               )}
-
 
               <ModalButtons
-                onCancel={
-                  closeModal
-                }
+                onCancel={closeModal}
                 saving={saving}
                 submitText="Create Shipment"
               />
-
             </form>
-
           </div>
-
         </div>
-
       )}
-
 
       {/* =====================================================
           EDIT MODAL
           ===================================================== */}
 
       {showEditModal && (
-
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-
           <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
-
-
             <ModalHeader
               title="Edit Shipment"
               description="Update shipment status and delivery information."
               onClose={closeModal}
             />
 
-
             <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
-
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-
                 <InfoItem
                   label="Shipment"
-                  value={
-                    selectedShipment?.shipment_id
-                  }
+                  value={selectedShipment?.shipment_id}
                 />
 
                 <InfoItem
                   label="Tracking"
-                  value={
-                    selectedShipment?.tracking_number
-                  }
+                  value={selectedShipment?.tracking_number}
                 />
 
                 <InfoItem
                   label="Vehicle"
-                  value={
-                    selectedShipment?.vehicle_id
-                  }
+                  value={selectedShipment?.vehicle_id}
                 />
 
                 <InfoItem
                   label="Driver"
-                  value={
-                    selectedShipment?.driver_id
-                  }
+                  value={selectedShipment?.driver_id}
                 />
-
               </div>
-
             </div>
 
-
             <form
-              onSubmit={
-                handleUpdateShipment
-              }
+              onSubmit={handleUpdateShipment}
               className="mt-6"
             >
-
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
-
                 <FormSelect
                   label="Status *"
                   name="status"
-                  value={
-                    shipmentForm.status
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.status}
+                  onChange={handleChange}
                   options={[
                     {
                       value: "PENDING",
@@ -1388,120 +958,81 @@ function Shipments() {
                   ]}
                 />
 
-
                 <FormInput
                   label="Current Location"
                   name="current_location"
-                  value={
-                    shipmentForm.current_location
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.current_location}
+                  onChange={handleChange}
                   placeholder="Current location"
                 />
-
 
                 <FormInput
                   label="Delivery Progress (%)"
                   type="number"
                   name="delivery_progress"
-                  value={
-                    shipmentForm.delivery_progress
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.delivery_progress}
+                  onChange={handleChange}
                   min="0"
                   max="100"
                   required
                 />
 
-
                 <FormInput
                   label="Expected Delivery"
                   type="datetime-local"
                   name="expected_delivery_at"
-                  value={
-                    shipmentForm.expected_delivery_at
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={shipmentForm.expected_delivery_at}
+                  onChange={handleChange}
                 />
-
               </div>
 
-
               <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
-
-                {shipmentForm.status ===
-                  "PENDING" && (
-
+                {shipmentForm.status === "PENDING" && (
                   <p className="text-xs text-slate-400">
                     Shipment is waiting to begin.
                   </p>
-
                 )}
 
-                {shipmentForm.status ===
-                  "IN_TRANSIT" && (
-
+                {shipmentForm.status === "IN_TRANSIT" && (
                   <p className="text-xs text-blue-300">
-                    Shipment is currently in transit. Starting time will be recorded automatically by the backend.
+                    Shipment is currently in transit.
+                    Starting time will be recorded
+                    automatically by the backend.
                   </p>
-
                 )}
 
-                {shipmentForm.status ===
-                  "DELIVERED" && (
-
+                {shipmentForm.status === "DELIVERED" && (
                   <p className="text-xs text-green-300">
-                    Delivered shipments are automatically set to 100% progress.
+                    Delivered shipments are automatically
+                    set to 100% progress.
                   </p>
-
                 )}
 
-                {shipmentForm.status ===
-                  "CANCELLED" && (
-
+                {shipmentForm.status === "CANCELLED" && (
                   <p className="text-xs text-red-300">
-                    Cancelling this shipment will create a HIGH severity alert.
+                    Cancelling this shipment will create a
+                    HIGH severity alert.
                   </p>
-
                 )}
-
               </div>
 
-
               <ModalButtons
-                onCancel={
-                  closeModal
-                }
+                onCancel={closeModal}
                 saving={saving}
                 submitText="Save Changes"
               />
-
             </form>
-
           </div>
-
         </div>
-
       )}
-
 
       {/* =====================================================
           HISTORY MODAL
           ===================================================== */}
 
       {showHistoryModal && (
-
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-
           <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
-
-
             <ModalHeader
               title="Shipment History"
               description={
@@ -1509,123 +1040,76 @@ function Shipments() {
                   ? `${selectedShipment.shipment_id} — ${selectedShipment.tracking_number}`
                   : ""
               }
-              onClose={
-                closeHistory
-              }
+              onClose={closeHistory}
             />
 
-
             {historyLoading ? (
-
               <div className="mt-8 rounded-lg border border-slate-700 bg-slate-950 p-8 text-center">
-
                 <p className="text-slate-400">
                   Loading history...
                 </p>
-
               </div>
-
-            ) : shipmentHistory.length ===
-              0 ? (
-
+            ) : shipmentHistory.length === 0 ? (
               <div className="mt-8 rounded-lg border border-slate-700 bg-slate-950 p-8 text-center">
-
                 <p className="text-slate-400">
                   No history found.
                 </p>
-
               </div>
-
             ) : (
-
               <div className="mt-6 space-y-4">
-
-                {shipmentHistory.map(
-                  (item) => (
-
-                    <div
-                      key={
-                        item.history_id
-                      }
-                      className="rounded-xl border border-slate-700 bg-slate-950 p-5"
-                    >
-
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-
-                        <div>
-
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                              item.status
-                            )}`}
-                          >
-                            {item.status.replace(
-                              "_",
-                              " "
-                            )}
-                          </span>
-
-                          <p className="mt-3 font-medium text-white">
-                            {
-                              item.description ||
-                              "Shipment event"
-                            }
-                          </p>
-
-                          <p className="mt-1 text-sm text-slate-400">
-                            Location:{" "}
-                            {
-                              item.location ||
-                              "Not specified"
-                            }
-                          </p>
-
-                        </div>
-
-
-                        <p className="text-xs text-slate-500">
-
-                          {formatDateTime(
-                            item.event_time
+                {shipmentHistory.map((item) => (
+                  <div
+                    key={item.history_id}
+                    className="rounded-xl border border-slate-700 bg-slate-950 p-5"
+                  >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                            item.status
+                          )}`}
+                        >
+                          {item.status.replace(
+                            "_",
+                            " "
                           )}
+                        </span>
 
+                        <p className="mt-3 font-medium text-white">
+                          {item.description ||
+                            "Shipment event"}
                         </p>
 
+                        <p className="mt-1 text-sm text-slate-400">
+                          Location:{" "}
+                          {item.location ||
+                            "Not specified"}
+                        </p>
                       </div>
 
+                      <p className="text-xs text-slate-500">
+                        {formatDateTime(item.event_time)}
+                      </p>
                     </div>
-
-                  )
-                )}
-
+                  </div>
+                ))}
               </div>
-
             )}
 
-
             <div className="mt-7 flex justify-end">
-
               <button
-                onClick={
-                  closeHistory
-                }
+                onClick={closeHistory}
                 className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
               >
                 Close
               </button>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }
-
 
 // =========================================================
 // MODAL HEADER
@@ -1638,9 +1122,7 @@ function ModalHeader({
 }) {
   return (
     <div className="flex items-start justify-between">
-
       <div>
-
         <h2 className="text-2xl font-bold text-white">
           {title}
         </h2>
@@ -1648,9 +1130,7 @@ function ModalHeader({
         <p className="mt-1 text-sm text-slate-400">
           {description}
         </p>
-
       </div>
-
 
       <button
         onClick={onClose}
@@ -1658,11 +1138,9 @@ function ModalHeader({
       >
         ×
       </button>
-
     </div>
   );
 }
-
 
 // =========================================================
 // MODAL BUTTONS
@@ -1675,7 +1153,6 @@ function ModalButtons({
 }) {
   return (
     <div className="mt-7 flex justify-end gap-3">
-
       <button
         type="button"
         onClick={onCancel}
@@ -1685,23 +1162,16 @@ function ModalButtons({
         Cancel
       </button>
 
-
       <button
         type="submit"
         disabled={saving}
         className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-
-        {saving
-          ? "Saving..."
-          : submitText}
-
+        {saving ? "Saving..." : submitText}
       </button>
-
     </div>
   );
 }
-
 
 // =========================================================
 // FORM INPUT
@@ -1721,7 +1191,6 @@ function FormInput({
 }) {
   return (
     <div>
-
       <label className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </label>
@@ -1742,11 +1211,9 @@ function FormInput({
             : "bg-slate-950 text-white focus:border-blue-500"
         }`}
       />
-
     </div>
   );
 }
-
 
 // =========================================================
 // FORM SELECT
@@ -1763,7 +1230,6 @@ function FormSelect({
 }) {
   return (
     <div>
-
       <label className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </label>
@@ -1779,48 +1245,37 @@ function FormSelect({
             : "bg-slate-950 focus:border-blue-500"
         }`}
       >
-
         {emptyLabel && (
           <option value="">
             {emptyLabel}
           </option>
         )}
 
-
-        {options.map(
-          (option) => {
-
-            if (
-              typeof option ===
-              "string"
-            ) {
-              return (
-                <option
-                  key={option}
-                  value={option}
-                >
-                  {option}
-                </option>
-              );
-            }
-
+        {options.map((option) => {
+          if (typeof option === "string") {
             return (
               <option
-                key={option.value}
-                value={option.value}
+                key={option}
+                value={option}
               >
-                {option.label}
+                {option}
               </option>
             );
           }
-        )}
 
+          return (
+            <option
+              key={option.value}
+              value={option.value}
+            >
+              {option.label}
+            </option>
+          );
+        })}
       </select>
-
     </div>
   );
 }
-
 
 // =========================================================
 // INFO ITEM
@@ -1832,7 +1287,6 @@ function InfoItem({
 }) {
   return (
     <div>
-
       <p className="text-xs uppercase tracking-wide text-slate-500">
         {label}
       </p>
@@ -1840,11 +1294,9 @@ function InfoItem({
       <p className="mt-1 text-sm font-semibold text-slate-200">
         {value || "—"}
       </p>
-
     </div>
   );
 }
-
 
 // =========================================================
 // DATE FORMAT
@@ -1855,18 +1307,14 @@ function formatDate(value) {
     return "—";
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  if (Number.isNaN(
-    date.getTime()
-  )) {
+  if (Number.isNaN(date.getTime())) {
     return "—";
   }
 
   return date.toLocaleDateString();
 }
-
 
 // =========================================================
 // DATE + TIME FORMAT
@@ -1877,64 +1325,49 @@ function formatDateTime(value) {
     return "—";
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  if (Number.isNaN(
-    date.getTime()
-  )) {
+  if (Number.isNaN(date.getTime())) {
     return "—";
   }
 
   return date.toLocaleString();
 }
 
-
 // =========================================================
 // DATETIME-LOCAL FORMAT
 // =========================================================
 
-function formatDateTimeForInput(
-  value
-) {
+function formatDateTimeForInput(value) {
   if (!value) {
     return "";
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  if (Number.isNaN(
-    date.getTime()
-  )) {
+  if (Number.isNaN(date.getTime())) {
     return "";
   }
 
-  const year =
-    date.getFullYear();
+  const year = date.getFullYear();
 
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
 
-  const day =
-    String(
-      date.getDate()
-    ).padStart(2, "0");
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
 
-  const hours =
-    String(
-      date.getHours()
-    ).padStart(2, "0");
+  const hours = String(
+    date.getHours()
+  ).padStart(2, "0");
 
-  const minutes =
-    String(
-      date.getMinutes()
-    ).padStart(2, "0");
+  const minutes = String(
+    date.getMinutes()
+  ).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
-
 
 export default Shipments;
