@@ -733,10 +733,10 @@ function Vehicles() {
   // =========================================================
 
   return (
-    <div>
+    <div className="vehicles-page">
       {/* HEADER */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="module-header flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">
             Vehicles
@@ -747,8 +747,8 @@ function Vehicles() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-blue-50 px-4 py-2">
+        <div className="module-header-actions flex items-center gap-3">
+          <div className="vehicle-count rounded-lg bg-blue-50 px-4 py-2">
             <span className="text-sm font-medium text-blue-700">
               {vehicles.length} vehicle
               {vehicles.length !== 1
@@ -760,7 +760,7 @@ function Vehicles() {
           {!isDispatcher && (
               <button
                 onClick={openAddModal}
-                className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                className="primary-action rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
               >
                 + Add Vehicle
               </button>
@@ -817,7 +817,7 @@ function Vehicles() {
             )}
         </div>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="vehicle-table-card mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-[1200px] w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
@@ -879,7 +879,7 @@ function Vehicles() {
                         key={
                           vehicle.vehicle_id
                         }
-                        className="hover:bg-slate-50"
+                        className="vehicle-row hover:bg-slate-50"
                       >
                         {/* VEHICLE */}
 
@@ -933,12 +933,14 @@ function Vehicles() {
                             null &&
                             vehicle.fuel_level !==
                               undefined && (
-                              <p className="mt-1 text-xs text-slate-400">
-                                Fuel:{" "}
-                                {
-                                  vehicle.fuel_level
-                                }
-                                %
+                              <p
+                                className={`mt-1 text-xs font-semibold ${
+                                  Number(vehicle.fuel_level) < 20
+                                    ? "fuel-low"
+                                    : "fuel-good"
+                                }`}
+                              >
+                                Fuel: {vehicle.fuel_level}%
                               </p>
                             )}
                         </td>
@@ -961,9 +963,9 @@ function Vehicles() {
                               </p>
 
                               {isInTransit && (
-                                <p className="mt-1 text-xs font-medium text-purple-600">
+                                <span className="assignment-locked-badge">
                                   🔒 Assignment locked
-                                </p>
+                                </span>
                               )}
                             </div>
                           ) : (
@@ -978,7 +980,7 @@ function Vehicles() {
                         <td className="px-5 py-5">
                           <div className="flex flex-col items-start gap-1">
                             <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                              className={`vehicle-status inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                                 vehicle.current_status ===
                                 "AVAILABLE"
                                   ? "bg-green-100 text-green-700"
@@ -1058,8 +1060,8 @@ function Vehicles() {
 
       {(showAddModal ||
         showEditModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+        <div className="vehicle-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="vehicle-modal max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white">

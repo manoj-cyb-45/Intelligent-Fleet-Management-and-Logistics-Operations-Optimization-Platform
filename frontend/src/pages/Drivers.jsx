@@ -958,12 +958,12 @@ function Drivers() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-3xl font-bold text-slate-800">
+        <h1 className="driver-page-title">
           Drivers
         </h1>
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-slate-500">
+        <div className="driver-loading-card">
+          <p className="driver-loading-text">
             Loading drivers...
           </p>
         </div>
@@ -979,20 +979,20 @@ function Drivers() {
     <div>
       {/* HEADER */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="driver-page-header">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="driver-page-title">
             Drivers
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="driver-page-subtitle">
             Manage drivers and their vehicle assignments.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-blue-50 px-4 py-2">
-            <span className="text-sm font-medium text-blue-700">
+        <div className="driver-header-actions">
+          <div className="driver-count-badge">
+            <span className="driver-count-text">
               {drivers.length} driver
               {drivers.length !== 1
                 ? "s"
@@ -1005,7 +1005,7 @@ function Drivers() {
           {!isDispatcher && (
             <button
               onClick={openAddModal}
-              className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="driver-primary-btn"
             >
               + Add Driver
             </button>
@@ -1016,9 +1016,9 @@ function Drivers() {
       {/* ERROR */}
 
       {error && (
-        <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-5 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-medium text-red-700">
+        <div className="driver-message driver-error">
+          <div className="driver-message-inner">
+            <p className="driver-error-text">
               {error}
             </p>
 
@@ -1026,7 +1026,7 @@ function Drivers() {
               onClick={() =>
                 setError("")
               }
-              className="text-xs font-semibold text-red-600"
+              className="driver-dismiss"
             >
               Dismiss
             </button>
@@ -1037,8 +1037,8 @@ function Drivers() {
       {/* SUCCESS */}
 
       {successMessage && (
-        <div className="mt-5 rounded-lg border border-green-200 bg-green-50 px-5 py-3">
-          <p className="text-sm font-medium text-green-700">
+        <div className="driver-message driver-success">
+          <p className="driver-success-text">
             {successMessage}
           </p>
         </div>
@@ -1047,57 +1047,57 @@ function Drivers() {
       {/* EMPTY */}
 
       {drivers.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <p className="text-slate-500">
+        <div className="driver-empty-state">
+          <p className="driver-muted">
             No drivers found.
           </p>
 
           {!isDispatcher && (
             <button
               onClick={openAddModal}
-              className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+              className="driver-primary-btn driver-empty-btn"
             >
               + Add First Driver
             </button>
           )}
         </div>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-[1250px] w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+        <div className="driver-table-card">
+          <div className="driver-table-scroll">
+            <table className="driver-table">
+              <thead className="driver-table-head">
                 <tr>
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Driver
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Email
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Phone
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Experience
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Vehicle
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Status
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="driver-th">
                     Actions
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="driver-table-body">
                 {drivers.map(
                   (driver) => {
                     const currentVehicle =
@@ -1120,16 +1120,16 @@ function Drivers() {
                           driver.driver_id ||
                           driver.user_id
                         }
-                        className="hover:bg-slate-50"
+                        className="driver-row"
                       >
                         {/* DRIVER */}
 
-                        <td className="px-5 py-5">
-                          <p className="font-semibold text-slate-800">
+                        <td className="driver-td">
+                          <p className="driver-name">
                             {driver.name}
                           </p>
 
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="driver-subtext">
                             ID:{" "}
                             {driver.driver_id ||
                               driver.user_id}
@@ -1138,19 +1138,19 @@ function Drivers() {
 
                         {/* EMAIL */}
 
-                        <td className="px-5 py-5 text-sm text-slate-600">
+                        <td className="driver-td driver-cell-text">
                           {driver.email}
                         </td>
 
                         {/* PHONE */}
 
-                        <td className="px-5 py-5 text-sm text-slate-600">
+                        <td className="driver-td driver-cell-text">
                           {driver.phone}
                         </td>
 
                         {/* EXPERIENCE */}
 
-                        <td className="px-5 py-5 text-sm text-slate-600">
+                        <td className="driver-td driver-cell-text">
                           {driver.experience_years !==
                           null
                             ? `${driver.experience_years} years`
@@ -1159,10 +1159,10 @@ function Drivers() {
 
                         {/* VEHICLE */}
 
-                        <td className="px-5 py-5">
+                        <td className="driver-td">
                           {assignedVehicleId ? (
                             <div>
-                              <p className="font-semibold text-blue-700">
+                              <p className="driver-vehicle-id">
                                 {
                                   assignedVehicleId
                                 }
@@ -1177,7 +1177,7 @@ function Drivers() {
                                       : currentVehicle.current_status ===
                                           "ASSIGNED"
                                         ? "bg-blue-100 text-blue-700"
-                                        : "bg-green-100 text-green-700"
+                                        : "driver-status-active"
                                   }`}
                                 >
                                   {
@@ -1187,13 +1187,13 @@ function Drivers() {
                               )}
 
                               {isInTransit && (
-                                <p className="mt-1 text-xs font-medium text-purple-600">
+                                <p className="driver-assignment-locked">
                                   Assignment locked
                                 </p>
                               )}
                             </div>
                           ) : (
-                            <span className="text-sm text-slate-400">
+                            <span className="driver-not-assigned">
                               Not assigned
                             </span>
                           )}
@@ -1201,13 +1201,13 @@ function Drivers() {
 
                         {/* STATUS */}
 
-                        <td className="px-5 py-5">
+                        <td className="driver-td">
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                            className={`driver-status-pill ${
                               driver.account_status ===
                               "ACTIVE"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-slate-100 text-slate-700"
+                                ? "driver-status-active"
+                                : "driver-status-inactive"
                             }`}
                           >
                             {
@@ -1218,8 +1218,8 @@ function Drivers() {
 
                         {/* ACTIONS */}
 
-                        <td className="px-5 py-5">
-                          <div className="flex flex-wrap gap-2">
+                        <td className="driver-td">
+                          <div className="driver-actions">
 
                             {/* ADMIN / MANAGER EDIT */}
 
@@ -1230,7 +1230,7 @@ function Drivers() {
                                     driver
                                   )
                                 }
-                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                className="driver-btn driver-edit-btn"
                               >
                                 Edit
                               </button>
@@ -1246,7 +1246,7 @@ function Drivers() {
                                       driver
                                     )
                                   }
-                                  className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                                  className="driver-btn driver-assign-btn"
                                 >
                                   {assignedVehicleId
                                     ? "Change Vehicle"
@@ -1264,7 +1264,7 @@ function Drivers() {
                                       driver
                                     )
                                   }
-                                  className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                                  className="driver-btn driver-assign-btn"
                                 >
                                   {assignedVehicleId
                                     ? "Change Vehicle"
@@ -1282,7 +1282,7 @@ function Drivers() {
                                       driver
                                     )
                                   }
-                                  className="rounded-lg border border-orange-300 bg-white px-3 py-2 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+                                  className="driver-btn driver-unassign-btn"
                                 >
                                   Unassign
                                 </button>
@@ -1308,7 +1308,7 @@ function Drivers() {
                                     ? "Unassign vehicle first"
                                     : "Delete driver"
                                 }
-                                className="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="driver-btn driver-delete-btn"
                               >
                                 Delete
                               </button>
@@ -1333,14 +1333,14 @@ function Drivers() {
       {(showAddModal ||
         showEditModal ||
         showAssignModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+        <div className="driver-modal-overlay">
+          <div className="driver-modal">
 
             {/* HEADER */}
 
-            <div className="flex items-start justify-between">
+            <div className="driver-modal-header">
               <div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="driver-modal-title">
 
                   {showAddModal
                     ? "Add Driver"
@@ -1350,7 +1350,7 @@ function Drivers() {
 
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="driver-assignment-subtext">
 
                   {showAddModal
                     ? "Create a new driver account."
@@ -1363,7 +1363,7 @@ function Drivers() {
 
               <button
                 onClick={closeModal}
-                className="text-3xl leading-none text-slate-400 hover:text-white"
+                className="driver-modal-close"
               >
                 ×
               </button>
@@ -1378,12 +1378,12 @@ function Drivers() {
                 selectedDriver
               )?.current_status ===
                 "IN_TRANSIT" && (
-                <div className="mt-5 rounded-lg border border-purple-700 bg-purple-950/40 px-4 py-4">
-                  <p className="font-semibold text-purple-300">
+                <div className="driver-lock-warning">
+                  <p className="driver-lock-title">
                     Driver assignment is locked
                   </p>
 
-                  <p className="mt-1 text-sm text-purple-200/80">
+                  <p className="driver-lock-text">
                     This driver's vehicle is
                     IN_TRANSIT. The vehicle
                     assignment cannot be changed
@@ -1402,10 +1402,10 @@ function Drivers() {
                 onSubmit={
                   handleAssignVehicle
                 }
-                className="mt-6"
+                className="driver-form-section"
               >
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <label className="driver-form-label">
                     Vehicle Assignment
                   </label>
 
@@ -1421,7 +1421,7 @@ function Drivers() {
                       )?.current_status ===
                       "IN_TRANSIT"
                     }
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:opacity-70"
+                    className="driver-form-control"
                   >
                     <option value="">
                       No vehicle / Unassign
@@ -1455,14 +1455,14 @@ function Drivers() {
                       selectedDriver
                     )?.current_status !==
                       "IN_TRANSIT" && (
-                      <p className="mt-2 text-xs text-yellow-400">
+                      <p className="mt-2 driver-warning-text">
                         No AVAILABLE vehicles.
                       </p>
                     )}
                 </div>
 
-                <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
-                  <p className="text-xs text-slate-400">
+                <div className="driver-form-note">
+                  <p className="driver-note-text">
                     Only ACTIVE drivers can be
                     assigned. Only AVAILABLE
                     vehicles can be newly
@@ -1471,12 +1471,12 @@ function Drivers() {
                   </p>
                 </div>
 
-                <div className="mt-7 flex justify-end gap-3">
+                <div className="driver-modal-actions">
                   <button
                     type="button"
                     onClick={closeModal}
                     disabled={saving}
-                    className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                    className="driver-modal-btn driver-cancel-btn"
                   >
                     Cancel
                   </button>
@@ -1490,7 +1490,7 @@ function Drivers() {
                       )?.current_status ===
                         "IN_TRANSIT"
                     }
-                    className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="driver-modal-btn driver-save-btn"
                   >
                     {saving
                       ? "Saving..."
@@ -1509,9 +1509,9 @@ function Drivers() {
                     ? handleAddDriver
                     : handleUpdateDriver
                 }
-                className="mt-6"
+                className="driver-form-section"
               >
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="driver-form-grid">
 
                   <FormInput
                     label="Driver ID *"
@@ -1630,8 +1630,8 @@ function Drivers() {
 
                   {/* VEHICLE ASSIGNMENT */}
 
-                  <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-slate-200">
+                  <div className="driver-form-full">
+                    <label className="driver-form-label">
                       Vehicle Assignment
                     </label>
 
@@ -1699,7 +1699,7 @@ function Drivers() {
                           </select>
 
                           {isInTransit && (
-                            <p className="mt-2 text-xs font-medium text-purple-300">
+                            <p className="driver-inline-lock-text">
                               Vehicle assignment
                               is locked because
                               the current vehicle
@@ -1710,7 +1710,7 @@ function Drivers() {
                           {!isInTransit &&
                             getAvailableVehicles()
                               .length === 0 && (
-                              <p className="mt-2 text-xs text-yellow-400">
+                              <p className="mt-2 driver-warning-text">
                                 No AVAILABLE
                                 vehicles.
                               </p>
@@ -1721,8 +1721,8 @@ function Drivers() {
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
-                  <p className="text-xs text-slate-400">
+                <div className="driver-form-note">
+                  <p className="driver-note-text">
                     Only ACTIVE drivers can be
                     assigned to vehicles. Only
                     AVAILABLE vehicles can be
@@ -1731,12 +1731,12 @@ function Drivers() {
                   </p>
                 </div>
 
-                <div className="mt-7 flex justify-end gap-3">
+                <div className="driver-modal-actions">
                   <button
                     type="button"
                     onClick={closeModal}
                     disabled={saving}
-                    className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                    className="driver-modal-btn driver-cancel-btn"
                   >
                     Cancel
                   </button>
@@ -1744,7 +1744,7 @@ function Drivers() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="driver-modal-btn driver-save-btn"
                   >
                     {saving
                       ? "Saving..."
@@ -1781,7 +1781,7 @@ function FormInput({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="driver-form-label">
         {label}
       </label>
 
@@ -1797,7 +1797,7 @@ function FormInput({
         disabled={disabled}
         className={`w-full rounded-lg border border-slate-700 px-4 py-3 outline-none ${
           disabled
-            ? "cursor-not-allowed bg-slate-800 text-slate-500"
+            ? "cursor-not-allowed bg-slate-800 driver-muted"
             : "bg-slate-950 text-white focus:border-blue-500"
         }`}
       />
@@ -1819,7 +1819,7 @@ function FormSelect({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="driver-form-label">
         {label}
       </label>
 
@@ -1828,11 +1828,7 @@ function FormSelect({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className={`w-full rounded-lg border border-slate-700 px-4 py-3 text-white outline-none ${
-          disabled
-            ? "cursor-not-allowed bg-slate-800 opacity-70"
-            : "bg-slate-950 focus:border-blue-500"
-        }`}
+        className={`driver-form-control ${disabled ? "driver-control-disabled" : ""}`}
       >
         {options.map((option) => (
           <option

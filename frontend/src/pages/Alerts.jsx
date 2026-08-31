@@ -284,19 +284,19 @@ function Alerts() {
   if (loading) {
 
     return (
-      <div>
+      <div className="alerts-page">
 
-        <h1 className="text-3xl font-bold text-slate-800">
+        <h1 className="alerts-page-title">
           Alerts
         </h1>
 
-        <p className="mt-2 text-slate-500">
+        <p className="alerts-page-subtitle">
           Monitor and manage fleet alerts.
         </p>
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="alerts-loading-card">
 
-          <p className="text-slate-500">
+          <p className="alerts-loading-text">
             Loading alerts...
           </p>
 
@@ -312,21 +312,21 @@ function Alerts() {
   // =========================================================
 
   return (
-    <div>
+    <div className="alerts-page">
 
       {/* =====================================================
           HEADER
           ===================================================== */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="alerts-header">
 
         <div>
 
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="alerts-page-title">
             Alerts
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="alerts-page-subtitle">
             Monitor and manage fleet alerts.
           </p>
 
@@ -335,28 +335,28 @@ function Alerts() {
 
         {/* SUMMARY */}
 
-        <div className="flex gap-3">
+        <div className="alerts-summary">
 
-          <div className="rounded-lg bg-red-50 px-4 py-2">
+          <div className="alerts-summary-card alerts-open-card">
 
-            <p className="text-xs font-medium text-red-500">
+            <p className="alerts-summary-label">
               Open
             </p>
 
-            <p className="text-lg font-bold text-red-700">
+            <p className="alerts-summary-value alerts-open-value">
               {openAlerts}
             </p>
 
           </div>
 
 
-          <div className="rounded-lg bg-green-50 px-4 py-2">
+          <div className="alerts-summary-card alerts-resolved-card">
 
-            <p className="text-xs font-medium text-green-600">
+            <p className="alerts-summary-label">
               Resolved
             </p>
 
-            <p className="text-lg font-bold text-green-700">
+            <p className="alerts-summary-value alerts-resolved-value">
               {resolvedAlerts}
             </p>
 
@@ -373,11 +373,11 @@ function Alerts() {
 
       {error && (
 
-        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="alerts-message alerts-error">
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="alerts-message-inner">
 
-            <p className="text-sm font-medium text-red-700">
+            <p className="alerts-error-text">
               {error}
             </p>
 
@@ -385,7 +385,7 @@ function Alerts() {
               onClick={() =>
                 setError("")
               }
-              className="text-xs font-semibold text-red-600 hover:text-red-800"
+              className="alerts-dismiss alerts-dismiss-red"
             >
               Dismiss
             </button>
@@ -403,11 +403,11 @@ function Alerts() {
 
       {successMessage && (
 
-        <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
+        <div className="alerts-message alerts-success">
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="alerts-message-inner">
 
-            <p className="text-sm font-medium text-green-700">
+            <p className="alerts-success-text">
               {successMessage}
             </p>
 
@@ -415,7 +415,7 @@ function Alerts() {
               onClick={() =>
                 setSuccessMessage("")
               }
-              className="text-xs font-semibold text-green-600 hover:text-green-800"
+              className="alerts-dismiss alerts-dismiss-green"
             >
               Dismiss
             </button>
@@ -433,21 +433,19 @@ function Alerts() {
 
       {alerts.length === 0 ? (
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="alerts-empty-card">
 
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+          <div className="alerts-empty-icon">
 
-            <span className="text-2xl">
-              ✓
-            </span>
+            <span className="alerts-empty-check">✓</span>
 
           </div>
 
-          <p className="mt-4 font-semibold text-slate-700">
+          <p className="alerts-empty-title">
             No alerts found
           </p>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="alerts-empty-text">
             Your fleet currently has no recorded alerts.
           </p>
 
@@ -459,45 +457,45 @@ function Alerts() {
            TABLE
            =================================================== */
 
-        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="alerts-table-card">
 
-          <div className="overflow-x-auto">
+          <div className="alerts-table-scroll">
 
-            <table className="min-w-[1250px] w-full divide-y divide-slate-200">
+            <table className="alerts-table">
 
-              <thead className="bg-slate-50">
+              <thead className="alerts-table-head">
 
                 <tr>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Alert
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Shipment
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Type
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Message
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Severity
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Created
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Status
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="alerts-th">
                     Action
                   </th>
 
@@ -506,7 +504,7 @@ function Alerts() {
               </thead>
 
 
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="alerts-table-body">
 
                 {alerts.map(
                   (alert) => {
@@ -522,14 +520,14 @@ function Alerts() {
                         key={
                           alert.alert_id
                         }
-                        className="hover:bg-slate-50"
+                        className="alerts-row"
                       >
 
                         {/* ALERT ID */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="alerts-td">
 
-                          <span className="font-semibold text-slate-800">
+                          <span className="alerts-id">
                             #
                             {
                               alert.alert_id
@@ -541,9 +539,9 @@ function Alerts() {
 
                         {/* SHIPMENT */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="alerts-td">
 
-                          <span className="font-medium text-slate-700">
+                          <span className="alerts-primary-text">
 
                             {
                               alert.shipment_id ||
@@ -557,9 +555,9 @@ function Alerts() {
 
                         {/* TYPE */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="alerts-td">
 
-                          <span className="font-medium text-slate-700">
+                          <span className="alerts-primary-text">
 
                             {
                               formatAlertType(
@@ -574,9 +572,9 @@ function Alerts() {
 
                         {/* MESSAGE */}
 
-                        <td className="min-w-[280px] max-w-[420px] px-6 py-5">
+                        <td className="alerts-td alerts-message-cell">
 
-                          <p className="text-sm leading-6 text-slate-600">
+                          <p className="alerts-message-text">
                             {
                               alert.message
                             }
@@ -587,12 +585,12 @@ function Alerts() {
 
                         {/* SEVERITY */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="alerts-td">
 
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getSeverityClass(
-                              alert.severity
-                            )}`}
+                            className={`alerts-severity alerts-severity-${String(
+                              alert.severity || "unknown"
+                            ).toLowerCase()}`}
                           >
 
                             {
@@ -606,7 +604,7 @@ function Alerts() {
 
                         {/* CREATED */}
 
-                        <td className="whitespace-nowrap px-6 py-5 text-sm text-slate-600">
+                        <td className="alerts-td alerts-date-cell">
 
                           {
                             formatDateTime(
@@ -619,12 +617,12 @@ function Alerts() {
 
                         {/* STATUS */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="alerts-td">
 
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                              alert.status
-                            )}`}
+                            className={`alerts-status alerts-status-${String(
+                              alert.status || "unknown"
+                            ).toLowerCase()}`}
                           >
 
                             {
@@ -640,7 +638,7 @@ function Alerts() {
 
                         {/* ACTION */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="alerts-td">
 
                           {resolved ? (
 
@@ -652,7 +650,7 @@ function Alerts() {
 
                               {alert.resolved_at && (
 
-                                <p className="mt-1 text-xs text-slate-400">
+                                <p className="alerts-resolved-date">
                                   {
                                     formatDateTime(
                                       alert.resolved_at
@@ -676,7 +674,7 @@ function Alerts() {
                                 resolvingId ===
                                 alert.alert_id
                               }
-                              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="alerts-resolve-btn"
                             >
 
                               {resolvingId ===

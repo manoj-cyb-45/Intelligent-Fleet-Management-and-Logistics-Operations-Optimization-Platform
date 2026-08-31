@@ -445,13 +445,13 @@ function Shipments() {
 
   if (loading) {
     return (
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">
+      <div className="shipments-loading">
+        <h1 className="shipments-page-title">
           Shipments
         </h1>
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-slate-500">
+        <div className="shipments-loading-card">
+          <p className="shipments-loading-text">
             Loading shipments...
           </p>
         </div>
@@ -464,25 +464,25 @@ function Shipments() {
   // =========================================================
 
   return (
-    <div>
+    <div className="shipments-page">
       {/* =====================================================
           HEADER
           ===================================================== */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="shipments-page-header">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="shipments-page-title">
             Shipments
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="shipments-page-subtitle">
             Track and manage fleet shipments.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-blue-50 px-4 py-2">
-            <span className="text-sm font-medium text-blue-700">
+        <div className="shipments-header-actions">
+          <div className="shipments-count-badge">
+            <span className="shipments-count-text">
               {shipments.length} shipment
               {shipments.length !== 1 ? "s" : ""}
             </span>
@@ -491,7 +491,7 @@ function Shipments() {
           {!isDriver && (
             <button
               onClick={openAddModal}
-              className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="shipments-add-btn"
             >
               + Add Shipment
             </button>
@@ -504,15 +504,15 @@ function Shipments() {
           ===================================================== */}
 
       {error && (
-        <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-5 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-medium text-red-700">
+        <div className="shipment-message shipment-error">
+          <div className="shipment-message-inner">
+            <p className="shipment-error-text">
               {error}
             </p>
 
             <button
               onClick={() => setError("")}
-              className="text-xs font-semibold text-red-600"
+              className="shipment-dismiss"
             >
               Dismiss
             </button>
@@ -525,8 +525,8 @@ function Shipments() {
           ===================================================== */}
 
       {successMessage && (
-        <div className="mt-5 rounded-lg border border-green-200 bg-green-50 px-5 py-3">
-          <p className="text-sm font-medium text-green-700">
+        <div className="shipment-message shipment-success">
+          <p className="shipment-success-text">
             {successMessage}
           </p>
         </div>
@@ -537,7 +537,7 @@ function Shipments() {
           ===================================================== */}
 
       {shipments.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="shipment-empty-state">
           <p className="text-slate-500">
             No shipments found.
           </p>
@@ -545,7 +545,7 @@ function Shipments() {
           {!isDriver && (
             <button
               onClick={openAddModal}
-              className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+              className="shipments-add-btn shipment-add-first"
             >
               + Add First Shipment
             </button>
@@ -556,80 +556,80 @@ function Shipments() {
            TABLE
            =================================================== */
 
-        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-[1450px] w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+        <div className="shipment-table-card">
+          <div className="shipment-table-scroll">
+            <table className="shipment-table">
+              <thead className="shipment-table-head">
                 <tr>
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Shipment
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Route
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Status
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Progress
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Location
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Vehicle
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Driver
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Due Date
                   </th>
 
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="shipment-th">
                     Actions
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="shipment-table-body">
                 {shipments.map((shipment) => (
                   <tr
                     key={shipment.shipment_id}
-                    className="hover:bg-slate-50"
+                    className="shipment-row"
                   >
                     {/* SHIPMENT */}
 
-                    <td className="px-5 py-5">
-                      <p className="font-semibold text-slate-800">
+                    <td className="shipment-td">
+                      <p className="shipment-id">
                         {shipment.shipment_id}
                       </p>
 
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="shipment-tracking">
                         {shipment.tracking_number}
                       </p>
                     </td>
 
                     {/* ROUTE */}
 
-                    <td className="px-5 py-5">
-                      <div className="text-sm">
-                        <p className="font-medium text-slate-700">
+                    <td className="shipment-td">
+                      <div className="shipment-route">
+                        <p className="shipment-route-point">
                           {shipment.origin}
                         </p>
 
-                        <p className="my-1 text-xs text-slate-400">
+                        <p className="shipment-route-arrow">
                           ↓
                         </p>
 
-                        <p className="font-medium text-slate-700">
+                        <p className="shipment-route-point">
                           {shipment.destination}
                         </p>
                       </div>
@@ -637,11 +637,9 @@ function Shipments() {
 
                     {/* STATUS */}
 
-                    <td className="px-5 py-5">
+                    <td className="shipment-td">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                          shipment.status
-                        )}`}
+                        className={`shipment-status ${shipment.status.toLowerCase()}`}
                       >
                         {shipment.status.replace(
                           "_",
@@ -652,11 +650,11 @@ function Shipments() {
 
                     {/* PROGRESS */}
 
-                    <td className="min-w-[180px] px-5 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 flex-1 rounded-full bg-slate-200">
+                    <td className="shipment-td shipment-progress-cell">
+                      <div className="shipment-progress-wrap">
+                        <div className="shipment-progress">
                           <div
-                            className="h-2 rounded-full bg-blue-600"
+                            className="shipment-progress-fill"
                             style={{
                               width: `${Math.min(
                                 100,
@@ -669,7 +667,7 @@ function Shipments() {
                           />
                         </div>
 
-                        <span className="text-xs font-semibold text-slate-600">
+                        <span className="shipment-progress-text">
                           {shipment.delivery_progress}%
                         </span>
                       </div>
@@ -677,44 +675,44 @@ function Shipments() {
 
                     {/* LOCATION */}
 
-                    <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-600">
+                    <td className="shipment-td shipment-muted-cell">
                       {shipment.current_location ||
                         "Not available"}
                     </td>
 
                     {/* VEHICLE */}
 
-                    <td className="whitespace-nowrap px-5 py-5">
-                      <span className="font-medium text-slate-700">
+                    <td className="shipment-td">
+                      <span className="shipment-entity">
                         {shipment.vehicle_id}
                       </span>
                     </td>
 
                     {/* DRIVER */}
 
-                    <td className="whitespace-nowrap px-5 py-5">
-                      <span className="font-medium text-slate-700">
+                    <td className="shipment-td">
+                      <span className="shipment-entity">
                         {shipment.driver_id}
                       </span>
                     </td>
 
                     {/* DUE DATE */}
 
-                    <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-600">
+                    <td className="shipment-td shipment-muted-cell">
                       {formatDate(shipment.due_date)}
                     </td>
 
                     {/* ACTIONS */}
 
-                    <td className="px-5 py-5">
-                      <div className="flex gap-2">
+                    <td className="shipment-td">
+                      <div className="shipment-actions">
                         {shipment.status !== "DELIVERED" &&
                           shipment.status !== "CANCELLED" && (
                           <button
                             onClick={() =>
                               openEditModal(shipment)
                             }
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                            className="shipment-btn shipment-btn-edit"
                           >
                             Edit
                           </button>
@@ -724,7 +722,7 @@ function Shipments() {
                           onClick={() =>
                             openHistory(shipment)
                           }
-                          className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                          className="shipment-btn shipment-btn-history"
                         >
                           History
                         </button>
@@ -743,8 +741,8 @@ function Shipments() {
           ===================================================== */}
 
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+        <div className="shipment-modal-overlay">
+          <div className="shipment-modal">
             <ModalHeader
               title="Add Shipment"
               description="Create a new fleet shipment."
@@ -857,8 +855,8 @@ function Shipments() {
           ===================================================== */}
 
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+        <div className="shipment-modal-overlay">
+          <div className="shipment-modal">
             <ModalHeader
               title="Edit Shipment"
               description="Update shipment status and delivery information."
@@ -992,8 +990,8 @@ function Shipments() {
           ===================================================== */}
 
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+        <div className="shipment-modal-overlay">
+          <div className="shipment-modal shipment-history-modal">
             <ModalHeader
               title="Shipment History"
               description={
@@ -1005,25 +1003,25 @@ function Shipments() {
             />
 
             {historyLoading ? (
-              <div className="mt-8 rounded-lg border border-slate-700 bg-slate-950 p-8 text-center">
+              <div className="shipment-history-empty">
                 <p className="text-slate-400">
                   Loading history...
                 </p>
               </div>
             ) : shipmentHistory.length === 0 ? (
-              <div className="mt-8 rounded-lg border border-slate-700 bg-slate-950 p-8 text-center">
+              <div className="shipment-history-empty">
                 <p className="text-slate-400">
                   No history found.
                 </p>
               </div>
             ) : (
-              <div className="mt-6 space-y-4">
+              <div className="shipment-history-list">
                 {shipmentHistory.map((item) => (
                   <div
                     key={item.history_id}
-                    className="rounded-xl border border-slate-700 bg-slate-950 p-5"
+                    className="shipment-history-card"
                   >
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="shipment-history-row">
                       <div>
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
@@ -1036,19 +1034,19 @@ function Shipments() {
                           )}
                         </span>
 
-                        <p className="mt-3 font-medium text-white">
+                        <p className="shipment-history-title">
                           {item.description ||
                             "Shipment event"}
                         </p>
 
-                        <p className="mt-1 text-sm text-slate-400">
+                        <p className="shipment-history-location">
                           Location:{" "}
                           {item.location ||
                             "Not specified"}
                         </p>
                       </div>
 
-                      <p className="text-xs text-slate-500">
+                      <p className="shipment-history-time">
                         {formatDateTime(item.event_time)}
                       </p>
                     </div>
@@ -1057,10 +1055,10 @@ function Shipments() {
               </div>
             )}
 
-            <div className="mt-7 flex justify-end">
+            <div className="shipment-history-close-wrap">
               <button
                 onClick={closeHistory}
-                className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+                className="shipment-btn shipment-btn-close"
               >
                 Close
               </button>
@@ -1082,20 +1080,20 @@ function ModalHeader({
   onClose,
 }) {
   return (
-    <div className="flex items-start justify-between">
+    <div className="shipment-modal-header">
       <div>
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="shipment-modal-title">
           {title}
         </h2>
 
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="shipment-modal-description">
           {description}
         </p>
       </div>
 
       <button
         onClick={onClose}
-        className="text-3xl leading-none text-slate-400 hover:text-white"
+        className="shipment-modal-close"
       >
         ×
       </button>
@@ -1113,12 +1111,12 @@ function ModalButtons({
   submitText,
 }) {
   return (
-    <div className="mt-7 flex justify-end gap-3">
+    <div className="shipment-modal-actions">
       <button
         type="button"
         onClick={onCancel}
         disabled={saving}
-        className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+        className="shipment-modal-btn shipment-cancel-btn"
       >
         Cancel
       </button>
@@ -1126,7 +1124,7 @@ function ModalButtons({
       <button
         type="submit"
         disabled={saving}
-        className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="shipment-modal-btn shipment-save-btn"
       >
         {saving ? "Saving..." : submitText}
       </button>
@@ -1152,7 +1150,7 @@ function FormInput({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="shipment-form-label">
         {label}
       </label>
 
@@ -1166,11 +1164,7 @@ function FormInput({
         min={min}
         max={max}
         disabled={disabled}
-        className={`w-full rounded-lg border border-slate-700 px-4 py-3 outline-none ${
-          disabled
-            ? "cursor-not-allowed bg-slate-800 text-slate-500"
-            : "bg-slate-950 text-white focus:border-blue-500"
-        }`}
+        className={`shipment-form-control ${disabled ? "shipment-form-disabled" : ""}`}
       />
     </div>
   );
@@ -1191,7 +1185,7 @@ function FormSelect({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="shipment-form-label">
         {label}
       </label>
 
@@ -1200,11 +1194,7 @@ function FormSelect({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className={`w-full rounded-lg border border-slate-700 px-4 py-3 text-white outline-none ${
-          disabled
-            ? "cursor-not-allowed bg-slate-800 opacity-70"
-            : "bg-slate-950 focus:border-blue-500"
-        }`}
+        className={`shipment-form-control ${disabled ? "shipment-form-disabled" : ""}`}
       >
         {emptyLabel && (
           <option value="">
@@ -1248,11 +1238,11 @@ function InfoItem({
 }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-slate-500">
+      <p className="shipment-info-label">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-semibold text-slate-200">
+      <p className="shipment-info-value">
         {value || "—"}
       </p>
     </div>

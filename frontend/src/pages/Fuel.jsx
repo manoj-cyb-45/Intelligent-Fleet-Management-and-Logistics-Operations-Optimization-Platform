@@ -645,19 +645,19 @@ function Fuel() {
 
   if (loading) {
     return (
-      <div>
+      <div className="fuel-page">
 
-        <h1 className="text-3xl font-bold text-slate-800">
+        <h1 className="fuel-page-title">
           Fuel
         </h1>
 
-        <p className="mt-2 text-slate-500">
+        <p className="fuel-page-subtitle">
           Track vehicle fuel consumption and costs.
         </p>
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="fuel-loading-card">
 
-          <p className="text-slate-500">
+          <p className="fuel-loading-text">
             Loading fuel records...
           </p>
 
@@ -672,31 +672,31 @@ function Fuel() {
   // =========================================================
 
   return (
-    <div>
+    <div className="fuel-page">
 
       {/* =====================================================
           HEADER
           ===================================================== */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="fuel-header">
 
         <div>
 
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="fuel-page-title">
             Fuel
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="fuel-page-subtitle">
             Track vehicle fuel consumption and costs.
           </p>
 
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="fuel-header-actions">
 
-          <div className="rounded-lg bg-blue-50 px-4 py-2">
+          <div className="fuel-count-badge">
 
-            <span className="text-sm font-medium text-blue-700">
+            <span className="fuel-count-text">
 
               {records.length} record
               {records.length !== 1
@@ -711,7 +711,7 @@ function Fuel() {
             onClick={
               openAddModal
             }
-            className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            className="fuel-primary-btn"
           >
             + Add Fuel Record
           </button>
@@ -726,11 +726,11 @@ function Fuel() {
 
       {error && (
 
-        <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-5 py-3">
+        <div className="fuel-message fuel-error">
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="fuel-message-inner">
 
-            <p className="text-sm font-medium text-red-700">
+            <p className="fuel-error-text">
               {error}
             </p>
 
@@ -738,7 +738,7 @@ function Fuel() {
               onClick={() =>
                 setError("")
               }
-              className="text-xs font-semibold text-red-600 hover:text-red-800"
+              className="fuel-dismiss fuel-dismiss-red"
             >
               Dismiss
             </button>
@@ -755,11 +755,11 @@ function Fuel() {
 
       {successMessage && (
 
-        <div className="mt-5 rounded-lg border border-green-200 bg-green-50 px-5 py-3">
+        <div className="fuel-message fuel-success">
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="fuel-message-inner">
 
-            <p className="text-sm font-medium text-green-700">
+            <p className="fuel-success-text">
               {successMessage}
             </p>
 
@@ -767,7 +767,7 @@ function Fuel() {
               onClick={() =>
                 setSuccessMessage("")
               }
-              className="text-xs font-semibold text-green-600 hover:text-green-800"
+              className="fuel-dismiss fuel-dismiss-green"
             >
               Dismiss
             </button>
@@ -784,9 +784,9 @@ function Fuel() {
 
       {records.length === 0 ? (
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="fuel-empty-card">
 
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
+          <div className="fuel-empty-icon">
 
             <span className="text-2xl">
               ⛽
@@ -794,11 +794,11 @@ function Fuel() {
 
           </div>
 
-          <p className="mt-4 font-semibold text-slate-700">
+          <p className="fuel-empty-title">
             No fuel records found.
           </p>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="fuel-empty-text">
             Add your first fuel record to start tracking fuel usage.
           </p>
 
@@ -806,7 +806,7 @@ function Fuel() {
             onClick={
               openAddModal
             }
-            className="mt-5 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            className="fuel-primary-btn fuel-empty-btn"
           >
             + Add First Fuel Record
           </button>
@@ -819,13 +819,13 @@ function Fuel() {
            TABLE
            =================================================== */
 
-        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="fuel-table-card">
 
-          <div className="overflow-x-auto">
+          <div className="fuel-table-scroll">
 
-            <table className="min-w-[1450px] w-full divide-y divide-slate-200">
+            <table className="fuel-table">
 
-              <thead className="bg-slate-50">
+              <thead className="fuel-table-head">
 
                 <tr>
 
@@ -873,7 +873,7 @@ function Fuel() {
 
               </thead>
 
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="fuel-table-body">
 
                 {records.map(
                   (record) => {
@@ -904,14 +904,14 @@ function Fuel() {
                         key={
                           record.fuel_id
                         }
-                        className="hover:bg-slate-50"
+                        className="fuel-row"
                       >
 
                         {/* RECORD */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="fuel-td">
 
-                          <span className="font-semibold text-slate-800">
+                          <span className="fuel-record-id">
                             #{record.fuel_id}
                           </span>
 
@@ -919,9 +919,9 @@ function Fuel() {
 
                         {/* VEHICLE */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="fuel-td">
 
-                          <span className="font-medium text-slate-700">
+                          <span className="fuel-vehicle-id">
                             {
                               record.vehicle_id
                             }
@@ -931,7 +931,7 @@ function Fuel() {
 
                         {/* DATE */}
 
-                        <td className="whitespace-nowrap px-6 py-5 text-sm text-slate-600">
+                        <td className="fuel-td fuel-date-cell">
 
                           {
                             formatDate(
@@ -943,9 +943,9 @@ function Fuel() {
 
                         {/* FUEL TYPE */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="fuel-td">
 
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                          <span className="fuel-type-badge">
 
                             {
                               record.fuel_type
@@ -957,7 +957,7 @@ function Fuel() {
 
                         {/* QUANTITY */}
 
-                        <td className="whitespace-nowrap px-6 py-5 text-slate-600">
+                        <td className="fuel-td fuel-value-cell">
 
                           {
                             Number(
@@ -973,7 +973,7 @@ function Fuel() {
 
                         {/* COST / UNIT */}
 
-                        <td className="whitespace-nowrap px-6 py-5 text-slate-600">
+                        <td className="fuel-td fuel-value-cell">
 
                           {
                             formatCurrency(
@@ -985,7 +985,7 @@ function Fuel() {
 
                         {/* TOTAL COST */}
 
-                        <td className="whitespace-nowrap px-6 py-5 font-semibold text-slate-700">
+                        <td className="fuel-td fuel-total-cell">
 
                           {
                             formatCurrency(
@@ -997,7 +997,7 @@ function Fuel() {
 
                         {/* ODOMETER */}
 
-                        <td className="whitespace-nowrap px-6 py-5 text-slate-600">
+                        <td className="fuel-td fuel-value-cell">
 
                           {
                             Number(
@@ -1013,10 +1013,10 @@ function Fuel() {
 
                         {/* FUEL LEVEL */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="fuel-td">
 
                           <span
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${fuelClass}`}
+                            className={`fuel-level-badge ${fuelLevel <= 20 ? "fuel-level-low" : fuelLevel <= 40 ? "fuel-level-medium" : "fuel-level-good"}`}
                           >
 
                             {Number.isNaN(
@@ -1031,7 +1031,7 @@ function Fuel() {
 
                         {/* ACTIONS */}
 
-                        <td className="whitespace-nowrap px-6 py-5">
+                        <td className="fuel-td">
                           <span className="text-xs font-medium text-slate-400">
                             Locked
                           </span>
@@ -1131,9 +1131,9 @@ function FuelModal({
 }) {
   return (
 
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="fuel-modal-overlay">
 
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+      <div className="fuel-modal">
 
         {/* =================================================
             HEADER
@@ -1143,11 +1143,11 @@ function FuelModal({
 
           <div>
 
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="fuel-modal-title">
               {title}
             </h2>
 
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="fuel-modal-subtitle">
               {description}
             </p>
 
@@ -1158,7 +1158,7 @@ function FuelModal({
             onClick={
               onCancel
             }
-            className="text-3xl leading-none text-slate-400 hover:text-white"
+            className="fuel-modal-close"
           >
             ×
           </button>
@@ -1173,7 +1173,7 @@ function FuelModal({
           onSubmit={
             onSubmit
           }
-          className="mt-7"
+          className="fuel-form"
         >
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -1184,7 +1184,7 @@ function FuelModal({
 
             <div>
 
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="fuel-form-label">
                 Vehicle *
               </label>
 
@@ -1197,7 +1197,7 @@ function FuelModal({
                   onChange
                 }
                 required
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+                className="fuel-form-control"
               >
 
                 <option value="">
@@ -1236,7 +1236,7 @@ function FuelModal({
               {vehicles.length ===
                 0 && (
 
-                <p className="mt-2 text-xs text-yellow-400">
+                <p className="fuel-warning-text">
                   No vehicles found. Create a vehicle first.
                 </p>
 
@@ -1267,7 +1267,7 @@ function FuelModal({
 
             <div>
 
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="fuel-form-label">
                 Fuel Type *
               </label>
 
@@ -1280,7 +1280,7 @@ function FuelModal({
                   onChange
                 }
                 required
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+                className="fuel-form-control"
               >
 
                 <option value="DIESEL">
@@ -1418,7 +1418,7 @@ function FuelModal({
             Number(form.fuel_level) <=
               20 && (
 
-            <div className="mt-5 rounded-lg border border-red-800 bg-red-950/50 px-4 py-4">
+            <div className="fuel-info-card fuel-info-low">
 
               <div className="flex items-center gap-3">
 
@@ -1452,7 +1452,7 @@ function FuelModal({
             Number(form.fuel_level) >
               20 && (
 
-            <div className="mt-5 rounded-lg border border-green-800 bg-green-950/40 px-4 py-4">
+            <div className="fuel-info-card fuel-info-normal">
 
               <div className="flex items-center gap-3">
 
@@ -1485,7 +1485,7 @@ function FuelModal({
           {form.quantity &&
             form.cost_per_unit && (
 
-            <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
+            <div className="fuel-cost-preview">
 
               <div className="flex items-center justify-between">
 
@@ -1522,7 +1522,7 @@ function FuelModal({
               BUTTONS
               ================================================= */}
 
-          <div className="mt-7 flex justify-end gap-3">
+          <div className="fuel-modal-actions">
 
             <button
               type="button"
@@ -1532,7 +1532,7 @@ function FuelModal({
               disabled={
                 saving
               }
-              className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+              className="fuel-cancel-btn"
             >
               Cancel
             </button>
@@ -1543,7 +1543,7 @@ function FuelModal({
                 saving ||
                 vehicles.length === 0
               }
-              className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="fuel-save-btn"
             >
 
               {saving
@@ -1587,7 +1587,7 @@ function FormInput({
 
     <div>
 
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="fuel-form-label">
         {label}
       </label>
 
@@ -1601,7 +1601,7 @@ function FormInput({
         min={min}
         max={max}
         step={step}
-        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+        className="fuel-form-control"
       />
 
     </div>

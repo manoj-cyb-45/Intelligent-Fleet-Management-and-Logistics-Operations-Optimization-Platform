@@ -535,17 +535,17 @@ const openEditModal = (record) => {
 
   if (loading) {
     return (
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">
+      <div className="maintenance-page">
+        <h1 className="maintenance-page-title">
           Maintenance
         </h1>
 
-        <p className="mt-2 text-slate-500">
+        <p className="maintenance-page-subtitle">
           Manage vehicle maintenance records.
         </p>
 
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-slate-500">
+        <div className="maintenance-loading-card">
+          <p className="maintenance-loading-text">
             Loading maintenance records...
           </p>
         </div>
@@ -558,23 +558,23 @@ const openEditModal = (record) => {
   // =========================================================
 
   return (
-    <div>
+    <div className="maintenance-page">
       {/* HEADER */}
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="maintenance-page-title">
             Maintenance
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="maintenance-page-subtitle">
             Manage vehicle maintenance records.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-blue-50 px-4 py-2">
-            <span className="text-sm font-medium text-blue-700">
+        <div className="maintenance-header-actions">
+          <div className="maintenance-count-badge">
+            <span className="maintenance-count-text">
               {records.length} record
               {records.length !== 1
                 ? "s"
@@ -585,7 +585,7 @@ const openEditModal = (record) => {
           <button
             type="button"
             onClick={openAddModal}
-            className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            className="maintenance-primary-btn"
           >
             + Add Maintenance
           </button>
@@ -595,9 +595,9 @@ const openEditModal = (record) => {
       {/* ERROR */}
 
       {error && (
-        <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-5 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-medium text-red-700">
+        <div className="maintenance-message maintenance-error">
+          <div className="maintenance-message-inner">
+            <p className="maintenance-error-text">
               {error}
             </p>
 
@@ -606,7 +606,7 @@ const openEditModal = (record) => {
               onClick={() =>
                 setError("")
               }
-              className="text-xs font-semibold text-red-600"
+              className="maintenance-dismiss"
             >
               Dismiss
             </button>
@@ -617,8 +617,8 @@ const openEditModal = (record) => {
       {/* SUCCESS */}
 
       {successMessage && (
-        <div className="mt-5 rounded-lg border border-green-200 bg-green-50 px-5 py-3">
-          <p className="text-sm font-medium text-green-700">
+        <div className="maintenance-message maintenance-success">
+          <p className="maintenance-success-text">
             {successMessage}
           </p>
         </div>
@@ -627,15 +627,15 @@ const openEditModal = (record) => {
       {/* EMPTY */}
 
       {records.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <p className="text-slate-500">
+        <div className="maintenance-empty-card">
+          <p className="maintenance-empty-text">
             No maintenance records found.
           </p>
 
           <button
             type="button"
             onClick={openAddModal}
-            className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            className="maintenance-primary-btn maintenance-empty-btn"
           >
             + Add First Maintenance
           </button>
@@ -643,60 +643,60 @@ const openEditModal = (record) => {
       ) : (
         /* TABLE */
 
-        <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-[1250px] w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
+        <div className="maintenance-table-card">
+          <div className="maintenance-table-scroll">
+            <table className="maintenance-table">
+              <thead className="maintenance-table-head">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Record
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Vehicle
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Maintenance Type
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Description
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Maintenance Date
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Due Date
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Cost
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Status
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <th className="maintenance-th">
                     Actions
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="maintenance-table-body">
                 {records.map(
                   (record) => (
                     <tr
                       key={
                         record.maintenance_id
                       }
-                      className="hover:bg-slate-50"
+                      className="maintenance-row"
                     >
-                      <td className="whitespace-nowrap px-6 py-5">
-                        <span className="font-semibold text-slate-800">
+                      <td className="maintenance-td">
+                        <span className="maintenance-record-id">
                           #
                           {
                             record.maintenance_id
@@ -704,46 +704,46 @@ const openEditModal = (record) => {
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5">
-                        <span className="font-medium text-slate-700">
+                      <td className="maintenance-td">
+                        <span className="maintenance-primary-text">
                           {
                             record.vehicle_id
                           }
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5">
-                        <span className="font-medium text-slate-700">
+                      <td className="maintenance-td">
+                        <span className="maintenance-primary-text">
                           {formatMaintenanceType(
                             record.maintenance_type
                           )}
                         </span>
                       </td>
 
-                      <td className="max-w-xs px-6 py-5 text-sm text-slate-600">
+                      <td className="maintenance-td">
                         {record.description ||
                           "No description"}
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5 text-sm text-slate-600">
+                      <td className="maintenance-td">
                         {formatDate(
                           record.maintenance_date
                         )}
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5 text-sm text-slate-600">
+                      <td className="maintenance-td">
                         {formatDate(
                           record.due_date
                         )}
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5 font-semibold text-slate-700">
+                      <td className="maintenance-td">
                         {formatCurrency(
                           record.cost
                         )}
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5">
+                      <td className="maintenance-td">
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
                             record.status
@@ -755,20 +755,20 @@ const openEditModal = (record) => {
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-6 py-5">
+                      <td className="maintenance-td">
                           {record.status !== "COMPLETED" ? (
                             <button
                               type="button"
                               onClick={() =>
                                 openEditModal(record)
                               }
-                              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                              className="maintenance-edit-btn"
                             >
                               Edit
                             </button>
                           ) : (
-                            <span className="text-xs font-medium text-slate-400">
-                              Locked
+                            <span className="maintenance-locked-badge">
+                              🔒 Locked
                             </span>
                           )}
                         </td>
@@ -837,18 +837,18 @@ function MaintenanceModal({
     form.status === "SCHEDULED";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-slate-900 p-7 shadow-2xl">
+    <div className="maintenance-modal-overlay">
+      <div className="maintenance-modal">
 
         {/* HEADER */}
 
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="maintenance-modal-title">
               {title}
             </h2>
 
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="maintenance-modal-subtitle">
               {description}
             </p>
           </div>
@@ -857,7 +857,7 @@ function MaintenanceModal({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="text-3xl leading-none text-slate-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="maintenance-modal-close"
           >
             ×
           </button>
@@ -867,14 +867,14 @@ function MaintenanceModal({
 
         <form
           onSubmit={onSubmit}
-          className="mt-7"
+          className="maintenance-form"
         >
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
             {/* VEHICLE */}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="maintenance-form-label">
                 Vehicle *
               </label>
 
@@ -885,7 +885,7 @@ function MaintenanceModal({
                 }
                 onChange={onChange}
                 required
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+                className="maintenance-form-control"
               >
                 <option value="">
                   Select vehicle
@@ -914,7 +914,7 @@ function MaintenanceModal({
               </select>
 
               {vehicles.length === 0 && (
-                <p className="mt-2 text-xs text-yellow-400">
+                <p className="maintenance-warning-text">
                   No vehicles found. Create a vehicle first.
                 </p>
               )}
@@ -923,7 +923,7 @@ function MaintenanceModal({
             {/* MAINTENANCE TYPE */}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="maintenance-form-label">
                 Maintenance Type *
               </label>
 
@@ -934,7 +934,7 @@ function MaintenanceModal({
                 }
                 onChange={onChange}
                 required
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+                className="maintenance-form-control"
               >
                 <option value="PREVENTIVE">
                   Preventive
@@ -1012,7 +1012,7 @@ function MaintenanceModal({
             {/* STATUS */}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="maintenance-form-label">
                 Status *
               </label>
 
@@ -1023,7 +1023,7 @@ function MaintenanceModal({
                 }
                 onChange={onChange}
                 required
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+                className="maintenance-form-control"
               >
                 <option value="SCHEDULED">
                   Scheduled
@@ -1046,7 +1046,7 @@ function MaintenanceModal({
             {/* DESCRIPTION */}
 
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="maintenance-form-label">
                 Description
               </label>
 
@@ -1065,12 +1065,12 @@ function MaintenanceModal({
 
           {/* BUTTONS */}
 
-          <div className="mt-7 flex justify-end gap-3">
+          <div className="maintenance-modal-actions">
             <button
               type="button"
               onClick={onCancel}
               disabled={saving}
-              className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+              className="maintenance-cancel-btn"
             >
               Cancel
             </button>
@@ -1081,7 +1081,7 @@ function MaintenanceModal({
                 saving ||
                 vehicles.length === 0
               }
-              className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="maintenance-save-btn"
             >
               {saving
                 ? "Saving..."
@@ -1130,7 +1130,7 @@ function DateInput({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="maintenance-form-label">
         {label}
       </label>
 
@@ -1144,7 +1144,7 @@ function DateInput({
         onKeyDown={preventTyping}
         onPaste={preventTyping}
         onClick={openCalendar}
-        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+        className="maintenance-form-control"
       />
     </div>
   );
@@ -1168,7 +1168,7 @@ function FormInput({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-200">
+      <label className="maintenance-form-label">
         {label}
       </label>
 
