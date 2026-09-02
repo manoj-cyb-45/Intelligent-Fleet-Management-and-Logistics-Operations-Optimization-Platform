@@ -94,4 +94,13 @@ class Shipment(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
-    
+
+    latitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    longitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )

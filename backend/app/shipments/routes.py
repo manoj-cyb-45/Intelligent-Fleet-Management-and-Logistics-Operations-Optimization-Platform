@@ -1,10 +1,12 @@
+
 from datetime import datetime
 import re
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
+from app.auth.jwt import decode_access_token
 from app.database.database import get_db
 
 from app.models import (
@@ -15,6 +17,9 @@ from app.models import (
     Alert,
     DriverVehicleAssignment,
 )
+
+from app.shipments.websocket import shipment_connection_manager
+
 
 from app.shipments.schemas import (
     ShipmentCreate,
@@ -54,6 +59,8 @@ def build_shipment_response(
         driver_id=shipment.driver_id,
         created_at=shipment.created_at,
         updated_at=shipment.updated_at,
+        latitude=shipment.latitude,
+        longitude=shipment.longitude,
     )
 
 
@@ -64,10 +71,8 @@ def get_active_assignment_for_vehicle(
     return (
         db.query(DriverVehicleAssignment)
         .filter(
-            DriverVehicleAssignment.vehicle_id
-            == vehicle_id,
-            DriverVehicleAssignment.status
-            == "ACTIVE",
+            DriverVehicleAssignment.vehicle_id == vehicle_id,
+            DriverVehicleAssignment.status == "ACTIVE",
         )
         .first()
     )
@@ -80,10 +85,8 @@ def get_active_assignment_for_driver(
     return (
         db.query(DriverVehicleAssignment)
         .filter(
-            DriverVehicleAssignment.driver_id
-            == driver_id,
-            DriverVehicleAssignment.status
-            == "ACTIVE",
+            DriverVehicleAssignment.driver_id == driver_id,
+            DriverVehicleAssignment.status == "ACTIVE",
         )
         .first()
     )
@@ -177,7 +180,6 @@ def create_shipment(
         )
     ),
 ):
-
     # =====================================================
     # DUE DATE VALIDATION
     # =====================================================
@@ -201,8 +203,7 @@ def create_shipment(
     vehicle = (
         db.query(Vehicle)
         .filter(
-            Vehicle.vehicle_id
-            == shipment_data.vehicle_id
+            Vehicle.vehicle_id == shipment_data.vehicle_id
         )
         .first()
     )
@@ -220,8 +221,7 @@ def create_shipment(
     driver = (
         db.query(User)
         .filter(
-            User.user_id
-            == shipment_data.driver_id,
+            User.user_id == shipment_data.driver_id,
             User.role == "DRIVER",
         )
         .first()
@@ -255,6 +255,9 @@ def create_shipment(
 
         vehicle_id=shipment_data.vehicle_id,
         driver_id=shipment_data.driver_id,
+
+        latitude=shipment_data.latitude,
+        longitude=shipment_data.longitude,
 
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
@@ -294,6 +297,7 @@ def create_shipment(
 
     return build_shipment_response(shipment)
 
+
 # =========================================================
 # LIST SHIPMENTS
 # =========================================================
@@ -327,9 +331,7 @@ def list_shipments(
     )
 
     return [
-        build_shipment_response(
-            shipment
-        )
+        build_shipment_response(shipment)
         for shipment in shipments
     ]
 
@@ -368,9 +370,7 @@ def get_shipment(
             detail="Shipment not found",
         )
 
-    return build_shipment_response(
-        shipment
-    )
+    return build_shipment_response(shipment)
 
 
 # =========================================================
@@ -397,8 +397,7 @@ def update_shipment(
     shipment = (
         db.query(Shipment)
         .filter(
-            Shipment.shipment_id
-            == shipment_id
+            Shipment.shipment_id == shipment_id
         )
         .first()
     )
@@ -445,8 +444,7 @@ def update_shipment(
         vehicle = (
             db.query(Vehicle)
             .filter(
-                Vehicle.vehicle_id
-                == shipment.vehicle_id
+                Vehicle.vehicle_id == shipment.vehicle_id
             )
             .first()
         )
@@ -454,8 +452,7 @@ def update_shipment(
         driver = (
             db.query(User)
             .filter(
-                User.user_id
-                == shipment.driver_id,
+                User.user_id == shipment.driver_id,
                 User.role == "DRIVER",
             )
             .first()
@@ -499,12 +496,9 @@ def update_shipment(
                 other_transit = (
                     db.query(Shipment)
                     .filter(
-                        Shipment.vehicle_id
-                        == vehicle.vehicle_id,
-                        Shipment.status
-                        == "IN_TRANSIT",
-                        Shipment.shipment_id
-                        != shipment.shipment_id,
+                        Shipment.vehicle_id == vehicle.vehicle_id,
+                        Shipment.status == "IN_TRANSIT",
+                        Shipment.shipment_id != shipment.shipment_id,
                     )
                     .first()
                 )
@@ -535,12 +529,9 @@ def update_shipment(
                 other_driver_transit = (
                     db.query(Shipment)
                     .filter(
-                        Shipment.driver_id
-                        == driver.user_id,
-                        Shipment.status
-                        == "IN_TRANSIT",
-                        Shipment.shipment_id
-                        != shipment.shipment_id,
+                        Shipment.driver_id == driver.user_id,
+                        Shipment.status == "IN_TRANSIT",
+                        Shipment.shipment_id != shipment.shipment_id,
                     )
                     .first()
                 )
@@ -576,11 +567,9 @@ def update_shipment(
                 db.add(vehicle)
 
             # Release active driver-vehicle assignment
-            assignment = (
-                get_active_assignment_for_vehicle(
-                    db,
-                    shipment.vehicle_id,
-                )
+            assignment = get_active_assignment_for_vehicle(
+                db,
+                shipment.vehicle_id,
             )
 
             if assignment:
@@ -609,11 +598,9 @@ def update_shipment(
                 vehicle.current_status = "AVAILABLE"
                 db.add(vehicle)
 
-            assignment = (
-                get_active_assignment_for_vehicle(
-                    db,
-                    shipment.vehicle_id,
-                )
+            assignment = get_active_assignment_for_vehicle(
+                db,
+                shipment.vehicle_id,
             )
 
             if assignment:
@@ -672,6 +659,16 @@ def update_shipment(
         shipment.current_location = (
             shipment_data.current_location
         )
+
+    # =====================================================
+    # GPS COORDINATES
+    # =====================================================
+
+    if shipment_data.latitude is not None:
+        shipment.latitude = shipment_data.latitude
+
+    if shipment_data.longitude is not None:
+        shipment.longitude = shipment_data.longitude
 
     # =====================================================
     # PROGRESS
@@ -766,8 +763,7 @@ def get_shipment_history(
     shipment = (
         db.query(Shipment)
         .filter(
-            Shipment.shipment_id
-            == shipment_id
+            Shipment.shipment_id == shipment_id
         )
         .first()
     )
@@ -781,8 +777,7 @@ def get_shipment_history(
     history = (
         db.query(ShipmentHistory)
         .filter(
-            ShipmentHistory.shipment_id
-            == shipment_id
+            ShipmentHistory.shipment_id == shipment_id
         )
         .order_by(
             ShipmentHistory.event_time.asc()
@@ -801,3 +796,245 @@ def get_shipment_history(
         )
         for item in history
     ]
+
+
+# =========================================================
+# REAL-TIME SHIPMENT TRACKING WEBSOCKET
+# =========================================================
+
+@router.websocket(
+    "/ws/{shipment_id}"
+)
+async def shipment_tracking_websocket(
+    websocket: WebSocket,
+    shipment_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Authenticated real-time shipment tracking channel.
+
+    Clients connect to:
+        ws://127.0.0.1:8000/shipments/ws/{shipment_id}?token=JWT
+
+    Incoming GPS message:
+        {
+            "type": "location_update",
+            "latitude": 12.971600,
+            "longitude": 77.594600,
+            "current_location": "Bengaluru"
+        }
+
+    Every valid location update is saved to PostgreSQL
+    and broadcast to all clients watching the shipment.
+
+    DRIVER users may update only their own assigned shipment.
+    ADMIN, MANAGER, and DISPATCHER users may update any
+    shipment they are authorized to manage.
+    """
+
+    token = websocket.query_params.get("token")
+
+    if not token:
+        await websocket.close(code=1008)
+        return
+
+    try:
+        payload = decode_access_token(token)
+
+        current_user_id = payload.get("sub")
+        current_user_role = payload.get("role")
+
+        if not current_user_id or not current_user_role:
+            await websocket.close(code=1008)
+            return
+
+        current_user_role = str(
+            current_user_role
+        ).upper()
+
+    except Exception:
+        await websocket.close(code=1008)
+        return
+
+    allowed_roles = {
+        "ADMIN",
+        "MANAGER",
+        "DISPATCHER",
+        "DRIVER",
+    }
+
+    if current_user_role not in allowed_roles:
+        await websocket.close(code=1008)
+        return
+
+    shipment = (
+        db.query(Shipment)
+        .filter(
+            Shipment.shipment_id == shipment_id
+        )
+        .first()
+    )
+
+    if not shipment:
+        await websocket.close(
+            code=1008
+        )
+        return
+
+    if (
+        current_user_role == "DRIVER"
+        and shipment.driver_id != current_user_id
+    ):
+        await websocket.close(code=1008)
+        return
+
+    await shipment_connection_manager.connect(
+        shipment_id,
+        websocket,
+    )
+
+    try:
+        await websocket.send_json(
+            {
+                "type": "tracking_connected",
+                "shipment_id": shipment.shipment_id,
+                "tracking_number": shipment.tracking_number,
+                "latitude": shipment.latitude,
+                "longitude": shipment.longitude,
+                "current_location": shipment.current_location,
+                "status": shipment.status,
+            }
+        )
+
+        while True:
+            message = await websocket.receive_json()
+
+            if not isinstance(message, dict):
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Tracking message must be a JSON object.",
+                    }
+                )
+                continue
+
+            message_type = message.get("type")
+
+            if message_type == "ping":
+                await websocket.send_json(
+                    {
+                        "type": "pong"
+                    }
+                )
+                continue
+
+            if message_type != "location_update":
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Unsupported tracking message type.",
+                    }
+                )
+                continue
+
+            latitude = message.get("latitude")
+            longitude = message.get("longitude")
+            current_location = message.get(
+                "current_location"
+            )
+
+            try:
+                latitude = float(latitude)
+                longitude = float(longitude)
+            except (
+                TypeError,
+                ValueError,
+            ):
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Latitude and longitude must be valid numbers.",
+                    }
+                )
+                continue
+
+            if not -90 <= latitude <= 90:
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Latitude must be between -90 and 90.",
+                    }
+                )
+                continue
+
+            if not -180 <= longitude <= 180:
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Longitude must be between -180 and 180.",
+                    }
+                )
+                continue
+
+            shipment.latitude = latitude
+            shipment.longitude = longitude
+
+            if (
+                isinstance(
+                    current_location,
+                    str,
+                )
+                and current_location.strip()
+            ):
+                shipment.current_location = (
+                    current_location.strip()
+                )
+
+            shipment.updated_at = datetime.utcnow()
+
+            db.commit()
+            db.refresh(shipment)
+
+            update_message = {
+                "type": "location_updated",
+                "shipment_id": shipment.shipment_id,
+                "tracking_number": shipment.tracking_number,
+                "latitude": shipment.latitude,
+                "longitude": shipment.longitude,
+                "current_location": shipment.current_location,
+                "status": shipment.status,
+                "delivery_progress": shipment.delivery_progress,
+                "updated_at": shipment.updated_at.isoformat(),
+            }
+
+            await shipment_connection_manager.broadcast(
+                shipment_id,
+                update_message,
+            )
+
+    except WebSocketDisconnect:
+        pass
+
+    except Exception as error:
+        db.rollback()
+
+        try:
+            await websocket.send_json(
+                {
+                    "type": "error",
+                    "message": "Unable to process the tracking update.",
+                }
+            )
+        except Exception:
+            pass
+
+        print(
+            f"Shipment WebSocket error for "
+            f"{shipment_id}: {error}"
+        )
+
+    finally:
+        await shipment_connection_manager.disconnect(
+            shipment_id,
+            websocket,
+        )

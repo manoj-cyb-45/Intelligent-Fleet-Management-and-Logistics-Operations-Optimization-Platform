@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import ShipmentMap from "../components/ShipmentMap";
+
+import {
+  formatEta,
+  getShipmentRoute,
+} from "../services/shipmentTrackingService";
+import {
+  closeShipmentWebSocket,
+  createShipmentWebSocket,
+} from "../services/shipmentWebSocketService";
 
 function Shipments() {
   const { user } = useAuth();
@@ -36,12 +46,30 @@ function Shipments() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-  const [selectedShipment, setSelectedShipment] = useState(null);
+const [selectedShipment, setSelectedShipment] = useState(null);
 
-  const [shipmentHistory, setShipmentHistory] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+const [selectedShipmentId, setSelectedShipmentId] =
+  useState(null);
 
-  const [shipmentForm, setShipmentForm] = useState(emptyForm);
+const [routeData, setRouteData] =
+  useState(null);
+
+const [routeLoading, setRouteLoading] =
+  useState(false);
+
+const [routeError, setRouteError] =
+  useState("");
+
+const [webSocketStatus, setWebSocketStatus] =
+  useState("DISCONNECTED");
+
+const [webSocketError, setWebSocketError] =
+  useState("");
+
+const [shipmentHistory, setShipmentHistory] = useState([]);
+const [historyLoading, setHistoryLoading] = useState(false);
+
+const [shipmentForm, setShipmentForm] = useState(emptyForm);
 
   // =========================================================
   // LOAD DATA
@@ -98,6 +126,178 @@ function Shipments() {
 
     initialLoad();
   }, [isDriver]);
+
+  useEffect(() => {
+  if (
+    shipments.length === 0 ||
+    selectedShipmentId
+  ) {
+    return;
+  }
+
+  const shipmentWithCoordinates =
+    shipments.find(
+      (shipment) =>
+        Number.isFinite(
+          Number(shipment.latitude)
+        ) &&
+        Number.isFinite(
+          Number(shipment.longitude)
+        )
+    );
+
+  setSelectedShipmentId(
+    shipmentWithCoordinates?.shipment_id ||
+      shipments[0].shipment_id
+  );
+}, [
+  shipments,
+  selectedShipmentId,
+]);
+
+
+useEffect(() => {
+  const selectedShipmentForRoute =
+    shipments.find(
+      (shipment) =>
+        shipment.shipment_id ===
+        selectedShipmentId
+    );
+
+  if (!selectedShipmentForRoute) {
+    setRouteData(null);
+    return;
+  }
+
+  const loadRoute = async () => {
+    setRouteLoading(true);
+    setRouteError("");
+
+    try {
+      const route =
+        await getShipmentRoute(
+          selectedShipmentForRoute
+        );
+
+      setRouteData(route);
+    } catch (error) {
+      console.error(
+        "Unable to generate shipment route:",
+        error
+      );
+
+      setRouteData(null);
+
+      setRouteError(
+        error?.message ||
+          "Unable to generate the shipment route."
+      );
+    } finally {
+      setRouteLoading(false);
+    }
+  };
+
+  loadRoute();
+}, [
+  shipments,
+  selectedShipmentId,
+]);
+
+  // =========================================================
+  // REAL-TIME SHIPMENT TRACKING
+  // =========================================================
+
+  useEffect(() => {
+    if (!selectedShipmentId) {
+      setWebSocketStatus("DISCONNECTED");
+      setWebSocketError("");
+      return undefined;
+    }
+
+    let websocket;
+
+    setWebSocketStatus("CONNECTING");
+    setWebSocketError("");
+
+    try {
+      websocket = createShipmentWebSocket(
+        selectedShipmentId,
+        {
+          onOpen: () => {
+            setWebSocketStatus("CONNECTED");
+            setWebSocketError("");
+          },
+
+          onMessage: (message) => {
+            if (
+              message?.type !== "location_updated" &&
+              message?.type !== "tracking_connected"
+            ) {
+              return;
+            }
+
+            setShipments((previousShipments) =>
+              previousShipments.map((shipment) => {
+                if (
+                  shipment.shipment_id !==
+                  selectedShipmentId
+                ) {
+                  return shipment;
+                }
+
+                return {
+                  ...shipment,
+                  latitude:
+                    message.latitude ??
+                    shipment.latitude,
+                  longitude:
+                    message.longitude ??
+                    shipment.longitude,
+                  current_location:
+                    message.current_location ??
+                    shipment.current_location,
+                  status:
+                    message.status ??
+                    shipment.status,
+                  updated_at:
+                    message.updated_at ??
+                    shipment.updated_at,
+                };
+              })
+            );
+
+            setWebSocketError("");
+          },
+
+          onError: () => {
+            setWebSocketStatus("ERROR");
+            setWebSocketError(
+              "Real-time tracking connection failed."
+            );
+          },
+
+          onClose: () => {
+            setWebSocketStatus("DISCONNECTED");
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Unable to connect to shipment tracking:",
+        error
+      );
+
+      setWebSocketStatus("ERROR");
+      setWebSocketError(
+        error?.message ||
+          "Unable to connect to real-time tracking."
+      );
+    }
+
+    return () => {
+      closeShipmentWebSocket(websocket);
+    };
+  }, [selectedShipmentId]);
 
   // =========================================================
   // STATUS CLASS
@@ -739,116 +939,131 @@ function Shipments() {
       {/* =====================================================
           ADD MODAL
           ===================================================== */}
+                {/* =====================================================
+          SHIPMENT TRACKING MAP
+          ===================================================== */}
 
-      {showAddModal && (
-        <div className="shipment-modal-overlay">
-          <div className="shipment-modal">
-            <ModalHeader
-              title="Add Shipment"
-              description="Create a new fleet shipment."
-              onClose={closeModal}
-            />
+<div className="shipment-tracking-map-section">
+  <div className="shipment-map-header">
+    <div>
+      <h2 className="text-xl font-semibold text-slate-100">
+        Shipment Tracking Map
+      </h2>
 
-            <form
-              onSubmit={handleAddShipment}
-              className="mt-6"
-            >
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <p className="mt-1 text-sm text-slate-400">
+        GPS location, optimized route and estimated
+        arrival time.
+      </p>
 
-                <div className="md:col-span-2">
-                  <FormInput
-                    label="Description"
-                    name="description"
-                    value={shipmentForm.description}
-                    onChange={handleChange}
-                    placeholder="Shipment description"
-                  />
-                </div>
+      <div className="mt-3 flex items-center gap-2 text-xs">
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 font-medium ${
+            webSocketStatus === "CONNECTED"
+              ? "bg-green-950/50 text-green-300"
+              : webSocketStatus === "CONNECTING"
+              ? "bg-amber-950/50 text-amber-300"
+              : "bg-slate-800 text-slate-400"
+          }`}
+        >
+          {webSocketStatus === "CONNECTED"
+            ? "Live tracking connected"
+            : webSocketStatus === "CONNECTING"
+            ? "Connecting live tracking..."
+            : "Live tracking disconnected"}
+        </span>
 
-                <FormInput
-                  label="Origin *"
-                  name="origin"
-                  value={shipmentForm.origin}
-                  onChange={handleChange}
-                  placeholder="Coimbatore"
-                  required
-                />
+        {webSocketError && (
+          <span className="text-red-300">
+            {webSocketError}
+          </span>
+        )}
+      </div>
+    </div>
 
-                <FormInput
-                  label="Destination *"
-                  name="destination"
-                  value={shipmentForm.destination}
-                  onChange={handleChange}
-                  placeholder="Chennai"
-                  required
-                />
+    <div>
+      <select
+        value={selectedShipmentId || ""}
+        onChange={(event) => {
+          setSelectedShipmentId(event.target.value);
+        }}
+        className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 outline-none"
+      >
+        <option value="" disabled>
+          Select shipment
+        </option>
 
-                <FormInput
-                  label="Due Date *"
-                  type="date"
-                  name="due_date"
-                  value={shipmentForm.due_date}
-                  onChange={handleChange}
-                  min={getTodayDate()}
-                  required
-                />  
+        {shipments.map((shipment) => (
+          <option
+            key={shipment.shipment_id}
+            value={shipment.shipment_id}
+          >
+            {shipment.shipment_id} -{" "}
+            {shipment.tracking_number}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
 
-                <FormSelect
-                  label="Vehicle *"
-                  name="vehicle_id"
-                  value={shipmentForm.vehicle_id}
-                  onChange={handleChange}
-                  options={getAvailableVehicles().map(
-                    (vehicle) => ({
-                      value: vehicle.vehicle_id,
-                      label: `${vehicle.vehicle_id} — ${vehicle.current_status}`,
-                    })
-                  )}
-                  emptyLabel="Select a vehicle"
-                />
+  {routeLoading && (
+    <div className="mt-4 rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-300">
+      Generating optimized route...
+    </div>
+  )}
 
-                <FormSelect
-                  label="Driver *"
-                  name="driver_id"
-                  value={shipmentForm.driver_id}
-                  onChange={handleChange}
-                  options={getAvailableDrivers().map(
-                    (driver) => ({
-                      value: driver.driver_id,
-                      label: `${driver.name} — ${driver.driver_id}`,
-                    })
-                  )}
-                  emptyLabel="Select a driver"
-                />
-              </div>
+  {routeError && (
+    <div className="mt-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+      {routeError}
+    </div>
+  )}
 
-              {getAvailableVehicles().length === 0 && (
-                <div className="mt-5 rounded-lg border border-yellow-700 bg-yellow-950/40 px-4 py-3">
-                  <p className="text-sm text-yellow-300">
-                    No AVAILABLE vehicles are currently
-                    available for shipment assignment.
-                  </p>
-                </div>
-              )}
+  {routeData && !routeLoading && (
+    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          Route Distance
+        </p>
 
-              {getAvailableDrivers().length === 0 && (
-                <div className="mt-3 rounded-lg border border-yellow-700 bg-yellow-950/40 px-4 py-3">
-                  <p className="text-sm text-yellow-300">
-                    No ACTIVE unassigned drivers are
-                    currently available.
-                  </p>
-                </div>
-              )}
+        <p className="mt-1 text-lg font-semibold text-slate-100">
+          {routeData.distanceText}
+        </p>
+      </div>
 
-              <ModalButtons
-                onCancel={closeModal}
-                saving={saving}
-                submitText="Create Shipment"
-              />
-            </form>
-          </div>
-        </div>
-      )}
+      <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          Estimated Travel Time
+        </p>
+
+        <p className="mt-1 text-lg font-semibold text-slate-100">
+          {routeData.durationText}
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          Estimated Arrival
+        </p>
+
+        <p className="mt-1 text-lg font-semibold text-slate-100">
+          {formatEta(routeData.eta)}
+        </p>
+      </div>
+    </div>
+  )}
+
+  <div className="mt-4">
+    <ShipmentMap
+      shipment={
+        shipments.find(
+          (shipment) =>
+            shipment.shipment_id ===
+            selectedShipmentId
+        ) || shipments[0]
+      }
+      routeData={routeData}
+    />
+  </div>
+</div>
 
       {/* =====================================================
           EDIT MODAL
