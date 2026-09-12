@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
 from app.database.database import get_db
-from app.models import Alert
+from app.models import Alert, Shipment
 from app.alerts.schemas import AlertResponse
 
 
@@ -213,3 +213,162 @@ def resolve_alert(
     db.refresh(alert)
 
     return build_alert_response(alert)
+
+
+# =========================================================
+# MONITOR SHIPMENTS
+# =========================================================
+
+@router.post(
+    "/monitor-shipments",
+)
+def monitor_shipments(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "ADMIN",
+            "MANAGER",
+            "DISPATCHER",
+        )
+    ),
+):
+
+    now = datetime.utcnow()
+
+    # -----------------------------------------------------
+    # GET ACTIVE SHIPMENTS
+    # Ignore delivered and cancelled shipments
+    # -----------------------------------------------------
+
+    shipments = (
+        db.query(Shipment)
+        .filter(
+            Shipment.status.notin_(
+                ["DELIVERED", "CANCELLED"]
+            )
+        )
+        .all()
+    )
+
+    generated_alerts = []
+
+    for shipment in shipments:
+
+        # =================================================
+        # OVERDUE CHECK
+        # =================================================
+
+        if shipment.due_date < now:
+
+            existing_alert = (
+                db.query(Alert)
+                .filter(
+                    Alert.shipment_id == shipment.shipment_id,
+                    Alert.alert_type == "SHIPMENT_OVERDUE",
+                    Alert.status == "OPEN",
+                )
+                .first()
+            )
+
+            if not existing_alert:
+
+                alert = Alert(
+                    shipment_id=shipment.shipment_id,
+                    alert_type="SHIPMENT_OVERDUE",
+                    message=(
+                        f"Shipment {shipment.shipment_id} "
+                        f"is overdue."
+                    ),
+                    severity="HIGH",
+                    status="OPEN",
+                    created_at=now,
+                )
+
+                db.add(alert)
+                generated_alerts.append(alert)
+
+        # =================================================
+        # DELAYED CHECK
+        # =================================================
+
+        if shipment.status == "DELAYED":
+
+            existing_alert = (
+                db.query(Alert)
+                .filter(
+                    Alert.shipment_id == shipment.shipment_id,
+                    Alert.alert_type == "SHIPMENT_DELAYED",
+                    Alert.status == "OPEN",
+                )
+                .first()
+            )
+
+            if not existing_alert:
+
+                alert = Alert(
+                    shipment_id=shipment.shipment_id,
+                    alert_type="SHIPMENT_DELAYED",
+                    message=(
+                        f"Shipment {shipment.shipment_id} "
+                        f"is delayed."
+                    ),
+                    severity="MEDIUM",
+                    status="OPEN",
+                    created_at=now,
+                )
+
+                db.add(alert)
+                generated_alerts.append(alert)
+
+        # =================================================
+        # ETA CHECK
+        # =================================================
+
+        if (
+            shipment.expected_delivery_at is not None
+            and shipment.expected_delivery_at < now
+        ):
+
+            existing_alert = (
+                db.query(Alert)
+                .filter(
+                    Alert.shipment_id == shipment.shipment_id,
+                    Alert.alert_type == "SHIPMENT_ETA_MISSED",
+                    Alert.status == "OPEN",
+                )
+                .first()
+            )
+
+            if not existing_alert:
+
+                alert = Alert(
+                    shipment_id=shipment.shipment_id,
+                    alert_type="SHIPMENT_ETA_MISSED",
+                    message=(
+                        f"Shipment {shipment.shipment_id} "
+                        f"has missed its expected delivery time."
+                    ),
+                    severity="HIGH",
+                    status="OPEN",
+                    created_at=now,
+                )
+
+                db.add(alert)
+                generated_alerts.append(alert)
+
+    # -----------------------------------------------------
+    # SAVE GENERATED ALERTS
+    # -----------------------------------------------------
+
+    db.commit()
+
+    for alert in generated_alerts:
+        db.refresh(alert)
+
+    return {
+        "message": "Shipment monitoring completed",
+        "alerts_generated": [
+            build_alert_response(alert)
+            for alert in generated_alerts
+        ],
+    }
