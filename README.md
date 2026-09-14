@@ -1,0 +1,541 @@
+# Intelligent Fleet Management and Logistics Operations Optimization Platform
+
+## Overview
+
+FleetFlow is an intelligent fleet management and logistics operations platform designed to help organizations manage vehicles, drivers, shipments, maintenance, fuel records, and operational alerts from a centralized system.
+
+The platform currently consists of:
+
+- FastAPI backend
+- PostgreSQL database
+- Alembic database migrations
+- React + Vite frontend
+- JWT-based authentication
+- Role-based access control
+- REST API integration between frontend and backend
+
+## Milestone 1 Status
+
+### Milestone 1 — Core Fleet Management Platform
+
+**Status: COMPLETED**
+
+The first milestone establishes the core backend APIs, database structure, authentication system, and functional React frontend.
+
+Implemented modules:
+
+- Authentication
+- Role-based access control
+- Vehicles
+- Drivers
+- Driver-vehicle assignment
+- Shipments
+- Shipment history
+- Maintenance records
+- Fuel records
+- Alerts
+- Operations dashboard
+
+## Technology Stack
+
+### Backend
+
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Alembic
+- Pydantic
+- JWT authentication
+- Password hashing
+
+### Frontend
+
+- React
+- Vite
+- React Router
+- Axios
+- Tailwind CSS
+
+### Development Tools
+
+- Git
+- GitHub
+- Visual Studio Code
+- PowerShell
+
+## Project Structure
+
+    Intelligent-Fleet-Management-and-Logistics-Operations-Optimization-Platform/
+    |
+    +-- backend/
+    |   +-- app/
+    |   |   +-- alerts/
+    |   |   +-- auth/
+    |   |   +-- database/
+    |   |   +-- drivers/
+    |   |   +-- fuel/
+    |   |   +-- maintenance/
+    |   |   +-- models/
+    |   |   +-- shipments/
+    |   |   +-- users/
+    |   |   +-- vehicles/
+    |   |   +-- main.py
+    |   |
+    |   +-- alembic/
+    |       +-- versions/
+    |
+    +-- frontend/
+    |   +-- public/
+    |   +-- src/
+    |   |   +-- components/
+    |   |   +-- context/
+    |   |   +-- layouts/
+    |   |   +-- pages/
+    |   |   +-- services/
+    |   |   +-- App.jsx
+    |   |   +-- index.css
+    |   |   +-- main.jsx
+    |   |
+    |   +-- package.json
+    |   +-- vite.config.js
+    |
+    +-- docs/
+    +-- LICENSE
+    +-- README.md
+
+## Authentication
+
+Authentication is implemented using JWT access tokens.
+
+### Login
+
+    POST /auth/login
+
+The login response contains:
+
+- Access token
+- Token type
+- User ID
+- User role
+
+### Current User
+
+    GET /auth/me
+
+### Driver Role Test
+
+    GET /auth/driver-test
+
+Protected endpoints use role-based authorization.
+
+## Vehicle Management
+
+The vehicle module manages fleet vehicles and their operational information.
+
+### Endpoints
+
+    POST   /vehicles
+    GET    /vehicles
+    GET    /vehicles/{vehicle_id}
+    PUT    /vehicles/{vehicle_id}
+    DELETE /vehicles/{vehicle_id}
+
+Vehicle information includes:
+
+- Vehicle ID
+- Registration number
+- Vehicle type
+- Capacity
+- Fuel type
+- Current status
+- Current location
+- Fuel level
+- Mileage
+
+## Driver Management
+
+The driver module manages driver accounts and vehicle assignments.
+
+### Endpoints
+
+    POST /drivers
+    GET  /drivers
+    GET  /drivers/{driver_id}
+    POST /drivers/{driver_id}/assign
+
+Driver information includes:
+
+- Driver ID
+- Name
+- Email
+- Phone
+- License details
+- Experience
+- Working hours
+- Account status
+- Assigned vehicle
+
+The system prevents:
+
+- Assigning a non-existent vehicle
+- Assigning multiple active vehicles to the same driver
+- Assigning the same vehicle to multiple drivers
+
+## Shipment Management
+
+The shipment module manages logistics operations and shipment progress.
+
+### Endpoints
+
+    POST /shipments
+    GET  /shipments
+    GET  /shipments/{shipment_id}
+    PUT  /shipments/{shipment_id}
+    GET  /shipments/{shipment_id}/history
+
+Shipment information includes:
+
+- Shipment ID
+- Tracking number
+- Description
+- Origin
+- Destination
+- Due date
+- Status
+- Current location
+- Delivery progress
+- Vehicle
+- Driver
+- Expected delivery time
+- Delivery completion time
+
+### Shipment Statuses
+
+    PENDING
+    IN_TRANSIT
+    DELIVERED
+    CANCELLED
+
+Shipment history is recorded when shipment activity is updated.
+
+Shipment cancellation also generates an operational alert.
+
+## Maintenance Management
+
+The maintenance module records vehicle maintenance activities.
+
+### Endpoints
+
+    POST /maintenance
+    GET  /maintenance
+    GET  /maintenance/{maintenance_id}
+    PUT  /maintenance/{maintenance_id}
+
+Maintenance records include:
+
+- Maintenance ID
+- Vehicle ID
+- Maintenance type
+- Description
+- Maintenance date
+- Due date
+- Cost
+- Status
+
+### Maintenance Statuses
+
+    SCHEDULED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+
+## Fuel Management
+
+The fuel module records vehicle fuel transactions.
+
+### Endpoints
+
+    POST /fuel
+    GET  /fuel
+    GET  /fuel/{fuel_id}
+    PUT  /fuel/{fuel_id}
+
+Fuel records include:
+
+- Fuel ID
+- Vehicle ID
+- Fuel date
+- Fuel type
+- Quantity
+- Cost per unit
+- Total cost
+- Odometer reading
+
+## Alert Management
+
+The alert module provides operational alerts generated by the system.
+
+### Endpoints
+
+    GET /alerts
+    GET /alerts/{alert_id}
+    PUT /alerts/{alert_id}/resolve
+
+Alert information includes:
+
+- Alert ID
+- Shipment ID
+- Alert type
+- Message
+- Severity
+- Status
+- Created time
+- Resolved time
+
+Alerts can be resolved by authorized users.
+
+## Frontend
+
+The frontend is implemented using React and Vite.
+
+Axios is used to communicate with the FastAPI backend.
+
+### Frontend Modules
+
+The following modules are currently implemented:
+
+- Login
+- Dashboard
+- Vehicles
+- Drivers
+- Shipments
+- Maintenance
+- Fuel
+- Alerts
+
+### Frontend Routes
+
+    /login
+    /
+    /vehicles
+    /drivers
+    /shipments
+    /maintenance
+    /fuel
+    /alerts
+
+## Dashboard
+
+The FleetFlow dashboard displays live information retrieved from the backend.
+
+Current dashboard information includes:
+
+- Active vehicles
+- Active shipments
+- Registered drivers
+- Open alerts
+- Vehicle status
+- Shipment status
+- Recent shipments
+- Delivery progress
+
+Dashboard statistics are calculated from live API responses rather than hard-coded values.
+
+## Frontend Authentication
+
+The frontend uses the backend JWT authentication system.
+
+After successful login:
+
+1. The access token is stored locally.
+2. User information is stored locally.
+3. Axios automatically attaches the JWT to protected API requests.
+4. The authenticated user's role is displayed in the application header.
+5. Logout removes the stored authentication information.
+
+## CORS Configuration
+
+The FastAPI backend is configured to allow communication with the React development server.
+
+Development origins:
+
+    http://localhost:5173
+    http://127.0.0.1:5173
+
+## Database
+
+PostgreSQL is used as the primary relational database.
+
+SQLAlchemy is used for ORM-based database access.
+
+Alembic is used for database migrations.
+
+The database contains the core entities required for:
+
+- Users
+- Vehicles
+- Driver-vehicle assignments
+- Shipments
+- Shipment history
+- Maintenance records
+- Fuel records
+- Alerts
+
+## API Documentation
+
+When the backend server is running, FastAPI provides interactive API documentation at:
+
+    http://127.0.0.1:8000/docs
+
+OpenAPI specification:
+
+    http://127.0.0.1:8000/openapi.json
+
+Health check:
+
+    http://127.0.0.1:8000/health
+
+## Running the Backend
+
+Navigate to the backend directory:
+
+    cd backend
+
+Activate the virtual environment:
+
+    .\.venv\Scripts\Activate.ps1
+
+Start the FastAPI development server:
+
+    uvicorn app.main:app --reload
+
+Backend:
+
+    http://127.0.0.1:8000
+
+## Running the Frontend
+
+Open a separate terminal and navigate to the frontend directory:
+
+    cd frontend
+
+Install dependencies:
+
+    npm install
+
+Start the development server:
+
+    npm run dev
+
+Frontend:
+
+    http://localhost:5173
+
+## Production Build
+
+The frontend production build can be verified using:
+
+    cd frontend
+    npm run build
+
+The current frontend production build has been successfully verified.
+
+## Testing and Verification
+
+The following areas have been verified during Milestone 1 development:
+
+- Backend application import
+- FastAPI route registration
+- OpenAPI route generation
+- PostgreSQL database connection
+- Database migrations
+- Authentication
+- JWT-protected API requests
+- Role-based authorization
+- Vehicle management
+- Driver management
+- Driver-vehicle assignment
+- Shipment management
+- Shipment history
+- Maintenance records
+- Fuel records
+- Alert management
+- React frontend routing
+- Axios API integration
+- CORS communication
+- Dashboard API integration
+- Frontend production build
+
+## Git and GitHub
+
+The project uses Git for version control and GitHub as the remote repository.
+
+Main branch:
+
+    main
+
+Repository:
+
+    manoj-cyb-45/Intelligent-Fleet-Management-and-Logistics-Operations-Optimization-Platform
+
+The completed Milestone 1 implementation and dynamic dashboard have been committed and pushed to the main branch.
+
+The repository is currently synchronized with origin/main.
+
+## Milestone 1 Completion Summary
+
+### Completed
+
+- Backend architecture
+- PostgreSQL database integration
+- Alembic migrations
+- Authentication
+- JWT security
+- Role-based authorization
+- Vehicle management
+- Driver management
+- Driver-vehicle assignment
+- Shipment management
+- Shipment history
+- Maintenance management
+- Fuel management
+- Alert management
+- React frontend
+- API integration
+- Operations dashboard
+- CORS configuration
+- Production frontend build
+- GitHub integration
+
+### Current State
+
+    Backend              COMPLETE
+    Database             COMPLETE
+    Authentication       COMPLETE
+    Core APIs            COMPLETE
+    Frontend             COMPLETE
+    Dashboard            COMPLETE
+    API Integration      COMPLETE
+    Production Build     PASSED
+    GitHub               SYNCHRONIZED
+    Milestone 1          COMPLETE
+
+## Future Development
+
+Future milestones can extend FleetFlow with advanced operational and optimization capabilities such as:
+
+- Fleet utilization analytics
+- Fuel efficiency analytics
+- Maintenance cost analytics
+- Predictive maintenance
+- Route optimization
+- ETA prediction
+- Driver performance analytics
+- Advanced alerting
+- Operational reports
+- Analytics dashboards
+- Logistics optimization
+- AI-assisted fleet decision support
+
+These features are planned for future development and are not part of the completed Milestone 1 implementation.
