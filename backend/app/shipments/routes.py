@@ -19,6 +19,7 @@ from app.models import (
 )
 
 from app.shipments.websocket import shipment_connection_manager
+from app.shipments.statuses import VALID_SHIPMENT_STATUSES, STATUS_PROGRESS
 
 
 from app.shipments.schemas import (
@@ -426,12 +427,7 @@ def update_shipment(
 
     if shipment_data.status is not None:
 
-        allowed_statuses = {
-            "PENDING",
-            "IN_TRANSIT",
-            "DELIVERED",
-            "CANCELLED",
-        }
+        allowed_statuses = VALID_SHIPMENT_STATUSES
 
         if shipment_data.status not in allowed_statuses:
             raise HTTPException(
@@ -674,12 +670,7 @@ def update_shipment(
     # PROGRESS
     # =====================================================
 
-    progress_by_status = {
-        "PENDING": 0.0,
-        "IN_TRANSIT": 50.0,
-        "DELIVERED": 100.0,
-        "CANCELLED": 0.0,
-    }
+    progress_by_status = STATUS_PROGRESS
 
     shipment.delivery_progress = progress_by_status[
         shipment.status
