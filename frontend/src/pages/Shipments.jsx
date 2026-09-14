@@ -1113,23 +1113,31 @@ useEffect(() => {
                   value={shipmentForm.status}
                   onChange={handleChange}
                   options={[
-                    {
-                      value: "PENDING",
-                      label: "PENDING",
-                    },
-                    {
-                      value: "IN_TRANSIT",
-                      label: "IN TRANSIT",
-                    },
-                    {
-                      value: "DELIVERED",
-                      label: "DELIVERED",
-                    },
-                    {
-                      value: "CANCELLED",
-                      label: "CANCELLED",
-                    },
-                  ]}
+  {
+    value: "PENDING",
+    label: "PENDING",
+  },
+  {
+    value: "ASSIGNED",
+    label: "ASSIGNED",
+  },
+  {
+    value: "IN_TRANSIT",
+    label: "IN TRANSIT",
+  },
+  {
+    value: "DELAYED",
+    label: "DELAYED",
+  },
+  {
+    value: "DELIVERED",
+    label: "DELIVERED",
+  },
+  {
+    value: "CANCELLED",
+    label: "CANCELLED",
+  },
+]}
                 />
 
                 <FormInput

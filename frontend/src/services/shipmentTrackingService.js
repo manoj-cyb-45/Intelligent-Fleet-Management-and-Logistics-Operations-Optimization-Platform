@@ -187,22 +187,32 @@ export async function getShipmentRoute(
 
   let startCoordinates = null;
 
-  const currentCoordinates = [
-    Number(shipment.latitude),
-    Number(shipment.longitude),
-  ];
+  const hasCurrentCoordinates =
+  shipment.latitude !== null &&
+  shipment.latitude !== undefined &&
+  shipment.latitude !== "" &&
+  shipment.longitude !== null &&
+  shipment.longitude !== undefined &&
+  shipment.longitude !== "";
 
-  if (
-    validateCoordinates(currentCoordinates)
-  ) {
-    startCoordinates =
-      currentCoordinates;
-  } else {
-    startCoordinates =
-      await geocodePlace(
-        shipment.origin
-      );
-  }
+const currentCoordinates = hasCurrentCoordinates
+  ? [
+      Number(shipment.latitude),
+      Number(shipment.longitude),
+    ]
+  : null;
+
+if (
+  validateCoordinates(currentCoordinates)
+) {
+  startCoordinates =
+    currentCoordinates;
+} else {
+  startCoordinates =
+    await geocodePlace(
+      shipment.origin
+    );
+}
 
   const destinationCoordinates =
     await geocodePlace(
