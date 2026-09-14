@@ -20,6 +20,7 @@ import Fuel from "./pages/Fuel";
 import Alerts from "./pages/Alerts";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import "leaflet/dist/leaflet.css";
 import "./App.css";
 
 

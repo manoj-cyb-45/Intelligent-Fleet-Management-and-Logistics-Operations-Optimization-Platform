@@ -3616,3 +3616,154 @@ textarea.maintenance-form-control {
     font-size: 26px !important;
   }
 }
+/* =========================================================
+   SHIPMENT MAP
+   ========================================================= */
+
+.shipment-map-container {
+  width: 100%;
+  height: 360px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.shipment-map {
+  width: 100%;
+  height: 100%;
+}
+
+.shipment-map-message {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+
+  background: white;
+  padding: 10px 14px;
+
+  border-radius: 8px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  font-size: 13px;
+}
+/* =========================================================
+   SHIPMENT TRACKING MAP SECTION
+   ========================================================= */
+
+.shipment-tracking-map-section {
+  width: 100%;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.shipment-map-header {
+  margin-bottom: 16px;
+}
+
+.shipment-map-container {
+  width: 100%;
+  height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #1e3a5f;
+}
+
+.shipment-map {
+  width: 100%;
+  height: 100%;
+}
+
+.shipment-map-message {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  background: white;
+  color: #111827;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+}
+/* =========================================================
+   SHIPMENT TRACKING MAP
+   ========================================================= */
+
+.shipment-tracking-map-section {
+  width: 100%;
+  margin-top: 24px;
+  margin-bottom: 30px;
+}
+
+.shipment-map-container {
+  width: 100%;
+  height: 420px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #243451;
+  border-radius: 14px;
+  background: #0d1728;
+}
+
+.shipment-map {
+  width: 100%;
+  height: 100%;
+}
+
+.shipment-map-message {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================================================
+   SHIPMENT TRACKING MAP
+   ========================================================= */
+
+.shipment-tracking-map-section {
+  margin-top: 30px;
+  width: 100%;
+}
+
+.shipment-map-header {
+  margin-bottom: 16px;
+}
+
+.shipment-map-container {
+  width: 100%;
+  height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #334155;
+  background: #0f172a;
+}
+
+.shipment-map {
+  width: 100%;
+  height: 100%;
+}
+
+.shipment-map-message {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}

@@ -11,6 +11,18 @@ class ShipmentCreate(BaseModel):
     vehicle_id: str = Field(min_length=3, max_length=20)
     driver_id: str = Field(min_length=3, max_length=20)
 
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+    )
+
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+    )
+
 
 class ShipmentResponse(BaseModel):
     shipment_id: str
@@ -30,11 +42,26 @@ class ShipmentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    latitude: float | None
+    longitude: float | None
+
 
 class ShipmentUpdate(BaseModel):
     status: str | None = None
     current_location: str | None = None
     expected_delivery_at: datetime | None = None
+
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+    )
+
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+    )
 
 
 class ShipmentHistoryResponse(BaseModel):
