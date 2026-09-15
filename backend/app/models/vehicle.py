@@ -1,4 +1,6 @@
-from sqlalchemy import Float, String
+from datetime import datetime
+
+from sqlalchemy import DateTime, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.database import Base
@@ -7,22 +9,88 @@ from app.database.database import Base
 class Vehicle(Base):
     __tablename__ = "vehicles"
 
-    vehicle_id: Mapped[str] = mapped_column(String(20), primary_key=True)
+    vehicle_id: Mapped[str] = mapped_column(
+        String(20),
+        primary_key=True,
+    )
+
     registration_number: Mapped[str] = mapped_column(
-        String(20), unique=True, nullable=False
+        String(20),
+        unique=True,
+        nullable=False,
     )
-    vehicle_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    capacity: Mapped[float] = mapped_column(Float, nullable=False)
-    fuel_type: Mapped[str] = mapped_column(String(30), nullable=False)
+
+    vehicle_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    capacity: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+    )
+
+    fuel_type: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+    )
+
     current_status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="AVAILABLE"
+        String(20),
+        nullable=False,
+        default="AVAILABLE",
     )
+
     current_location: Mapped[str | None] = mapped_column(
-        String(255), nullable=True
+        String(255),
+        nullable=True,
     )
+
     fuel_level: Mapped[float | None] = mapped_column(
-        Float, nullable=True
+        Float,
+        nullable=True,
     )
+
     mileage: Mapped[float | None] = mapped_column(
-        Float, nullable=True
+        Float,
+        nullable=True,
+    )
+
+    # =========================================================
+    # GPS TRACKING
+    # =========================================================
+
+    latitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    longitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    gps_speed: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    gps_heading: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    gps_accuracy: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    gps_altitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    last_gps_update: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
     )

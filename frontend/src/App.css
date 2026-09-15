@@ -3616,3 +3616,1401 @@ textarea.maintenance-form-control {
     font-size: 26px !important;
   }
 }
+
+/* =========================================================
+   FLEETFLOW THEME SYSTEM
+   Dark / Light Mode
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   LIGHT THEME VARIABLES
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] {
+  --ff-bg: #f4f7fb;
+  --ff-bg-2: #eef2f7;
+
+  --ff-panel: #ffffff;
+  --ff-panel-2: #f8fafc;
+
+  --ff-border: rgba(15, 23, 42, 0.10);
+
+  --ff-text: #0f172a;
+  --ff-text-2: #475569;
+  --ff-muted: #64748b;
+
+  --ff-blue: #2563eb;
+  --ff-blue-2: #1d4ed8;
+  --ff-purple: #9333ea;
+  --ff-green: #059669;
+  --ff-orange: #ea580c;
+  --ff-red: #dc2626;
+  --ff-cyan: #0891b2;
+}
+
+/* ---------------------------------------------------------
+   GLOBAL THEME TRANSITION
+   --------------------------------------------------------- */
+
+html,
+body,
+#root,
+.fleet-app,
+.app-main,
+.app-sidebar,
+.app-header,
+.app-content,
+.dashboard-card,
+.status-panel,
+.shipments-panel {
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+/* ---------------------------------------------------------
+   LIGHT APPLICATION SHELL
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(
+      circle at 80% 0%,
+      rgba(37, 99, 235, 0.08),
+      transparent 28%
+    ),
+    #f4f7fb;
+
+  color: var(--ff-text);
+}
+
+:root[data-theme="light"] .fleet-app {
+  background:
+    radial-gradient(
+      circle at 80% 0%,
+      rgba(37, 99, 235, 0.06),
+      transparent 30%
+    ),
+    #f4f7fb;
+}
+
+:root[data-theme="light"] .app-main {
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(37, 99, 235, 0.05),
+      transparent 28%
+    ),
+    #f4f7fb;
+}
+
+/* ---------------------------------------------------------
+   LIGHT SIDEBAR
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .app-sidebar {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f8fafc 55%,
+      #f1f5f9 100%
+    );
+
+  border-right-color: rgba(15, 23, 42, 0.09);
+
+  box-shadow:
+    10px 0 35px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .brand-name {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .brand-name span {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .brand-block p {
+  color: #64748b;
+}
+
+:root[data-theme="light"] .nav-item {
+  color: #64748b;
+}
+
+:root[data-theme="light"] .nav-icon {
+  color: #64748b;
+}
+
+:root[data-theme="light"] .nav-item:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.045);
+}
+
+:root[data-theme="light"] .nav-item:hover .nav-icon {
+  color: #334155;
+}
+
+:root[data-theme="light"] .nav-item.active {
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #3b5eea
+  );
+}
+
+:root[data-theme="light"] .nav-item.active .nav-icon {
+  color: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   LIGHT SIDEBAR FOOTER
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .sidebar-footer-card {
+  border-color: rgba(37, 99, 235, 0.16);
+
+  background:
+    linear-gradient(
+      145deg,
+      #eef5ff,
+      #f8fafc
+    );
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .sidebar-footer-card strong {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .sidebar-footer-card p {
+  color: #64748b;
+}
+
+/* ---------------------------------------------------------
+   LIGHT HEADER
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .app-header {
+  background: rgba(255, 255, 255, 0.94);
+
+  border-color: rgba(15, 23, 42, 0.09);
+
+  box-shadow:
+    0 12px 35px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .header-brand-mark {
+  color: #1e3a8a;
+  background: #eff6ff;
+  border-color: rgba(37, 99, 235, 0.12);
+}
+
+:root[data-theme="light"] .header-left span {
+  color: #64748b;
+}
+
+:root[data-theme="light"] .header-left strong {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .user-copy strong {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .user-copy span {
+  color: #64748b;
+}
+
+/* ---------------------------------------------------------
+   THEME SWITCH
+   --------------------------------------------------------- */
+
+.theme-toggle {
+  height: 36px;
+  min-width: 88px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 0 11px;
+
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.035);
+  color: #cbd5e1;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.35);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+}
+
+.theme-toggle-icon {
+  width: 18px;
+  height: 18px;
+
+  display: grid;
+  place-items: center;
+
+  font-size: 14px;
+  line-height: 1;
+}
+
+.theme-toggle-text {
+  line-height: 1;
+}
+
+/* Light-mode button */
+
+:root[data-theme="light"] .theme-toggle {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #334155;
+}
+
+:root[data-theme="light"] .theme-toggle:hover {
+  background: #eef2f7;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+/* ---------------------------------------------------------
+   LIGHT DASHBOARD HEADINGS
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .page-heading h1 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .page-heading p {
+  color: #64748b;
+}
+
+:root[data-theme="light"] .live-indicator {
+  color: #64748b;
+}
+
+/* ---------------------------------------------------------
+   LIGHT CARDS
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .dashboard-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.09);
+  box-shadow:
+    0 14px 35px rgba(15, 23, 42, 0.07);
+}
+
+:root[data-theme="light"] .dashboard-card.blue {
+  background:
+    linear-gradient(
+      145deg,
+      #eaf2ff,
+      #ffffff 78%
+    );
+
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+:root[data-theme="light"] .dashboard-card.purple {
+  background:
+    linear-gradient(
+      145deg,
+      #f5edff,
+      #ffffff 78%
+    );
+
+  border-color: rgba(147, 51, 234, 0.20);
+}
+
+:root[data-theme="light"] .dashboard-card.green,
+:root[data-theme="light"] .dashboard-card.teal {
+  background:
+    linear-gradient(
+      145deg,
+      #e9fbf5,
+      #ffffff 78%
+    );
+
+  border-color: rgba(5, 150, 105, 0.20);
+}
+
+:root[data-theme="light"] .dashboard-card.orange {
+  background:
+    linear-gradient(
+      145deg,
+      #fff2e9,
+      #ffffff 78%
+    );
+
+  border-color: rgba(234, 88, 12, 0.20);
+}
+
+:root[data-theme="light"] .card-copy p {
+  color: #475569;
+}
+
+:root[data-theme="light"] .card-copy strong {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .card-copy span {
+  color: #64748b;
+}
+
+/* ---------------------------------------------------------
+   LIGHT STATUS + SHIPMENT PANELS
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .status-panel,
+:root[data-theme="light"] .shipments-panel {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #f8fafc
+    );
+
+  border-color: rgba(15, 23, 42, 0.09);
+
+  box-shadow:
+    0 14px 35px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .panel-title h2,
+:root[data-theme="light"] .shipments-header h2 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .status-row {
+  color: #64748b;
+  border-bottom-color: rgba(15, 23, 42, 0.07);
+}
+
+:root[data-theme="light"] .status-row strong {
+  color: #334155;
+}
+
+:root[data-theme="light"] .route-text {
+  color: #475569;
+}
+
+/* ---------------------------------------------------------
+   LIGHT TABLE
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .shipment-table th {
+  color: #64748b;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="light"] .shipment-table td {
+  color: #334155;
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .shipment-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.025);
+}
+
+:root[data-theme="light"] .shipment-id strong {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .shipment-id small {
+  color: #64748b;
+}
+
+/* ---------------------------------------------------------
+   LIGHT LOGOUT
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .logout-button {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #334155;
+}
+
+:root[data-theme="light"] .logout-button:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+/* ---------------------------------------------------------
+   LIGHT EMPTY / ERROR / LOADING STATES
+   --------------------------------------------------------- */
+
+:root[data-theme="light"] .empty-row {
+  color: #64748b;
+}
+
+:root[data-theme="light"] .error-card {
+  background: #ffffff;
+  border-color: rgba(220, 38, 38, 0.16);
+  color: #334155;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .loading-card {
+  background: #ffffff;
+  color: #334155;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+/* ---------------------------------------------------------
+   ACCESSIBILITY
+   --------------------------------------------------------- */
+
+.theme-toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   FLEETFLOW - COMPLETE LIGHT THEME
+   Applies to ALL existing modules and tables
+   ========================================================= */
+
+:root[data-theme="light"] {
+  --ff-bg: #f4f7fb;
+  --ff-bg-2: #eef2f7;
+  --ff-panel: #ffffff;
+  --ff-panel-2: #f8fafc;
+  --ff-border: #dce3ec;
+  --ff-text: #0f172a;
+  --ff-text-2: #334155;
+  --ff-muted: #64748b;
+
+  --ff-blue: #2563eb;
+  --ff-blue-2: #1d4ed8;
+  --ff-purple: #9333ea;
+  --ff-green: #059669;
+  --ff-orange: #ea580c;
+  --ff-red: #dc2626;
+  --ff-cyan: #0891b2;
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+:root[data-theme="light"] body {
+  background: #f4f7fb !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .fleet-app {
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(37, 99, 235, 0.07),
+      transparent 28%
+    ),
+    #f4f7fb !important;
+}
+
+:root[data-theme="light"] .app-main {
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(37, 99, 235, 0.045),
+      transparent 28%
+    ),
+    #f4f7fb !important;
+}
+
+:root[data-theme="light"] .app-content {
+  background: transparent !important;
+  color: #0f172a !important;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+:root[data-theme="light"] .app-sidebar {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f8fafc 55%,
+      #f1f5f9 100%
+    ) !important;
+
+  border-right-color: #dce3ec !important;
+
+  box-shadow:
+    8px 0 30px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme="light"] .brand-block {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .brand-name,
+:root[data-theme="light"] .brand-name span {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .brand-block p {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .nav-item {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .nav-icon {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .nav-item:hover {
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+}
+
+:root[data-theme="light"] .nav-item:hover .nav-icon {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .nav-item.active {
+  color: #ffffff !important;
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #3b5eea
+  ) !important;
+}
+
+:root[data-theme="light"] .nav-item.active .nav-icon {
+  color: #ffffff !important;
+}
+
+:root[data-theme="light"] .sidebar-footer-card {
+  background:
+    linear-gradient(
+      145deg,
+      #eef5ff,
+      #f8fafc
+    ) !important;
+
+  border-color: #cbdcf8 !important;
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme="light"] .sidebar-footer-card strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .sidebar-footer-card p {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+:root[data-theme="light"] .app-header {
+  background: rgba(255, 255, 255, 0.96) !important;
+
+  border-color: #dce3ec !important;
+
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme="light"] .header-brand-mark {
+  color: #2563eb !important;
+  background: #eff6ff !important;
+  border-color: #dbeafe !important;
+}
+
+:root[data-theme="light"] .header-left span {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .header-left strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .user-copy strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .user-copy span {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   THEME BUTTON
+   ========================================================= */
+
+:root[data-theme="light"] .theme-toggle {
+  background: #f8fafc !important;
+  border-color: #dbe2ea !important;
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .theme-toggle:hover {
+  background: #eef2f7 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* =========================================================
+   PAGE HEADINGS
+   ========================================================= */
+
+:root[data-theme="light"] .page-heading h1,
+:root[data-theme="light"] .module-header h1,
+:root[data-theme="light"] .driver-page-title,
+:root[data-theme="light"] .shipments-page-title,
+:root[data-theme="light"] .maintenance-page-title,
+:root[data-theme="light"] .fuel-page-title,
+:root[data-theme="light"] .alerts-page-title,
+:root[data-theme="light"] .vehicles-page h1 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .page-heading p,
+:root[data-theme="light"] .module-header p,
+:root[data-theme="light"] .driver-page-subtitle,
+:root[data-theme="light"] .shipments-page-subtitle,
+:root[data-theme="light"] .maintenance-page-subtitle,
+:root[data-theme="light"] .fuel-page-subtitle,
+:root[data-theme="light"] .alerts-page-subtitle {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .eyebrow {
+  color: #2563eb !important;
+}
+
+:root[data-theme="light"] .live-indicator {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   DASHBOARD CARDS
+   ========================================================= */
+
+:root[data-theme="light"] .dashboard-card {
+  background: #ffffff !important;
+  border-color: #dce3ec !important;
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme="light"] .dashboard-card.blue {
+  background:
+    linear-gradient(
+      145deg,
+      #eaf2ff,
+      #ffffff
+    ) !important;
+
+  border-color: #cfe0ff !important;
+}
+
+:root[data-theme="light"] .dashboard-card.purple {
+  background:
+    linear-gradient(
+      145deg,
+      #f5edff,
+      #ffffff
+    ) !important;
+
+  border-color: #ead9ff !important;
+}
+
+:root[data-theme="light"] .dashboard-card.green,
+:root[data-theme="light"] .dashboard-card.teal {
+  background:
+    linear-gradient(
+      145deg,
+      #e9fbf5,
+      #ffffff
+    ) !important;
+
+  border-color: #c8f0df !important;
+}
+
+:root[data-theme="light"] .dashboard-card.orange {
+  background:
+    linear-gradient(
+      145deg,
+      #fff2e9,
+      #ffffff
+    ) !important;
+
+  border-color: #fedbc5 !important;
+}
+
+:root[data-theme="light"] .card-copy p {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .card-copy strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .card-copy span {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   DASHBOARD STATUS PANELS
+   ========================================================= */
+
+:root[data-theme="light"] .status-panel {
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #f8fafc
+    ) !important;
+
+  border-color: #dce3ec !important;
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme="light"] .panel-title h2 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .status-row {
+  color: #64748b !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .status-row strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .route-text {
+  color: #475569 !important;
+}
+
+/* =========================================================
+   COMMON TABLE FOUNDATION
+   ========================================================= */
+
+/* Table containers */
+
+:root[data-theme="light"] .vehicle-table-card,
+:root[data-theme="light"] .driver-table-card,
+:root[data-theme="light"] .shipment-table-card,
+:root[data-theme="light"] .maintenance-table-card,
+:root[data-theme="light"] .fuel-table-card,
+:root[data-theme="light"] .alerts-table-card {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #f8fafc
+    ) !important;
+
+  border-color: #d8e1eb !important;
+
+  box-shadow:
+    0 14px 35px rgba(15, 23, 42, 0.07) !important;
+}
+
+/* Table bodies */
+
+:root[data-theme="light"] .vehicle-table-card tbody,
+:root[data-theme="light"] .driver-table-body,
+:root[data-theme="light"] .shipment-table-body,
+:root[data-theme="light"] .maintenance-table-body,
+:root[data-theme="light"] .fuel-table-body,
+:root[data-theme="light"] .alerts-table-body {
+  background: transparent !important;
+}
+
+/* =========================================================
+   VEHICLES TABLE
+   ========================================================= */
+
+:root[data-theme="light"] .vehicle-table-card thead {
+  background: #f1f5f9 !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card th {
+  color: #64748b !important;
+  background: #f1f5f9 !important;
+  border-bottom-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card td {
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card td:first-child p:first-child {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card td:first-child p:last-child,
+:root[data-theme="light"] .vehicle-table-card td p.text-xs,
+:root[data-theme="light"] .vehicle-table-card td .text-slate-400,
+:root[data-theme="light"] .vehicle-table-card td .text-slate-500 {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card td .text-sm {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .vehicle-table-card td .text-blue-700 {
+  color: #2563eb !important;
+}
+
+/* =========================================================
+   DRIVERS TABLE
+   ========================================================= */
+
+:root[data-theme="light"] .driver-table-head {
+  background:
+    linear-gradient(
+      180deg,
+      #f1f5f9,
+      #eaf0f6
+    ) !important;
+}
+
+:root[data-theme="light"] .driver-th {
+  color: #64748b !important;
+  border-bottom-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .driver-td {
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .driver-row:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .driver-cell-text {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .driver-name {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .driver-subtext,
+:root[data-theme="light"] .driver-assignment-subtext {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .driver-vehicle-id {
+  color: #2563eb !important;
+}
+
+/* =========================================================
+   SHIPMENTS TABLE
+   ========================================================= */
+
+:root[data-theme="light"] .shipment-table-head {
+  background:
+    linear-gradient(
+      180deg,
+      #f1f5f9,
+      #eaf0f6
+    ) !important;
+}
+
+:root[data-theme="light"] .shipment-th {
+  color: #64748b !important;
+  border-bottom-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .shipment-td {
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .shipment-row:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .shipment-id {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .shipment-tracking {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .shipment-route-point {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .shipment-route-arrow {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .shipment-muted-cell {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .shipment-entity {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .shipment-progress {
+  background: #dbe4ef !important;
+}
+
+:root[data-theme="light"] .shipment-progress-text {
+  color: #64748b !important;
+}
+
+/* Shipment buttons */
+
+:root[data-theme="light"] .shipment-btn-edit {
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+}
+
+:root[data-theme="light"] .shipment-btn-edit:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .shipment-btn-close {
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+}
+
+/* =========================================================
+   MAINTENANCE TABLE
+   ========================================================= */
+
+:root[data-theme="light"] .maintenance-table-head {
+  background:
+    linear-gradient(
+      180deg,
+      #f1f5f9,
+      #eaf0f6
+    ) !important;
+}
+
+:root[data-theme="light"] .maintenance-th {
+  color: #64748b !important;
+  border-bottom-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .maintenance-td {
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .maintenance-row:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .maintenance-record-id {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .maintenance-primary-text {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .maintenance-description-cell,
+:root[data-theme="light"] .maintenance-date-cell,
+:root[data-theme="light"] .maintenance-cost-cell {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   FUEL TABLE
+   ========================================================= */
+
+:root[data-theme="light"] .fuel-table-head {
+  background:
+    linear-gradient(
+      180deg,
+      #f1f5f9,
+      #eaf0f6
+    ) !important;
+}
+
+:root[data-theme="light"] .fuel-th {
+  color: #64748b !important;
+  border-bottom-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .fuel-td {
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .fuel-row:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .fuel-record-id,
+:root[data-theme="light"] .fuel-vehicle-id,
+:root[data-theme="light"] .fuel-total-cell {
+  color: #0f172a !important;
+}
+
+/* =========================================================
+   ALERTS TABLE
+   ========================================================= */
+
+:root[data-theme="light"] .alerts-table-head {
+  background:
+    linear-gradient(
+      180deg,
+      #f1f5f9,
+      #eaf0f6
+    ) !important;
+}
+
+:root[data-theme="light"] .alerts-th {
+  color: #64748b !important;
+  background: transparent !important;
+  border-bottom-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .alerts-td {
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root[data-theme="light"] .alerts-row:hover {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .alerts-id {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .alerts-primary-text {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .alerts-message-text {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .alerts-date-cell {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .alerts-resolved-date {
+  color: #64748b !important;
+}
+
+/* =========================================================
+   COMMON TAILWIND LIGHT-MODE OVERRIDES
+   Needed by Vehicles and some existing forms
+   ========================================================= */
+
+:root[data-theme="light"] .text-slate-800 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .text-slate-700 {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .text-slate-600 {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .text-slate-500 {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme="light"] .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+:root[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+/* Don't change white text on blue buttons */
+
+:root[data-theme="light"] .bg-blue-600 .text-white,
+:root[data-theme="light"] .bg-blue-700 .text-white,
+:root[data-theme="light"] button.bg-blue-600,
+:root[data-theme="light"] button.bg-blue-700 {
+  color: #ffffff !important;
+}
+
+:root[data-theme="light"] .bg-white {
+  background: #ffffff !important;
+}
+
+:root[data-theme="light"] .bg-slate-50 {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .bg-slate-950 {
+  background: #f8fafc !important;
+}
+
+:root[data-theme="light"] .bg-slate-900 {
+  background: #ffffff !important;
+}
+
+:root[data-theme="light"] .border-slate-200 {
+  border-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .border-slate-300 {
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-theme="light"] .border-slate-700 {
+  border-color: #dce3ec !important;
+}
+
+:root[data-theme="light"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+/* =========================================================
+   LIGHT EMPTY / LOADING STATES
+   ========================================================= */
+
+:root[data-theme="light"] .loading-card,
+:root[data-theme="light"] .dashboard-loading .loading-card,
+:root[data-theme="light"] .driver-loading-card,
+:root[data-theme="light"] .shipments-loading-card,
+:root[data-theme="light"] .maintenance-loading-card,
+:root[data-theme="light"] .fuel-loading-card,
+:root[data-theme="light"] .alerts-loading-card {
+  background: #ffffff !important;
+  border-color: #dce3ec !important;
+  color: #334155 !important;
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme="light"] .empty-row,
+:root[data-theme="light"] .driver-empty-state,
+:root[data-theme="light"] .shipment-empty-state,
+:root[data-theme="light"] .maintenance-empty-card,
+:root[data-theme="light"] .fuel-empty-card,
+:root[data-theme="light"] .alerts-empty-card {
+  background: #ffffff !important;
+  border-color: #dce3ec !important;
+  color: #64748b !important;
+}
+
+/* =========================================================
+   LIGHT ERROR / SUCCESS BOXES
+   ========================================================= */
+
+:root[data-theme="light"] .error-card {
+  background: #ffffff !important;
+  border-color: #fecaca !important;
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .driver-message,
+:root[data-theme="light"] .shipment-message,
+:root[data-theme="light"] .maintenance-message,
+:root[data-theme="light"] .fuel-message,
+:root[data-theme="light"] .alerts-message {
+  box-shadow:
+    0 5px 15px rgba(15, 23, 42, 0.04);
+}
+
+/* =========================================================
+   LIGHT MODALS
+   ========================================================= */
+
+:root[data-theme="light"] .vehicle-modal,
+:root[data-theme="light"] .driver-modal,
+:root[data-theme="light"] .shipment-modal,
+:root[data-theme="light"] .maintenance-modal,
+:root[data-theme="light"] .fuel-modal {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(37, 99, 235, 0.05),
+      transparent 35%
+    ),
+    #ffffff !important;
+
+  border-color: #dce3ec !important;
+
+  box-shadow:
+    0 30px 80px rgba(15, 23, 42, 0.20) !important;
+}
+
+:root[data-theme="light"] .vehicle-modal-overlay,
+:root[data-theme="light"] .driver-modal-overlay,
+:root[data-theme="light"] .shipment-modal-overlay,
+:root[data-theme="light"] .maintenance-modal-overlay,
+:root[data-theme="light"] .fuel-modal-overlay {
+  background: rgba(15, 23, 42, 0.38) !important;
+}
+
+:root[data-theme="light"] .shipment-modal-title,
+:root[data-theme="light"] .maintenance-modal-title,
+:root[data-theme="light"] .driver-modal-title,
+:root[data-theme="light"] .fuel-modal-title {
+  color: #0f172a !important;
+}
+
+/* Modal form fields */
+
+:root[data-theme="light"] .shipment-form-control,
+:root[data-theme="light"] .maintenance-form-control,
+:root[data-theme="light"] .fuel-form-control,
+:root[data-theme="light"] .driver-form-control {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root[data-theme="light"] .shipment-form-control::placeholder,
+:root[data-theme="light"] .maintenance-form-control::placeholder,
+:root[data-theme="light"] .fuel-form-control::placeholder {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme="light"] .shipment-form-label,
+:root[data-theme="light"] .maintenance-form-label,
+:root[data-theme="light"] .fuel-form-label,
+:root[data-theme="light"] .driver-form-label {
+  color: #334155 !important;
+}
+
+/* =========================================================
+   LOGIN - KEEP DARK CINEMATIC DESIGN
+   ========================================================= */
+
+:root[data-theme="light"] .login-page {
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      rgba(37, 99, 235, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 85%,
+      rgba(79, 70, 229, 0.10),
+      transparent 32%
+    ),
+    #f4f7fb !important;
+}
+
+/* =========================================================
+   SMOOTH THEME TRANSITION
+   ========================================================= */
+
+html,
+body,
+#root,
+.fleet-app,
+.app-sidebar,
+.app-main,
+.app-header,
+.app-content,
+.dashboard-card,
+.status-panel,
+.vehicle-table-card,
+.driver-table-card,
+.shipment-table-card,
+.maintenance-table-card,
+.fuel-table-card,
+.alerts-table-card {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* =========================================================
+   SHIPMENT LIVE TRACKING MAP
+   ========================================================= */
+
+.shipment-map-container {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.shipment-map {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  z-index: 1;
+}
+
+.shipment-map .leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  border-radius: 12px;
+}
+
+.shipment-map-message {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.82);
+  pointer-events: none;
+}

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import ShipmentMap from "../components/ShipmentMap";
+import {
+  closeShipmentWebSocket,
+  createShipmentWebSocket,
+} from "../services/shipmentWebSocketService";
+
 
 function Shipments() {
   const { user } = useAuth();
@@ -35,13 +41,19 @@ function Shipments() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
 
   const [selectedShipment, setSelectedShipment] = useState(null);
+  const [selectedTrackingShipment, setSelectedTrackingShipment] =
+    useState(null);
 
   const [shipmentHistory, setShipmentHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [shipmentForm, setShipmentForm] = useState(emptyForm);
+
+  const [webSocketStatus, setWebSocketStatus] = useState("DISCONNECTED");
+  const [webSocketError, setWebSocketError] = useState("");
 
   // =========================================================
   // LOAD DATA
@@ -100,6 +112,197 @@ function Shipments() {
   }, [isDriver]);
 
   // =========================================================
+  // REAL-TIME SHIPMENT TRACKING
+  // =========================================================
+
+  useEffect(() => {
+    if (
+      !showTrackingModal ||
+      !selectedTrackingShipment?.shipment_id
+    ) {
+      setWebSocketStatus("DISCONNECTED");
+      setWebSocketError("");
+
+      return undefined;
+    }
+
+    let websocket = null;
+
+    setWebSocketStatus("CONNECTING");
+    setWebSocketError("");
+
+    try {
+      websocket = createShipmentWebSocket(
+        selectedTrackingShipment.shipment_id,
+        {
+          onOpen: () => {
+            setWebSocketStatus("CONNECTED");
+            setWebSocketError("");
+          },
+
+          onMessage: (message) => {
+            if (
+              message.type === "tracking_connected" ||
+              message.type === "location_updated"
+            ) {
+              setSelectedTrackingShipment((previous) => {
+                if (!previous) {
+                  return previous;
+                }
+
+                return {
+                  ...previous,
+                  latitude:
+                    message.latitude ??
+                    previous.latitude ??
+                    null,
+
+                  longitude:
+                    message.longitude ??
+                    previous.longitude ??
+                    null,
+
+                  current_location:
+                    message.current_location ??
+                    previous.current_location ??
+                    null,
+
+                  delivery_progress:
+                    message.delivery_progress ??
+                    previous.delivery_progress ??
+                    0,
+
+                  status:
+                    message.status ??
+                    previous.status,
+
+                  updated_at:
+                    message.updated_at ??
+                    new Date().toISOString(),
+                };
+              });
+
+              setShipments((previousShipments) =>
+                previousShipments.map((shipment) => {
+                  if (
+                    shipment.shipment_id !==
+                    selectedTrackingShipment.shipment_id
+                  ) {
+                    return shipment;
+                  }
+
+                  return {
+                    ...shipment,
+
+                    latitude:
+                      message.latitude ??
+                      shipment.latitude ??
+                      null,
+
+                    longitude:
+                      message.longitude ??
+                      shipment.longitude ??
+                      null,
+
+                    current_location:
+                      message.current_location ??
+                      shipment.current_location ??
+                      null,
+
+                    delivery_progress:
+                      message.delivery_progress ??
+                      shipment.delivery_progress ??
+                      0,
+
+                    status:
+                      message.status ??
+                      shipment.status,
+
+                    updated_at:
+                      message.updated_at ??
+                      new Date().toISOString(),
+                  };
+                })
+              );
+            }
+
+            if (message.type === "error") {
+              setWebSocketError(
+                message.message ||
+                  "Unable to process tracking update."
+              );
+            }
+          },
+
+          onError: () => {
+            setWebSocketStatus("ERROR");
+            setWebSocketError(
+              "Unable to connect to live shipment tracking."
+            );
+          },
+
+          onClose: (event) => {
+            setWebSocketStatus("DISCONNECTED");
+
+            if (
+              event?.code !== 1000 &&
+              event?.code !== 1001
+            ) {
+              setWebSocketError(
+                "Live tracking connection closed."
+              );
+            }
+          },
+        }
+      );
+    } catch (err) {
+      console.error(
+        "Failed to create shipment WebSocket:",
+        err
+      );
+
+      setWebSocketStatus("ERROR");
+
+      setWebSocketError(
+        err.message ||
+          "Unable to start live shipment tracking."
+      );
+    }
+
+    return () => {
+      closeShipmentWebSocket(websocket);
+    };
+  }, [
+    showTrackingModal,
+    selectedTrackingShipment?.shipment_id,
+  ]);
+
+  // =========================================================
+  // OPEN TRACKING
+  // =========================================================
+
+  const openTracking = (shipment) => {
+    setSelectedTrackingShipment({
+      ...shipment,
+    });
+
+    setWebSocketStatus("CONNECTING");
+    setWebSocketError("");
+    setShowTrackingModal(true);
+  };
+
+  // =========================================================
+  // CLOSE TRACKING
+  // =========================================================
+
+  const closeTracking = () => {
+    setShowTrackingModal(false);
+    setSelectedTrackingShipment(null);
+    setWebSocketStatus("DISCONNECTED");
+    setWebSocketError("");
+  };
+
+  // =========================================================
   // STATUS CLASS
   // =========================================================
 
@@ -108,8 +311,17 @@ function Shipments() {
       case "PENDING":
         return "bg-amber-100 text-amber-700";
 
+      case "CREATED":
+        return "bg-slate-100 text-slate-700";
+
+      case "ASSIGNED":
+        return "bg-purple-100 text-purple-700";
+
       case "IN_TRANSIT":
         return "bg-blue-100 text-blue-700";
+
+      case "DELAYED":
+        return "bg-orange-100 text-orange-700";
 
       case "DELIVERED":
         return "bg-green-100 text-green-700";
@@ -167,14 +379,20 @@ function Shipments() {
       description: shipment.description || "",
       origin: shipment.origin || "",
       destination: shipment.destination || "",
-      due_date: formatDateTimeForInput(shipment.due_date),
+      due_date: formatDateTimeForInput(
+        shipment.due_date
+      ),
       vehicle_id: shipment.vehicle_id || "",
       driver_id: shipment.driver_id || "",
       status: shipment.status || "PENDING",
-      current_location: shipment.current_location || "",
-      expected_delivery_at: shipment.expected_delivery_at
-        ? formatDateTimeForInput(shipment.expected_delivery_at)
-        : "",
+      current_location:
+        shipment.current_location || "",
+      expected_delivery_at:
+        shipment.expected_delivery_at
+          ? formatDateTimeForInput(
+              shipment.expected_delivery_at
+            )
+          : "",
     });
 
     setError("");
@@ -215,7 +433,8 @@ function Shipments() {
       if (
         showEditModal &&
         selectedShipment &&
-        vehicle.vehicle_id === selectedShipment.vehicle_id
+        vehicle.vehicle_id ===
+          selectedShipment.vehicle_id
       ) {
         return true;
       }
@@ -241,7 +460,8 @@ function Shipments() {
       if (
         showEditModal &&
         selectedShipment &&
-        driver.driver_id === selectedShipment.driver_id
+        driver.driver_id ===
+          selectedShipment.driver_id
       ) {
         return true;
       }
@@ -301,9 +521,11 @@ function Shipments() {
       setSaving(true);
 
       const payload = {
-        description: shipmentForm.description.trim() || null,
+        description:
+          shipmentForm.description.trim() || null,
         origin: shipmentForm.origin.trim(),
-        destination: shipmentForm.destination.trim(),
+        destination:
+          shipmentForm.destination.trim(),
         due_date: shipmentForm.due_date,
         vehicle_id: shipmentForm.vehicle_id,
         driver_id: shipmentForm.driver_id,
@@ -315,11 +537,16 @@ function Shipments() {
 
       setShipmentForm(emptyForm);
 
-      setSuccessMessage("Shipment created successfully.");
+      setSuccessMessage(
+        "Shipment created successfully."
+      );
 
       await loadData();
     } catch (err) {
-      console.error("Failed to create shipment:", err);
+      console.error(
+        "Failed to create shipment:",
+        err
+      );
 
       if (err.response?.data?.detail) {
         setError(err.response.data.detail);
@@ -351,7 +578,8 @@ function Shipments() {
       const payload = {
         status: shipmentForm.status,
         current_location:
-          shipmentForm.current_location.trim() || null,
+          shipmentForm.current_location.trim() ||
+          null,
       };
 
       if (!isDriver) {
@@ -374,11 +602,16 @@ function Shipments() {
 
       setShipmentForm(emptyForm);
 
-      setSuccessMessage("Shipment updated successfully.");
+      setSuccessMessage(
+        "Shipment updated successfully."
+      );
 
       await loadData();
     } catch (err) {
-      console.error("Failed to update shipment:", err);
+      console.error(
+        "Failed to update shipment:",
+        err
+      );
 
       if (err.response?.data?.detail) {
         setError(err.response.data.detail);
@@ -420,7 +653,9 @@ function Shipments() {
       if (err.response?.data?.detail) {
         setError(err.response.data.detail);
       } else {
-        setError("Unable to load shipment history.");
+        setError(
+          "Unable to load shipment history."
+        );
       }
     } finally {
       setHistoryLoading(false);
@@ -660,7 +895,10 @@ function Shipments() {
                                 100,
                                 Math.max(
                                   0,
-                                  shipment.delivery_progress
+                                  Number(
+                                    shipment.delivery_progress ||
+                                      0
+                                  )
                                 )
                               )}%`,
                             }}
@@ -668,7 +906,7 @@ function Shipments() {
                         </div>
 
                         <span className="shipment-progress-text">
-                          {shipment.delivery_progress}%
+                          {shipment.delivery_progress || 0}%
                         </span>
                       </div>
                     </td>
@@ -699,24 +937,39 @@ function Shipments() {
                     {/* DUE DATE */}
 
                     <td className="shipment-td shipment-muted-cell">
-                      {formatDate(shipment.due_date)}
+                      {formatDate(
+                        shipment.due_date
+                      )}
                     </td>
 
                     {/* ACTIONS */}
 
                     <td className="shipment-td">
                       <div className="shipment-actions">
-                        {shipment.status !== "DELIVERED" &&
-                          shipment.status !== "CANCELLED" && (
-                          <button
-                            onClick={() =>
-                              openEditModal(shipment)
-                            }
-                            className="shipment-btn shipment-btn-edit"
-                          >
-                            Edit
-                          </button>
-                        )}
+                        <button
+                          onClick={() =>
+                            openTracking(shipment)
+                          }
+                          className="shipment-btn shipment-btn-track"
+                        >
+                          Track
+                        </button>
+
+                        {shipment.status !==
+                          "DELIVERED" &&
+                          shipment.status !==
+                            "CANCELLED" && (
+                            <button
+                              onClick={() =>
+                                openEditModal(
+                                  shipment
+                                )
+                              }
+                              className="shipment-btn shipment-btn-edit"
+                            >
+                              Edit
+                            </button>
+                          )}
 
                         <button
                           onClick={() =>
@@ -737,6 +990,201 @@ function Shipments() {
       )}
 
       {/* =====================================================
+          LIVE TRACKING MODAL
+          ===================================================== */}
+
+      {showTrackingModal &&
+        selectedTrackingShipment && (
+          <div className="shipment-modal-overlay">
+            <div
+              className="shipment-modal"
+              style={{
+                maxWidth: "1100px",
+                width: "95%",
+              }}
+            >
+              <ModalHeader
+                title={`Live Tracking — ${selectedTrackingShipment.shipment_id}`}
+                description={
+                  selectedTrackingShipment.tracking_number ||
+                  "Real-time shipment tracking"
+                }
+                onClose={closeTracking}
+              />
+
+              {/* CONNECTION STATUS */}
+
+              <div
+                className="mt-5 rounded-lg border px-4 py-3"
+                style={{
+                  borderColor:
+                    webSocketStatus === "CONNECTED"
+                      ? "#16a34a"
+                      : webSocketStatus ===
+                        "ERROR"
+                      ? "#dc2626"
+                      : "#64748b",
+                  background:
+                    webSocketStatus === "CONNECTED"
+                      ? "rgba(22, 163, 74, 0.08)"
+                      : webSocketStatus ===
+                        "ERROR"
+                      ? "rgba(220, 38, 38, 0.08)"
+                      : "rgba(100, 116, 139, 0.08)",
+                }}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-200">
+                      Live GPS Connection
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {webSocketStatus ===
+                        "CONNECTED" &&
+                        "Real-time location updates are active."}
+
+                      {webSocketStatus ===
+                        "CONNECTING" &&
+                        "Connecting to shipment tracking..."}
+
+                      {webSocketStatus ===
+                        "DISCONNECTED" &&
+                        "Tracking connection is disconnected."}
+
+                      {webSocketStatus ===
+                        "ERROR" &&
+                        "Unable to establish live tracking."}
+                    </p>
+                  </div>
+
+                  <span
+                    className="rounded-full px-3 py-1 text-xs font-semibold"
+                    style={{
+                      color:
+                        webSocketStatus ===
+                        "CONNECTED"
+                          ? "#16a34a"
+                          : webSocketStatus ===
+                            "ERROR"
+                          ? "#dc2626"
+                          : "#d97706",
+                      background:
+                        webSocketStatus ===
+                        "CONNECTED"
+                          ? "rgba(22, 163, 74, 0.12)"
+                          : webSocketStatus ===
+                            "ERROR"
+                          ? "rgba(220, 38, 38, 0.12)"
+                          : "rgba(217, 119, 6, 0.12)",
+                    }}
+                  >
+                    {webSocketStatus}
+                  </span>
+                </div>
+              </div>
+
+              {/* WEBSOCKET ERROR */}
+
+              {webSocketError && (
+                <div className="mt-3 rounded-lg border border-red-700 bg-red-950/30 px-4 py-3">
+                  <p className="text-xs text-red-300">
+                    {webSocketError}
+                  </p>
+                </div>
+              )}
+
+              {/* SHIPMENT INFO */}
+
+              <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+                <InfoItem
+                  label="Shipment"
+                  value={
+                    selectedTrackingShipment.shipment_id
+                  }
+                />
+
+                <InfoItem
+                  label="Status"
+                  value={
+                    selectedTrackingShipment.status
+                  }
+                />
+
+                <InfoItem
+                  label="Progress"
+                  value={`${selectedTrackingShipment.delivery_progress || 0}%`}
+                />
+
+                <InfoItem
+                  label="Location"
+                  value={
+                    selectedTrackingShipment.current_location ||
+                    "Waiting for GPS"
+                  }
+                />
+              </div>
+
+              {/* GPS COORDINATES */}
+
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <InfoItem
+                  label="Latitude"
+                  value={
+                    Number.isFinite(
+                      Number(
+                        selectedTrackingShipment.latitude
+                      )
+                    )
+                      ? Number(
+                          selectedTrackingShipment.latitude
+                        ).toFixed(6)
+                      : "Waiting for GPS"
+                  }
+                />
+
+                <InfoItem
+                  label="Longitude"
+                  value={
+                    Number.isFinite(
+                      Number(
+                        selectedTrackingShipment.longitude
+                      )
+                    )
+                      ? Number(
+                          selectedTrackingShipment.longitude
+                        ).toFixed(6)
+                      : "Waiting for GPS"
+                  }
+                />
+              </div>
+
+              {/* MAP */}
+
+              <div className="mt-5">
+                <ShipmentMap
+                  shipment={
+                    selectedTrackingShipment
+                  }
+                />
+              </div>
+
+              {/* CLOSE */}
+
+              <div className="shipment-history-close-wrap">
+                <button
+                  type="button"
+                  onClick={closeTracking}
+                  className="shipment-btn shipment-btn-close"
+                >
+                  Close Tracking
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* =====================================================
           ADD MODAL
           ===================================================== */}
 
@@ -754,12 +1202,13 @@ function Shipments() {
               className="mt-6"
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                 <div className="md:col-span-2">
                   <FormInput
                     label="Description"
                     name="description"
-                    value={shipmentForm.description}
+                    value={
+                      shipmentForm.description
+                    }
                     onChange={handleChange}
                     placeholder="Shipment description"
                   />
@@ -777,7 +1226,9 @@ function Shipments() {
                 <FormInput
                   label="Destination *"
                   name="destination"
-                  value={shipmentForm.destination}
+                  value={
+                    shipmentForm.destination
+                  }
                   onChange={handleChange}
                   placeholder="Chennai"
                   required
@@ -787,20 +1238,25 @@ function Shipments() {
                   label="Due Date *"
                   type="date"
                   name="due_date"
-                  value={shipmentForm.due_date}
+                  value={
+                    shipmentForm.due_date
+                  }
                   onChange={handleChange}
                   min={getTodayDate()}
                   required
-                />  
+                />
 
                 <FormSelect
                   label="Vehicle *"
                   name="vehicle_id"
-                  value={shipmentForm.vehicle_id}
+                  value={
+                    shipmentForm.vehicle_id
+                  }
                   onChange={handleChange}
                   options={getAvailableVehicles().map(
                     (vehicle) => ({
-                      value: vehicle.vehicle_id,
+                      value:
+                        vehicle.vehicle_id,
                       label: `${vehicle.vehicle_id} — ${vehicle.current_status}`,
                     })
                   )}
@@ -810,11 +1266,14 @@ function Shipments() {
                 <FormSelect
                   label="Driver *"
                   name="driver_id"
-                  value={shipmentForm.driver_id}
+                  value={
+                    shipmentForm.driver_id
+                  }
                   onChange={handleChange}
                   options={getAvailableDrivers().map(
                     (driver) => ({
-                      value: driver.driver_id,
+                      value:
+                        driver.driver_id,
                       label: `${driver.name} — ${driver.driver_id}`,
                     })
                   )}
@@ -822,20 +1281,23 @@ function Shipments() {
                 />
               </div>
 
-              {getAvailableVehicles().length === 0 && (
+              {getAvailableVehicles().length ===
+                0 && (
                 <div className="mt-5 rounded-lg border border-yellow-700 bg-yellow-950/40 px-4 py-3">
                   <p className="text-sm text-yellow-300">
-                    No AVAILABLE vehicles are currently
-                    available for shipment assignment.
+                    No AVAILABLE vehicles are
+                    currently available for
+                    shipment assignment.
                   </p>
                 </div>
               )}
 
-              {getAvailableDrivers().length === 0 && (
+              {getAvailableDrivers().length ===
+                0 && (
                 <div className="mt-3 rounded-lg border border-yellow-700 bg-yellow-950/40 px-4 py-3">
                   <p className="text-sm text-yellow-300">
-                    No ACTIVE unassigned drivers are
-                    currently available.
+                    No ACTIVE unassigned drivers
+                    are currently available.
                   </p>
                 </div>
               )}
@@ -867,22 +1329,30 @@ function Shipments() {
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <InfoItem
                   label="Shipment"
-                  value={selectedShipment?.shipment_id}
+                  value={
+                    selectedShipment?.shipment_id
+                  }
                 />
 
                 <InfoItem
                   label="Tracking"
-                  value={selectedShipment?.tracking_number}
+                  value={
+                    selectedShipment?.tracking_number
+                  }
                 />
 
                 <InfoItem
                   label="Vehicle"
-                  value={selectedShipment?.vehicle_id}
+                  value={
+                    selectedShipment?.vehicle_id
+                  }
                 />
 
                 <InfoItem
                   label="Driver"
-                  value={selectedShipment?.driver_id}
+                  value={
+                    selectedShipment?.driver_id
+                  }
                 />
               </div>
             </div>
@@ -903,8 +1373,20 @@ function Shipments() {
                       label: "PENDING",
                     },
                     {
+                      value: "CREATED",
+                      label: "CREATED",
+                    },
+                    {
+                      value: "ASSIGNED",
+                      label: "ASSIGNED",
+                    },
+                    {
                       value: "IN_TRANSIT",
                       label: "IN TRANSIT",
+                    },
+                    {
+                      value: "DELAYED",
+                      label: "DELAYED",
                     },
                     {
                       value: "DELIVERED",
@@ -920,7 +1402,9 @@ function Shipments() {
                 <FormInput
                   label="Current Location"
                   name="current_location"
-                  value={shipmentForm.current_location}
+                  value={
+                    shipmentForm.current_location
+                  }
                   onChange={handleChange}
                   placeholder="Current location"
                 />
@@ -930,7 +1414,9 @@ function Shipments() {
                     label="Expected Delivery"
                     type="date"
                     name="expected_delivery_at"
-                    value={shipmentForm.expected_delivery_at}
+                    value={
+                      shipmentForm.expected_delivery_at
+                    }
                     onChange={handleChange}
                     min={getTodayDate()}
                   />
@@ -938,31 +1424,60 @@ function Shipments() {
               </div>
 
               <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
-                {shipmentForm.status === "PENDING" && (
+                {shipmentForm.status ===
+                  "PENDING" && (
                   <p className="text-xs text-slate-400">
                     Shipment is waiting to begin.
                   </p>
                 )}
 
-                {shipmentForm.status === "IN_TRANSIT" && (
+                {shipmentForm.status ===
+                  "CREATED" && (
+                  <p className="text-xs text-slate-400">
+                    Shipment has been created and
+                    is waiting for assignment.
+                  </p>
+                )}
+
+                {shipmentForm.status ===
+                  "ASSIGNED" && (
+                  <p className="text-xs text-purple-300">
+                    Shipment has been assigned to
+                    a driver and vehicle.
+                  </p>
+                )}
+
+                {shipmentForm.status ===
+                  "IN_TRANSIT" && (
                   <p className="text-xs text-blue-300">
-                    Shipment is currently in transit.
-                    Starting time will be recorded
-                    automatically by the backend.
+                    Shipment is currently in
+                    transit. Starting time will be
+                    recorded automatically by the
+                    backend.
                   </p>
                 )}
 
-                {shipmentForm.status === "DELIVERED" && (
+                {shipmentForm.status ===
+                  "DELAYED" && (
+                  <p className="text-xs text-orange-300">
+                    Shipment is currently delayed.
+                  </p>
+                )}
+
+                {shipmentForm.status ===
+                  "DELIVERED" && (
                   <p className="text-xs text-green-300">
-                    Delivered shipments are automatically
-                    set to 100% progress.
+                    Delivered shipments are
+                    automatically set to 100%
+                    progress.
                   </p>
                 )}
 
-                {shipmentForm.status === "CANCELLED" && (
+                {shipmentForm.status ===
+                  "CANCELLED" && (
                   <p className="text-xs text-red-300">
-                    Cancelling this shipment will create a
-                    HIGH severity alert.
+                    Cancelling this shipment will
+                    create a HIGH severity alert.
                   </p>
                 )}
               </div>
@@ -970,7 +1485,11 @@ function Shipments() {
               {isDriver && (
                 <div className="mt-5 rounded-lg border border-blue-700 bg-blue-950/40 px-4 py-3">
                   <p className="text-xs text-blue-300">
-                    Drivers can update the status and current location of their assigned shipment. Progress is calculated automatically from status.
+                    Drivers can update the status
+                    and current location of their
+                    assigned shipment. Progress is
+                    calculated automatically from
+                    status.
                   </p>
                 </div>
               )}
@@ -1047,7 +1566,9 @@ function Shipments() {
                       </div>
 
                       <p className="shipment-history-time">
-                        {formatDateTime(item.event_time)}
+                        {formatDateTime(
+                          item.event_time
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1069,6 +1590,7 @@ function Shipments() {
     </div>
   );
 }
+
 
 // =========================================================
 // MODAL HEADER
@@ -1101,6 +1623,7 @@ function ModalHeader({
   );
 }
 
+
 // =========================================================
 // MODAL BUTTONS
 // =========================================================
@@ -1131,6 +1654,7 @@ function ModalButtons({
     </div>
   );
 }
+
 
 // =========================================================
 // FORM INPUT
@@ -1164,11 +1688,16 @@ function FormInput({
         min={min}
         max={max}
         disabled={disabled}
-        className={`shipment-form-control ${disabled ? "shipment-form-disabled" : ""}`}
+        className={`shipment-form-control ${
+          disabled
+            ? "shipment-form-disabled"
+            : ""
+        }`}
       />
     </div>
   );
 }
+
 
 // =========================================================
 // FORM SELECT
@@ -1194,7 +1723,11 @@ function FormSelect({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className={`shipment-form-control ${disabled ? "shipment-form-disabled" : ""}`}
+        className={`shipment-form-control ${
+          disabled
+            ? "shipment-form-disabled"
+            : ""
+        }`}
       >
         {emptyLabel && (
           <option value="">
@@ -1228,6 +1761,7 @@ function FormSelect({
   );
 }
 
+
 // =========================================================
 // INFO ITEM
 // =========================================================
@@ -1249,9 +1783,11 @@ function InfoItem({
   );
 }
 
+
 // =========================================================
 // DATE FORMAT
 // =========================================================
+
 function getTodayDate() {
   const today = new Date();
 
@@ -1269,7 +1805,6 @@ function getTodayDate() {
 }
 
 
-
 function formatDate(value) {
   if (!value) {
     return "—";
@@ -1283,6 +1818,7 @@ function formatDate(value) {
 
   return date.toLocaleDateString();
 }
+
 
 // =========================================================
 // DATE + TIME FORMAT
@@ -1301,6 +1837,7 @@ function formatDateTime(value) {
 
   return date.toLocaleString();
 }
+
 
 // =========================================================
 // DATETIME-LOCAL FORMAT
@@ -1337,5 +1874,6 @@ function formatDateTimeForInput(value) {
 
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
+
 
 export default Shipments;

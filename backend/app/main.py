@@ -9,6 +9,7 @@ from app.shipments.routes import router as shipments_router
 from app.alerts.routes import router as alerts_router
 from app.maintenance.routes import router as maintenance_router
 from app.fuel.routes import router as fuel_router
+from app.tracking.routes import router as tracking_router
 
 
 app = FastAPI(
@@ -37,8 +38,11 @@ app.include_router(shipments_router)
 app.include_router(alerts_router)
 app.include_router(maintenance_router)
 app.include_router(fuel_router)
+app.include_router(tracking_router)
 
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy"
+    }

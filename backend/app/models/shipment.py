@@ -51,6 +51,20 @@ class Shipment(Base):
         nullable=True,
     )
 
+    # =========================================================
+    # GPS TRACKING
+    # =========================================================
+
+    latitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    longitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
     delivery_progress: Mapped[float] = mapped_column(
         Float,
         nullable=False,
@@ -94,4 +108,3 @@ class Shipment(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
-    

@@ -10,7 +10,7 @@ import {
 
 import { useAuth } from "./context/AuthContext";
 import api from "./services/api";
-
+import { useTheme } from "./context/ThemeContext";
 import Login from "./pages/Login";
 import Vehicles from "./pages/Vehicles";
 import Drivers from "./pages/Drivers";
@@ -18,6 +18,7 @@ import Shipments from "./pages/Shipments";
 import Maintenance from "./pages/Maintenance";
 import Fuel from "./pages/Fuel";
 import Alerts from "./pages/Alerts";
+import Tracking from "./pages/Tracking";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -339,6 +340,16 @@ const navigation = [
       "DISPATCHER",
     ],
   },
+  {
+  name: "Live Tracking",
+  icon: "truck",
+  path: "/tracking",
+  roles: [
+    "ADMIN",
+    "MANAGER",
+    "DISPATCHER",
+  ],
+},
 ];
 
 
@@ -348,9 +359,14 @@ const navigation = [
 
 function App() {
   const {
-    user,
-    logout,
-  } = useAuth();
+  user,
+  logout,
+} = useAuth();
+
+const {
+  theme,
+  toggleTheme,
+} = useTheme();
 
 
   // ==========================================================
@@ -422,9 +438,51 @@ function App() {
 
         <div className="app-main">
           <header className="app-header">
-            <div className="header-left"><div className="header-brand-mark">FF</div><div><span>FleetFlow</span><strong>Operations Center</strong></div></div>
-            <div className="user-area"><div className="user-copy"><strong>{user.user_id}</strong><span>{user.role}</span></div><div className="avatar">{user.user_id?.charAt(0) || "U"}</div><button className="logout-button" onClick={logout}>Logout</button></div>
-          </header>
+  <div className="header-left">
+    <div className="header-brand-mark">FF</div>
+
+    <div>
+      <span>FleetFlow</span>
+      <strong>Operations Center</strong>
+    </div>
+  </div>
+
+  <div className="user-area">
+
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={toggleTheme}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+    >
+      <span className="theme-toggle-icon">
+        {theme === "dark" ? "☀" : "☾"}
+      </span>
+
+      <span className="theme-toggle-text">
+        {theme === "dark" ? "Light" : "Dark"}
+      </span>
+    </button>
+
+    <div className="user-copy">
+      <strong>{user.user_id}</strong>
+      <span>{user.role}</span>
+    </div>
+
+    <div className="avatar">
+      {user.user_id?.charAt(0) || "U"}
+    </div>
+
+    <button
+      className="logout-button"
+      onClick={logout}
+    >
+      Logout
+    </button>
+
+  </div>
+</header>
 
             <main className="app-content">
 
@@ -484,7 +542,20 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-
+                <Route
+                      path="/tracking"
+                      element={
+                        <ProtectedRoute
+                          allowedRoles={[
+                            "ADMIN",
+                            "MANAGER",
+                            "DISPATCHER",
+                          ]}
+                        >
+                          <Tracking />
+                        </ProtectedRoute>
+                      }
+                    />
 
                 {/* =================================================
                     DRIVERS
