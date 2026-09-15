@@ -52,6 +52,30 @@ class Shipment(Base):
     )
 
     # =========================================================
+    # SHIPMENT ROUTE COORDINATES
+    # =========================================================
+
+    origin_latitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    origin_longitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    destination_latitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    destination_longitude: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    # =========================================================
     # GPS TRACKING
     # =========================================================
 

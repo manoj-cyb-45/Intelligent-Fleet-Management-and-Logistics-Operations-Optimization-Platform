@@ -61,8 +61,15 @@ class ShipmentResponse(BaseModel):
     vehicle_id: str
     driver_id: str
 
+    # Live GPS coordinates
     latitude: float | None
     longitude: float | None
+
+    # Fixed route coordinates
+    origin_latitude: float | None
+    origin_longitude: float | None
+    destination_latitude: float | None
+    destination_longitude: float | None
 
     created_at: datetime
     updated_at: datetime

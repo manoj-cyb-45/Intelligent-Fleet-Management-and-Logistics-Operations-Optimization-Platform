@@ -1,6 +1,8 @@
 from datetime import datetime
 import re
 
+import requests
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -46,6 +48,63 @@ router = APIRouter(
 
 
 # =========================================================
+# GEOCODING
+# =========================================================
+
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+GEOCODING_USER_AGENT = "FleetFlow/1.0"
+
+
+def geocode_location(location: str) -> tuple[float, float]:
+    """
+    Convert a city/address entered by the user into
+    latitude and longitude using OpenStreetMap Nominatim.
+
+    The search is case-insensitive and ignores leading/trailing
+    whitespace, so inputs such as Bengaluru, bengaluru, BENGALURU,
+    and   Bengaluru   are treated equivalently.
+    """
+    normalized_location = " ".join(
+        location.strip().casefold().split()
+    )
+
+    try:
+        response = requests.get(
+            NOMINATIM_URL,
+            params={
+                "q": normalized_location,
+                "format": "json",
+                "limit": 1,
+            },
+            headers={
+                "User-Agent": GEOCODING_USER_AGENT,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        results = response.json()
+    except requests.RequestException as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Geocoding service unavailable for '{location}'.",
+        ) from error
+
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not locate '{location}'. Please enter a valid city or address.",
+        )
+
+    try:
+        return float(results[0]["lat"]), float(results[0]["lon"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Invalid geocoding response for '{location}'.",
+        ) from error
+
+
+# =========================================================
 # HELPERS
 # =========================================================
 
@@ -70,6 +129,10 @@ def build_shipment_response(
         driver_id=shipment.driver_id,
         latitude=shipment.latitude,
         longitude=shipment.longitude,
+        origin_latitude=shipment.origin_latitude,
+        origin_longitude=shipment.origin_longitude,
+        destination_latitude=shipment.destination_latitude,
+        destination_longitude=shipment.destination_longitude,
         created_at=shipment.created_at,
         updated_at=shipment.updated_at,
     )
@@ -278,6 +341,18 @@ def create_shipment(
         )
 
     # =====================================================
+    # GEOCODE ORIGIN / DESTINATION
+    # =====================================================
+
+    origin_latitude, origin_longitude = geocode_location(
+        shipment_data.origin
+    )
+
+    destination_latitude, destination_longitude = geocode_location(
+        shipment_data.destination
+    )
+
+    # =====================================================
     # CREATE SHIPMENT
     # =====================================================
 
@@ -298,6 +373,10 @@ def create_shipment(
         driver_id=shipment_data.driver_id,
         latitude=shipment_data.latitude,
         longitude=shipment_data.longitude,
+        origin_latitude=origin_latitude,
+        origin_longitude=origin_longitude,
+        destination_latitude=destination_latitude,
+        destination_longitude=destination_longitude,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )

@@ -322,35 +322,64 @@ function Shipments() {
   // ROUTE OPTIMIZATION
   // =========================================================
 
-  const geocodeLocation = async (location) => {
-    if (!location?.trim()) {
-      throw new Error("A location is required for route optimization.");
-    }
-
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(
-        location.trim()
-      )}`,
-      {
-        headers: {
-          Accept: "application/json",
-        },
-      }
+  const hasValidGpsCoordinates = () => {
+    const latitude = Number(
+      selectedTrackingShipment?.latitude
+    );
+    const longitude = Number(
+      selectedTrackingShipment?.longitude
     );
 
-    if (!response.ok) {
-      throw new Error("Unable to resolve the shipment location.");
-    }
+    return (
+      Number.isFinite(latitude) &&
+      Number.isFinite(longitude) &&
+      !(latitude === 0 && longitude === 0)
+    );
+  };
 
-    const results = await response.json();
+  const getStoredDestinationCoordinates = () => {
+    const latitude = Number(
+      selectedTrackingShipment?.destination_latitude
+    );
+    const longitude = Number(
+      selectedTrackingShipment?.destination_longitude
+    );
 
-    if (!results.length) {
-      throw new Error(`Unable to find location: ${location}`);
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      throw new Error(
+        "Stored destination coordinates are not available for this shipment."
+      );
     }
 
     return {
-      latitude: Number(results[0].lat),
-      longitude: Number(results[0].lon),
+      latitude,
+      longitude,
+    };
+  };
+
+  const getStoredOriginCoordinates = () => {
+    const latitude = Number(
+      selectedTrackingShipment?.origin_latitude
+    );
+    const longitude = Number(
+      selectedTrackingShipment?.origin_longitude
+    );
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude)
+    ) {
+      throw new Error(
+        "Stored origin coordinates are not available for this shipment."
+      );
+    }
+
+    return {
+      latitude,
+      longitude,
     };
   };
 
@@ -373,23 +402,23 @@ function Shipments() {
 
       let start;
 
+      // Prefer the live GPS position when available.
+      // Otherwise use the coordinates stored for the shipment origin.
       if (
-        Number.isFinite(currentLatitude) &&
-        Number.isFinite(currentLongitude)
+        hasValidGpsCoordinates()
       ) {
         start = {
           latitude: currentLatitude,
           longitude: currentLongitude,
         };
       } else {
-        start = await geocodeLocation(
-          selectedTrackingShipment.origin
-        );
+        start = getStoredOriginCoordinates();
       }
 
-      const destination = await geocodeLocation(
-        selectedTrackingShipment.destination
-      );
+      // Destination coordinates were generated automatically when
+      // the shipment was created and are now stored in PostgreSQL.
+      const destination =
+        getStoredDestinationCoordinates();
 
       const response = await api.post(
         "/route-optimizer/optimize",
@@ -432,6 +461,13 @@ function Shipments() {
       return;
     }
 
+    if (!hasValidGpsCoordinates()) {
+      setRouteError(
+        "Waiting for valid live GPS coordinates. Start or reconnect the GPS tracker and try again."
+      );
+      return;
+    }
+
     const currentLatitude = Number(
       selectedTrackingShipment.latitude
     );
@@ -439,24 +475,15 @@ function Shipments() {
       selectedTrackingShipment.longitude
     );
 
-    if (
-      !Number.isFinite(currentLatitude) ||
-      !Number.isFinite(currentLongitude)
-    ) {
-      setRouteError(
-        "Current GPS coordinates are required to recalculate the route."
-      );
-      return;
-    }
-
     setRouteLoading(true);
     setRouteError("");
     setRouteMetrics(null);
 
     try {
-      const destination = await geocodeLocation(
-        selectedTrackingShipment.destination
-      );
+      // Recalculation uses the current live GPS position as the
+      // start point and the stored destination coordinates.
+      const destination =
+        getStoredDestinationCoordinates();
 
       const response = await api.post(
         "/route-optimizer/recalculate",
@@ -1323,11 +1350,7 @@ function Shipments() {
                 <InfoItem
                   label="Latitude"
                   value={
-                    Number.isFinite(
-                      Number(
-                        selectedTrackingShipment.latitude
-                      )
-                    )
+                    hasValidGpsCoordinates()
                       ? Number(
                           selectedTrackingShipment.latitude
                         ).toFixed(6)
@@ -1338,11 +1361,7 @@ function Shipments() {
                 <InfoItem
                   label="Longitude"
                   value={
-                    Number.isFinite(
-                      Number(
-                        selectedTrackingShipment.longitude
-                      )
-                    )
+                    hasValidGpsCoordinates()
                       ? Number(
                           selectedTrackingShipment.longitude
                         ).toFixed(6)
@@ -1373,7 +1392,8 @@ function Shipments() {
 
                     <p className="mt-1 text-xs text-slate-400">
                       Generate or recalculate the road route using
-                      the current GPS position and shipment destination.
+                      live GPS data and the coordinates stored with
+                      the shipment.
                     </p>
                   </div>
 
@@ -1450,20 +1470,13 @@ function Shipments() {
                       onClick={recalculateShipmentRoute}
                       disabled={
                         routeLoading ||
-                        !Number.isFinite(
-                          Number(
-                            selectedTrackingShipment.latitude
-                          )
-                        ) ||
-                        !Number.isFinite(
-                          Number(
-                            selectedTrackingShipment.longitude
-                          )
-                        )
+                        !hasValidGpsCoordinates()
                       }
                       className="shipment-btn shipment-btn-edit"
                     >
-                      Recalculate From GPS
+                      {hasValidGpsCoordinates()
+                        ? "Recalculate From GPS"
+                        : "Waiting for GPS..."}
                     </button>
                   </div>
 
