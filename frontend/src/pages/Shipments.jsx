@@ -55,6 +55,13 @@ function Shipments() {
   const [webSocketStatus, setWebSocketStatus] = useState("DISCONNECTED");
   const [webSocketError, setWebSocketError] = useState("");
 
+  const [optimizedRoute, setOptimizedRoute] = useState([]);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState("");
+  const [routeMetrics, setRouteMetrics] = useState(null);
+  const [trafficLevel, setTrafficLevel] = useState("moderate");
+  const [optimizeBy, setOptimizeBy] = useState("time");
+
   // =========================================================
   // LOAD DATA
   // =========================================================
@@ -286,6 +293,12 @@ function Shipments() {
       ...shipment,
     });
 
+    setOptimizedRoute([]);
+    setRouteMetrics(null);
+    setRouteError("");
+    setTrafficLevel("moderate");
+    setOptimizeBy("time");
+
     setWebSocketStatus("CONNECTING");
     setWebSocketError("");
     setShowTrackingModal(true);
@@ -298,8 +311,187 @@ function Shipments() {
   const closeTracking = () => {
     setShowTrackingModal(false);
     setSelectedTrackingShipment(null);
+    setOptimizedRoute([]);
+    setRouteMetrics(null);
+    setRouteError("");
     setWebSocketStatus("DISCONNECTED");
     setWebSocketError("");
+  };
+
+  // =========================================================
+  // ROUTE OPTIMIZATION
+  // =========================================================
+
+  const geocodeLocation = async (location) => {
+    if (!location?.trim()) {
+      throw new Error("A location is required for route optimization.");
+    }
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(
+        location.trim()
+      )}`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Unable to resolve the shipment location.");
+    }
+
+    const results = await response.json();
+
+    if (!results.length) {
+      throw new Error(`Unable to find location: ${location}`);
+    }
+
+    return {
+      latitude: Number(results[0].lat),
+      longitude: Number(results[0].lon),
+    };
+  };
+
+  const optimizeShipmentRoute = async () => {
+    if (!selectedTrackingShipment) {
+      return;
+    }
+
+    setRouteLoading(true);
+    setRouteError("");
+    setRouteMetrics(null);
+
+    try {
+      const currentLatitude = Number(
+        selectedTrackingShipment.latitude
+      );
+      const currentLongitude = Number(
+        selectedTrackingShipment.longitude
+      );
+
+      let start;
+
+      if (
+        Number.isFinite(currentLatitude) &&
+        Number.isFinite(currentLongitude)
+      ) {
+        start = {
+          latitude: currentLatitude,
+          longitude: currentLongitude,
+        };
+      } else {
+        start = await geocodeLocation(
+          selectedTrackingShipment.origin
+        );
+      }
+
+      const destination = await geocodeLocation(
+        selectedTrackingShipment.destination
+      );
+
+      const response = await api.post(
+        "/route-optimizer/optimize",
+        {
+          start_lat: start.latitude,
+          start_lng: start.longitude,
+          end_lat: destination.latitude,
+          end_lng: destination.longitude,
+          optimize_by: optimizeBy,
+          traffic_level: trafficLevel,
+        }
+      );
+
+      setOptimizedRoute(response.data.route || []);
+      setRouteMetrics(response.data);
+    } catch (err) {
+      console.error(
+        "Failed to optimize shipment route:",
+        err
+      );
+
+      setOptimizedRoute([]);
+      setRouteMetrics(null);
+
+      if (err.response?.data?.detail) {
+        setRouteError(err.response.data.detail);
+      } else {
+        setRouteError(
+          err.message ||
+            "Unable to optimize shipment route."
+        );
+      }
+    } finally {
+      setRouteLoading(false);
+    }
+  };
+
+  const recalculateShipmentRoute = async () => {
+    if (!selectedTrackingShipment) {
+      return;
+    }
+
+    const currentLatitude = Number(
+      selectedTrackingShipment.latitude
+    );
+    const currentLongitude = Number(
+      selectedTrackingShipment.longitude
+    );
+
+    if (
+      !Number.isFinite(currentLatitude) ||
+      !Number.isFinite(currentLongitude)
+    ) {
+      setRouteError(
+        "Current GPS coordinates are required to recalculate the route."
+      );
+      return;
+    }
+
+    setRouteLoading(true);
+    setRouteError("");
+    setRouteMetrics(null);
+
+    try {
+      const destination = await geocodeLocation(
+        selectedTrackingShipment.destination
+      );
+
+      const response = await api.post(
+        "/route-optimizer/recalculate",
+        {
+          start_lat: currentLatitude,
+          start_lng: currentLongitude,
+          end_lat: destination.latitude,
+          end_lng: destination.longitude,
+          optimize_by: optimizeBy,
+          traffic_level: trafficLevel,
+        }
+      );
+
+      setOptimizedRoute(response.data.route || []);
+      setRouteMetrics(response.data);
+    } catch (err) {
+      console.error(
+        "Failed to recalculate shipment route:",
+        err
+      );
+
+      setOptimizedRoute([]);
+      setRouteMetrics(null);
+
+      if (err.response?.data?.detail) {
+        setRouteError(err.response.data.detail);
+      } else {
+        setRouteError(
+          err.message ||
+            "Unable to recalculate shipment route."
+        );
+      }
+    } finally {
+      setRouteLoading(false);
+    }
   };
 
   // =========================================================
@@ -1166,7 +1358,147 @@ function Shipments() {
                   shipment={
                     selectedTrackingShipment
                   }
+                  optimizedRoute={optimizedRoute}
                 />
+              </div>
+
+              {/* ROUTE OPTIMIZATION */}
+
+              <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-200">
+                      Route Optimization
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      Generate or recalculate the road route using
+                      the current GPS position and shipment destination.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="shipment-form-label">
+                        Optimize By
+                      </label>
+
+                      <select
+                        value={optimizeBy}
+                        onChange={(event) =>
+                          setOptimizeBy(event.target.value)
+                        }
+                        className="shipment-form-control"
+                        disabled={routeLoading}
+                      >
+                        <option value="time">
+                          Fastest Route
+                        </option>
+
+                        <option value="distance">
+                          Shortest Route
+                        </option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="shipment-form-label">
+                        Traffic Level
+                      </label>
+
+                      <select
+                        value={trafficLevel}
+                        onChange={(event) =>
+                          setTrafficLevel(event.target.value)
+                        }
+                        className="shipment-form-control"
+                        disabled={routeLoading}
+                      >
+                        <option value="low">
+                          Low
+                        </option>
+
+                        <option value="moderate">
+                          Moderate
+                        </option>
+
+                        <option value="high">
+                          High
+                        </option>
+
+                        <option value="severe">
+                          Severe
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={optimizeShipmentRoute}
+                      disabled={routeLoading}
+                      className="shipment-btn shipment-btn-track"
+                    >
+                      {routeLoading
+                        ? "Calculating..."
+                        : "Optimize Route"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={recalculateShipmentRoute}
+                      disabled={
+                        routeLoading ||
+                        !Number.isFinite(
+                          Number(
+                            selectedTrackingShipment.latitude
+                          )
+                        ) ||
+                        !Number.isFinite(
+                          Number(
+                            selectedTrackingShipment.longitude
+                          )
+                        )
+                      }
+                      className="shipment-btn shipment-btn-edit"
+                    >
+                      Recalculate From GPS
+                    </button>
+                  </div>
+
+                  {routeError && (
+                    <div className="rounded-lg border border-red-700 bg-red-950/30 px-4 py-3">
+                      <p className="text-xs text-red-300">
+                        {routeError}
+                      </p>
+                    </div>
+                  )}
+
+                  {routeMetrics && (
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                      <InfoItem
+                        label="Route Distance"
+                        value={`${routeMetrics.distance_km} km`}
+                      />
+
+                      <InfoItem
+                        label="OSRM ETA"
+                        value={`${routeMetrics.duration_min} min`}
+                      />
+
+                      <InfoItem
+                        label="Traffic ETA"
+                        value={`${routeMetrics.traffic_adjusted_duration_min} min`}
+                      />
+
+                      <InfoItem
+                        label="Traffic"
+                        value={routeMetrics.traffic_level}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* CLOSE */}

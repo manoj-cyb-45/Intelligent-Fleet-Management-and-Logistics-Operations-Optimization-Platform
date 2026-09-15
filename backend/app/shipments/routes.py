@@ -1386,16 +1386,16 @@ async def shipment_tracking_websocket(
             # =================================================
 
             # =================================================
-# AUTOMATIC STATUS FROM GPS MOVEMENT
-# =================================================
-#
-# Support legacy PENDING shipments created before
-# the Milestone 2 status workflow was introduced.
-#
-# PENDING / CREATED / ASSIGNED + valid GPS update
-#                    ↓
-#                IN_TRANSIT
-# =================================================
+                # AUTOMATIC STATUS FROM GPS MOVEMENT
+                # =================================================
+                #
+                # Support legacy PENDING shipments created before
+                # the Milestone 2 status workflow was introduced.
+                #
+                # PENDING / CREATED / ASSIGNED + valid GPS update
+                #                    ↓
+                #                IN_TRANSIT
+            # =================================================
 
             if shipment.status in {
                 "PENDING",

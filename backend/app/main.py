@@ -10,6 +10,7 @@ from app.alerts.routes import router as alerts_router
 from app.maintenance.routes import router as maintenance_router
 from app.fuel.routes import router as fuel_router
 from app.tracking.routes import router as tracking_router
+from app.route_optimizer.routes import router as route_optimizer_router
 
 
 app = FastAPI(
@@ -39,6 +40,7 @@ app.include_router(alerts_router)
 app.include_router(maintenance_router)
 app.include_router(fuel_router)
 app.include_router(tracking_router)
+app.include_router(route_optimizer_router)
 
 
 @app.get("/health")
