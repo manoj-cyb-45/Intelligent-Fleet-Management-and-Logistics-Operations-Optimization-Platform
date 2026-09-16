@@ -284,6 +284,56 @@ function Shipments() {
     selectedTrackingShipment?.shipment_id,
   ]);
 
+
+
+  // =========================================================
+// AUTOMATIC SHIPMENT LIST REFRESH
+// =========================================================
+
+useEffect(() => {
+  const refreshShipmentList = async () => {
+    try {
+      const response = await api.get("/shipments");
+
+      setShipments(response.data);
+
+      setSelectedTrackingShipment((previous) => {
+        if (!previous) {
+          return previous;
+        }
+
+        const updatedShipment = response.data.find(
+          (shipment) =>
+            shipment.shipment_id ===
+            previous.shipment_id
+        );
+
+        if (!updatedShipment) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          ...updatedShipment,
+        };
+      });
+    } catch (err) {
+      console.error(
+        "Failed to refresh shipment list:",
+        err
+      );
+    }
+  };
+
+  const refreshInterval = setInterval(
+    refreshShipmentList,
+    3000
+  );
+
+  return () => {
+    clearInterval(refreshInterval);
+  };
+}, []);
   // =========================================================
   // OPEN TRACKING
   // =========================================================
@@ -1125,7 +1175,7 @@ function Shipments() {
                         </div>
 
                         <span className="shipment-progress-text">
-                          {shipment.delivery_progress || 0}%
+                          {Number(shipment.delivery_progress || 0).toFixed(1)}%
                         </span>
                       </div>
                     </td>
@@ -1332,7 +1382,7 @@ function Shipments() {
 
                 <InfoItem
                   label="Progress"
-                  value={`${selectedTrackingShipment.delivery_progress || 0}%`}
+                  value={`${Number(selectedTrackingShipment.delivery_progress || 0).toFixed(1)}%`}
                 />
 
                 <InfoItem

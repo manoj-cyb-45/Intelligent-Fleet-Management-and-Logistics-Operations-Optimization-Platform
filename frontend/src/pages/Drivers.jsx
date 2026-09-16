@@ -32,6 +32,7 @@ function Drivers() {
 
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [shipments, setShipments] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,9 +68,11 @@ function Drivers() {
       const [
         driverResponse,
         vehicleResponse,
+        shipmentResponse,
       ] = await Promise.all([
         api.get("/drivers"),
         api.get("/vehicles"),
+        api.get("/shipments"),
       ]);
 
       setDrivers(
@@ -81,6 +84,12 @@ function Drivers() {
       setVehicles(
         Array.isArray(vehicleResponse.data)
           ? vehicleResponse.data
+          : []
+      );
+
+      setShipments(
+        Array.isArray(shipmentResponse.data)
+          ? shipmentResponse.data
           : []
       );
     } catch (err) {
@@ -107,6 +116,38 @@ function Drivers() {
 
     initialLoad();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // =========================================================
+  // FIND CURRENT SHIPMENT FOR DRIVER
+  // =========================================================
+
+  const getCurrentShipment = (driver) => {
+    if (!driver) {
+      return null;
+    }
+
+    const driverId =
+      driver.driver_id ||
+      driver.user_id;
+
+    return (
+      shipments.find(
+        (shipment) =>
+          (shipment.driver_id === driverId) &&
+          ["CREATED", "ASSIGNED", "IN_TRANSIT", "DELAYED"].includes(
+            String(shipment.status || "").toUpperCase()
+          )
+      ) || null
+    );
+  };
 
   // =========================================================
   // FIND VEHICLE ASSIGNED TO DRIVER
@@ -1092,6 +1133,10 @@ function Drivers() {
                   </th>
 
                   <th className="driver-th">
+                    Current Shipment
+                  </th>
+
+                  <th className="driver-th">
                     Actions
                   </th>
                 </tr>
@@ -1113,6 +1158,9 @@ function Drivers() {
                     const isInTransit =
                       currentVehicle?.current_status ===
                       "IN_TRANSIT";
+
+                    const currentShipment =
+                      getCurrentShipment(driver);
 
                     return (
                       <tr
@@ -1214,6 +1262,27 @@ function Drivers() {
                               driver.account_status
                             }
                           </span>
+                        </td>
+
+                        {/* CURRENT SHIPMENT */}
+
+                        <td className="driver-td">
+                          {currentShipment ? (
+                            <div>
+                              <p className="driver-vehicle-id">
+                                {currentShipment.shipment_id}
+                              </p>
+                              <p className="driver-subtext">
+                                {String(currentShipment.status || "").replaceAll("_", " ")}
+                                {" · "}
+                                {Number(currentShipment.delivery_progress || 0).toFixed(1)}%
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="driver-not-assigned">
+                              No active shipment
+                            </span>
+                          )}
                         </td>
 
                         {/* ACTIONS */}

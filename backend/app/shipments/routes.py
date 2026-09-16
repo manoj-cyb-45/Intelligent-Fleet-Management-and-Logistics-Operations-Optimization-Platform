@@ -179,6 +179,95 @@ def get_active_assignment_for_driver(
     )
 
 
+def ensure_shipment_assignment(
+    db: Session,
+    vehicle: Vehicle,
+    driver: User,
+):
+    """
+    Keep the shipment's vehicle/driver pair synchronized with the
+    canonical DriverVehicleAssignment record.
+
+    A shipment may use an already matching active assignment. If neither
+    side is assigned, create the assignment automatically. Conflicting
+    active assignments are rejected instead of allowing inconsistent data.
+    """
+    if driver.account_status != "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Only ACTIVE drivers can be assigned to shipments.",
+        )
+
+    if vehicle.current_status in {"MAINTENANCE", "RETIRED"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Vehicle {vehicle.vehicle_id} is "
+                f"{vehicle.current_status.lower()} and cannot be assigned."
+            ),
+        )
+
+    vehicle_assignment = get_active_assignment_for_vehicle(
+        db,
+        vehicle.vehicle_id,
+    )
+    driver_assignment = get_active_assignment_for_driver(
+        db,
+        driver.user_id,
+    )
+
+    if (
+        vehicle_assignment
+        and vehicle_assignment.driver_id != driver.user_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Vehicle {vehicle.vehicle_id} is already assigned "
+                f"to driver {vehicle_assignment.driver_id}."
+            ),
+        )
+
+    if (
+        driver_assignment
+        and driver_assignment.vehicle_id != vehicle.vehicle_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Driver {driver.user_id} is already assigned "
+                f"to vehicle {driver_assignment.vehicle_id}."
+            ),
+        )
+
+    if not vehicle_assignment and not driver_assignment:
+        assignment = DriverVehicleAssignment(
+            driver_id=driver.user_id,
+            vehicle_id=vehicle.vehicle_id,
+            start_date=datetime.utcnow(),
+            status="ACTIVE",
+        )
+        db.add(assignment)
+        db.flush()
+
+    elif vehicle_assignment and not driver_assignment:
+        # Repair a legacy one-sided vehicle assignment.
+        if vehicle_assignment.driver_id == driver.user_id:
+            pass
+
+    elif driver_assignment and not vehicle_assignment:
+        # Repair a legacy one-sided driver assignment.
+        if driver_assignment.vehicle_id == vehicle.vehicle_id:
+            pass
+
+    vehicle.current_status = (
+        "IN_TRANSIT"
+        if vehicle.current_status == "IN_TRANSIT"
+        else "ASSIGNED"
+    )
+    db.add(vehicle)
+
+
 def get_transit_shipment_for_vehicle(
     db: Session,
     vehicle_id: str,
@@ -339,6 +428,16 @@ def create_shipment(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Driver not found",
         )
+
+    # =====================================================
+    # SYNCHRONIZE VEHICLE <-> DRIVER ASSIGNMENT
+    # =====================================================
+
+    ensure_shipment_assignment(
+        db,
+        vehicle,
+        driver,
+    )
 
     # =====================================================
     # GEOCODE ORIGIN / DESTINATION
@@ -1489,18 +1588,12 @@ async def shipment_tracking_websocket(
                     or datetime.utcnow()
                 )
 
-                if shipment.delivery_progress < 10:
-                    shipment.delivery_progress = 10.0
-
                 shipment.status = "IN_TRANSIT"
 
                 shipment.started_at = (
                     shipment.started_at
                     or datetime.utcnow()
                 )
-
-                if shipment.delivery_progress < 10:
-                    shipment.delivery_progress = 10.0
 
             # =================================================
             # AUTO COMPLETE

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,11 +13,23 @@ from app.maintenance.routes import router as maintenance_router
 from app.fuel.routes import router as fuel_router
 from app.tracking.routes import router as tracking_router
 from app.route_optimizer.routes import router as route_optimizer_router
+from app.tracking.simulator import automatic_shipment_simulator
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await automatic_shipment_simulator.start()
+
+    try:
+        yield
+    finally:
+        await automatic_shipment_simulator.stop()
 
 
 app = FastAPI(
     title="FleetFlow API",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 

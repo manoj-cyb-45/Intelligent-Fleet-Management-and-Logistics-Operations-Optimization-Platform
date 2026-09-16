@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 function Alerts() {
+  const navigate = useNavigate();
+
   // =========================================================
   // STATE
   // =========================================================
@@ -61,14 +64,56 @@ function Alerts() {
     loadAlerts();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadAlerts();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   // =========================================================
   // RESOLVE ALERT
   // =========================================================
 
   const resolveAlert = async (
-    alertId
+    alertId,
+    alertType,
+    alertMessage
   ) => {
+
+    // LOW_FUEL alerts are resolved through the fuel-record
+    // workflow. Do not mark the alert resolved before the
+    // vehicle is actually refueled.
+    if (
+      alertType?.toUpperCase() === "LOW_FUEL"
+    ) {
+      const vehicleMatch =
+        (alertMessage || "").match(
+          /Vehicle\s+([A-Za-z0-9_-]+)/i
+        );
+
+      const vehicleId =
+        vehicleMatch?.[1];
+
+      if (!vehicleId) {
+        setError(
+          "Unable to determine the vehicle for this low-fuel alert."
+        );
+        return;
+      }
+
+      navigate("/fuel", {
+        state: {
+          openAddFuelModal: true,
+          vehicleId,
+          alertId,
+        },
+      });
+
+      return;
+    }
 
     try {
 
@@ -667,7 +712,9 @@ function Alerts() {
                             <button
                               onClick={() =>
                                 resolveAlert(
-                                  alert.alert_id
+                                  alert.alert_id,
+                                  alert.alert_type,
+                                  alert.message
                                 )
                               }
                               disabled={
@@ -679,8 +726,11 @@ function Alerts() {
 
                               {resolvingId ===
                               alert.alert_id
-                                ? "Resolving..."
-                                : "Resolve"}
+                                ? "Opening..."
+                                : alert.alert_type?.toUpperCase() ===
+                                  "LOW_FUEL"
+                                  ? "Refuel & Resolve"
+                                  : "Resolve"}
 
                             </button>
 

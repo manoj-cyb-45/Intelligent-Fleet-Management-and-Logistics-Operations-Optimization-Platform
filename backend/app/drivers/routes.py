@@ -574,7 +574,7 @@ def assign_vehicle(
     # =====================================================
 
     existing_vehicle_assignment = (
-        db.transit_shipmentquery(DriverVehicleAssignment)
+        db.query(DriverVehicleAssignment)
         .filter(
             DriverVehicleAssignment.vehicle_id
             == vehicle.vehicle_id,
