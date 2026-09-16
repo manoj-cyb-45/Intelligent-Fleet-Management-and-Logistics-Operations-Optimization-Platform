@@ -35,6 +35,12 @@ class Vehicle(Base):
         nullable=False,
     )
 
+    fuel_tank_capacity: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=120.0,
+    )
+
     current_status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,

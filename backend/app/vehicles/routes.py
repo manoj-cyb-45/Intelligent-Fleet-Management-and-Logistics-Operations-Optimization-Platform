@@ -102,6 +102,7 @@ def build_vehicle_response(
         vehicle_type=vehicle.vehicle_type,
         capacity=vehicle.capacity,
         fuel_type=vehicle.fuel_type,
+        fuel_tank_capacity=vehicle.fuel_tank_capacity,
         current_status=vehicle.current_status,
         current_location=vehicle.current_location,
         fuel_level=vehicle.fuel_level,
@@ -237,6 +238,7 @@ def create_vehicle(
         vehicle_type=vehicle_data.vehicle_type,
         capacity=vehicle_data.capacity,
         fuel_type=vehicle_data.fuel_type,
+        fuel_tank_capacity=vehicle_data.fuel_tank_capacity,
         current_status=vehicle_data.current_status,
         current_location=vehicle_data.current_location,
         fuel_level=vehicle_data.fuel_level,
@@ -625,6 +627,10 @@ def update_vehicle(
 
     vehicle.fuel_type = (
         vehicle_data.fuel_type
+    )
+
+    vehicle.fuel_tank_capacity = (
+        vehicle_data.fuel_tank_capacity
     )
 
     vehicle.current_status = (

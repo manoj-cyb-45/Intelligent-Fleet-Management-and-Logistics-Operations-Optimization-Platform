@@ -9,7 +9,10 @@ function Fuel() {
   const emptyForm = {
     vehicle_id: "",
     fuel_date: "",
-    fuel_type: "DIESEL",
+    fuel_type: "",
+    fuel_tank_capacity: "",
+    current_fuel_level: "",
+
     quantity: "",
     cost_per_unit: "",
     total_cost: "",
@@ -130,11 +133,31 @@ function Fuel() {
 
           vehicle_id: value,
 
-          // Automatically show the vehicle's
-          // current fuel level when selected.
-          fuel_level:
+          // Vehicle-derived values are automatically
+          // populated and should not be manually changed.
+          fuel_type:
+            selectedVehicle?.fuel_type ??
+            "",
+
+          fuel_tank_capacity:
+            selectedVehicle?.fuel_tank_capacity ??
+            "",
+
+          current_fuel_level:
             selectedVehicle?.fuel_level ??
             "",
+
+          // The odometer is read from the vehicle's current mileage.
+          // It is not manually editable in the fuel-entry workflow.
+          odometer_reading:
+            selectedVehicle?.mileage ??
+            0,
+
+          // Start from the vehicle's current fuel level. The new level
+          // is recalculated automatically when the refill quantity changes.
+          fuel_level:
+            selectedVehicle?.fuel_level ??
+            0,
         })
       );
 
@@ -185,6 +208,33 @@ function Fuel() {
   };
 
   // =========================================================
+  // AUTO CALCULATE NEW FUEL LEVEL
+  // =========================================================
+
+  const calculateNewFuelLevel = (
+    quantity,
+    currentFuel,
+    tankCapacity
+  ) => {
+    const q = Number(quantity);
+    const current = Number(currentFuel);
+    const tank = Number(tankCapacity);
+
+    if (
+      !Number.isFinite(q) ||
+      !Number.isFinite(current) ||
+      !Number.isFinite(tank) ||
+      q < 0 ||
+      current < 0 ||
+      tank <= 0
+    ) {
+      return currentFuel ?? "";
+    }
+
+    return Math.min(100, current + (q / tank) * 100).toFixed(1);
+  };
+
+  // =========================================================
   // QUANTITY / COST CHANGE
   // =========================================================
 
@@ -216,6 +266,15 @@ function Fuel() {
               name === "cost_per_unit"
                 ? value
                 : previous.cost_per_unit
+            );
+        }
+
+        if (name === "quantity") {
+          updated.fuel_level =
+            calculateNewFuelLevel(
+              value,
+              previous.current_fuel_level,
+              previous.fuel_tank_capacity
             );
         }
 
@@ -270,13 +329,20 @@ function Fuel() {
         record.vehicle_id || "",
 
       fuel_date:
-        formatDateForInput(
-          record.fuel_date
-        ),
+        getCurrentDate(),
 
       fuel_type:
+        selectedVehicle?.fuel_type ||
         record.fuel_type ||
-        "DIESEL",
+        "",
+
+      fuel_tank_capacity:
+        selectedVehicle?.fuel_tank_capacity ??
+        "",
+
+      current_fuel_level:
+        selectedVehicle?.fuel_level ??
+        "",
 
       quantity:
         record.quantity ?? "",
@@ -346,9 +412,11 @@ function Fuel() {
     // DATE
     // -------------------------------------------------------
 
-    if (!fuelForm.fuel_date) {
+    const today = getCurrentDate();
+
+    if (fuelForm.fuel_date !== today) {
       setError(
-        "Fuel date is required."
+        "Fuel date must be today's date."
       );
 
       return false;
@@ -370,11 +438,53 @@ function Fuel() {
     // QUANTITY
     // -------------------------------------------------------
 
+    const selectedVehicle =
+      vehicles.find(
+        (vehicle) =>
+          vehicle.vehicle_id ===
+          fuelForm.vehicle_id
+      );
+
+    const tankCapacity =
+      Number(
+        selectedVehicle?.fuel_tank_capacity ??
+        fuelForm.fuel_tank_capacity
+      );
+
+    const currentFuel =
+      Number(
+        selectedVehicle?.fuel_level ??
+        fuelForm.current_fuel_level
+      );
+
+    const maxRefillQuantity =
+      tankCapacity > 0 &&
+      !Number.isNaN(currentFuel)
+        ? tankCapacity *
+          Math.max(
+            0,
+            (100 - currentFuel) / 100
+          )
+        : tankCapacity;
+
     if (
       Number(fuelForm.quantity) <= 0
     ) {
       setError(
         "Quantity must be greater than 0."
+      );
+
+      return false;
+    }
+
+    if (
+      !Number.isNaN(maxRefillQuantity) &&
+      maxRefillQuantity >= 0 &&
+      Number(fuelForm.quantity) >
+        maxRefillQuantity + 0.000001
+    ) {
+      setError(
+        `Quantity cannot exceed the vehicle's remaining tank capacity (${maxRefillQuantity.toFixed(1)} L).`
       );
 
       return false;
@@ -413,12 +523,12 @@ function Fuel() {
     // -------------------------------------------------------
 
     if (
-      Number(
-        fuelForm.odometer_reading
-      ) < 0
+      selectedVehicle?.mileage != null &&
+      Number(fuelForm.odometer_reading) !==
+        Number(selectedVehicle.mileage)
     ) {
       setError(
-        "Odometer reading cannot be negative."
+        "Odometer reading is automatically taken from the vehicle's current mileage."
       );
 
       return false;
@@ -428,13 +538,32 @@ function Fuel() {
     // FUEL LEVEL
     // -------------------------------------------------------
 
+    const expectedFuelLevel = calculateNewFuelLevel(
+      fuelForm.quantity,
+      currentFuel,
+      tankCapacity
+    );
+
     if (
       fuelForm.fuel_level === "" ||
       Number(fuelForm.fuel_level) < 0 ||
       Number(fuelForm.fuel_level) > 100
     ) {
       setError(
-        "Fuel level must be between 0% and 100%."
+        "New fuel level must be between 0% and 100%."
+      );
+
+      return false;
+    }
+
+    if (
+      Math.abs(
+        Number(fuelForm.fuel_level) -
+        Number(expectedFuelLevel)
+      ) > 0.11
+    ) {
+      setError(
+        "New fuel level is calculated automatically from the current fuel level, tank capacity, and refill quantity."
       );
 
       return false;
@@ -467,7 +596,7 @@ function Fuel() {
           fuelForm.vehicle_id,
 
         fuel_date:
-          `${fuelForm.fuel_date}T00:00:00`,
+          `${getCurrentDate()}T00:00:00`,
 
         fuel_type:
           fuelForm.fuel_type,
@@ -566,7 +695,7 @@ function Fuel() {
           fuelForm.vehicle_id,
 
         fuel_date:
-          `${fuelForm.fuel_date}T00:00:00`,
+          `${getCurrentDate()}T00:00:00`,
 
         fuel_type:
           fuelForm.fuel_type,
@@ -1242,6 +1371,28 @@ function FuelModal({
 
               )}
 
+              {form.vehicle_id && (
+                <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Current Fuel</span>
+                    <strong>
+                      {form.current_fuel_level === ""
+                        ? "N/A"
+                        : `${Number(form.current_fuel_level).toFixed(1)}%`}
+                    </strong>
+                  </div>
+
+                  <div className="mt-1 flex justify-between">
+                    <span>Tank Capacity</span>
+                    <strong>
+                      {form.fuel_tank_capacity === ""
+                        ? "N/A"
+                        : `${Number(form.fuel_tank_capacity).toFixed(1)} L`}
+                    </strong>
+                  </div>
+                </div>
+              )}
+
             </div>
 
             {/* =================================================
@@ -1258,6 +1409,7 @@ function FuelModal({
               onChange={
                 onChange
               }
+              disabled
               required
             />
 
@@ -1266,45 +1418,22 @@ function FuelModal({
                 ================================================= */}
 
             <div>
-
               <label className="fuel-form-label">
                 Fuel Type *
               </label>
 
-              <select
-                name="fuel_type"
+              <input
+                type="text"
                 value={
-                  form.fuel_type
+                  form.fuel_type || "Select a vehicle"
                 }
-                onChange={
-                  onChange
-                }
-                required
-                className="fuel-form-control"
-              >
+                readOnly
+                className="fuel-form-control bg-slate-100"
+              />
 
-                <option value="DIESEL">
-                  DIESEL
-                </option>
-
-                <option value="PETROL">
-                  PETROL
-                </option>
-
-                <option value="CNG">
-                  CNG
-                </option>
-
-                <option value="ELECTRIC">
-                  ELECTRIC
-                </option>
-
-                <option value="HYBRID">
-                  HYBRID
-                </option>
-
-              </select>
-
+              <p className="mt-1 text-xs text-slate-500">
+                Automatically loaded from the selected vehicle.
+              </p>
             </div>
 
             {/* =================================================
@@ -1322,10 +1451,80 @@ function FuelModal({
                 onQuantityOrCostChange
               }
               min="0.01"
+              max={
+                (() => {
+                  const vehicle =
+                    vehicles.find(
+                      (item) =>
+                        item.vehicle_id ===
+                        form.vehicle_id
+                    );
+
+                  const tank =
+                    Number(
+                      vehicle?.fuel_tank_capacity ??
+                      form.fuel_tank_capacity
+                    );
+
+                  const current =
+                    Number(
+                      vehicle?.fuel_level ??
+                      form.current_fuel_level
+                    );
+
+                  if (
+                    !Number.isNaN(tank) &&
+                    tank > 0 &&
+                    !Number.isNaN(current)
+                  ) {
+                    return (
+                      tank *
+                      Math.max(
+                        0,
+                        (100 - current) / 100
+                      )
+                    ).toFixed(1);
+                  }
+
+                  return undefined;
+                })()
+              }
               step="0.01"
               placeholder="50"
               required
             />
+
+            {form.vehicle_id &&
+              form.fuel_tank_capacity !== "" && (
+                <p className="mt-1 text-xs text-slate-500">
+                  Maximum refill:
+                  {" "}
+                  {(() => {
+                    const tank =
+                      Number(
+                        form.fuel_tank_capacity
+                      );
+                    const current =
+                      Number(
+                        form.current_fuel_level
+                      );
+                    if (
+                      tank > 0 &&
+                      !Number.isNaN(current)
+                    ) {
+                      return (
+                        tank *
+                        Math.max(
+                          0,
+                          (100 - current) / 100
+                        )
+                      ).toFixed(1);
+                    }
+                    return "0.0";
+                  })()}
+                  {" "}L
+                </p>
+              )}
 
             {/* =================================================
                 COST PER UNIT
@@ -1378,35 +1577,39 @@ function FuelModal({
               value={
                 form.odometer_reading
               }
-              onChange={
-                onChange
-              }
+              readOnly
               min="0"
               step="0.01"
               placeholder="25000"
               required
             />
 
+            <p className="-mt-3 text-xs text-slate-500">
+              Automatically loaded from the vehicle's current mileage.
+            </p>
+
             {/* =================================================
                 FUEL LEVEL
                 ================================================= */}
 
             <FormInput
-              label="Current Fuel Level (%) *"
+              label="New Fuel Level (%) *"
               type="number"
               name="fuel_level"
               value={
                 form.fuel_level
               }
-              onChange={
-                onChange
-              }
+              readOnly
               min="0"
               max="100"
               step="0.1"
-              placeholder="75"
+              placeholder="100"
               required
             />
+
+            <p className="-mt-3 text-xs text-slate-500">
+              Automatically calculated from current fuel + refill quantity.
+            </p>
 
           </div>
 
@@ -1582,6 +1785,8 @@ function FormInput({
   min,
   max,
   step,
+  disabled = false,
+  readOnly = false,
 }) {
   return (
 
@@ -1601,6 +1806,8 @@ function FormInput({
         min={min}
         max={max}
         step={step}
+        disabled={disabled}
+        readOnly={readOnly}
         className="fuel-form-control"
       />
 

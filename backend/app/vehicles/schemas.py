@@ -8,6 +8,8 @@ class VehicleCreate(BaseModel):
     capacity: float = Field(gt=0)
     fuel_type: str = Field(min_length=1, max_length=30)
 
+    fuel_tank_capacity: float = Field(gt=0)
+
     current_status: str = Field(
         default="AVAILABLE"
     )
@@ -35,6 +37,7 @@ class VehicleResponse(BaseModel):
     vehicle_type: str
     capacity: float
     fuel_type: str
+    fuel_tank_capacity: float
     current_status: str
     current_location: str | None
     fuel_level: float | None

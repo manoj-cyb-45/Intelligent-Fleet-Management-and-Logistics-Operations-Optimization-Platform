@@ -51,6 +51,7 @@ function Vehicles() {
     registration_number: "",
     vehicle_type: "TRUCK",
     capacity: "",
+    fuel_tank_capacity: "",
     fuel_type: "DIESEL",
     current_status: "AVAILABLE",
     current_location: "",
@@ -269,6 +270,9 @@ function Vehicles() {
       capacity:
         vehicle.capacity ?? "",
 
+      fuel_tank_capacity:
+        vehicle.fuel_tank_capacity ?? "",
+
       fuel_type:
         vehicle.fuel_type || "DIESEL",
 
@@ -346,6 +350,16 @@ function Vehicles() {
     ) {
       setError(
         "Capacity must be greater than 0."
+      );
+      return false;
+    }
+
+    if (
+      vehicleForm.fuel_tank_capacity === "" ||
+      Number(vehicleForm.fuel_tank_capacity) <= 0
+    ) {
+      setError(
+        "Fuel tank capacity must be greater than 0."
       );
       return false;
     }
@@ -454,6 +468,9 @@ function Vehicles() {
 
         capacity:
           Number(vehicleForm.capacity),
+
+        fuel_tank_capacity:
+          Number(vehicleForm.fuel_tank_capacity),
 
         fuel_type:
           vehicleForm.fuel_type,
@@ -583,6 +600,9 @@ function Vehicles() {
 
         capacity:
           Number(vehicleForm.capacity),
+
+        fuel_tank_capacity:
+          Number(vehicleForm.fuel_tank_capacity),
 
         fuel_type:
           vehicleForm.fuel_type,
@@ -1164,6 +1184,20 @@ function Vehicles() {
                   onChange={handleChange}
                   placeholder="5000"
                   min="0"
+                  required
+                />
+
+                <FormInput
+                  label="Fuel Tank Capacity (L) *"
+                  type="number"
+                  name="fuel_tank_capacity"
+                  value={
+                    vehicleForm.fuel_tank_capacity
+                  }
+                  onChange={handleChange}
+                  placeholder="120"
+                  min="1"
+                  step="0.1"
                   required
                 />
 
