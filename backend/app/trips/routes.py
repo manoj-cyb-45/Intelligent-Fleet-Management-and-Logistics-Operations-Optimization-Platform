@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
 from app.database.database import get_db
-from app.models import Shipment, User, Vehicle
+from app.models import Alert, DriverVehicleAssignment, Shipment, User, Vehicle
 from app.models.trip import Trip
 from app.trips.schemas import TripCreate, TripResponse, TripUpdate
 
@@ -52,6 +52,99 @@ def response(trip: Trip) -> TripResponse:
         created_at=trip.created_at,
         updated_at=trip.updated_at,
     )
+
+
+def cancel_trip_state(
+    db: Session,
+    trip: Trip,
+):
+    """
+    Cancel a trip and synchronize the shipment, vehicle,
+    driver assignment and cancellation alert.
+
+    A completed shipment cannot belong to a cancelled trip.
+    """
+    if trip.status in {"COMPLETED", "CANCELLED"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Trip is already completed or cancelled.",
+        )
+
+    shipment = (
+        db.query(Shipment)
+        .filter(Shipment.shipment_id == trip.shipment_id)
+        .first()
+    )
+
+    if shipment and shipment.status == "DELIVERED":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A trip linked to a delivered shipment cannot be cancelled.",
+        )
+
+    if shipment:
+        shipment.status = "CANCELLED"
+        shipment.updated_at = datetime.utcnow()
+
+        if shipment.delivered_at is not None:
+            shipment.delivered_at = None
+
+        vehicle = (
+            db.query(Vehicle)
+            .filter(Vehicle.vehicle_id == trip.vehicle_id)
+            .first()
+        )
+
+        if vehicle:
+            vehicle.current_status = "AVAILABLE"
+            db.add(vehicle)
+
+        assignment = (
+            db.query(DriverVehicleAssignment)
+            .filter(
+                DriverVehicleAssignment.vehicle_id == trip.vehicle_id,
+                DriverVehicleAssignment.status == "ACTIVE",
+            )
+            .first()
+        )
+
+        if assignment:
+            assignment.status = "COMPLETED"
+            assignment.end_date = datetime.utcnow()
+            db.add(assignment)
+
+        existing_alert = (
+            db.query(Alert)
+            .filter(
+                Alert.shipment_id == shipment.shipment_id,
+                Alert.alert_type == "SHIPMENT_CANCELLED",
+                Alert.status == "OPEN",
+            )
+            .first()
+        )
+
+        if not existing_alert:
+            db.add(
+                Alert(
+                    shipment_id=shipment.shipment_id,
+                    alert_type="SHIPMENT_CANCELLED",
+                    message=(
+                        f"Shipment {shipment.shipment_id} "
+                        f"has been cancelled because its trip "
+                        f"{trip.trip_id} was cancelled"
+                    ),
+                    severity="HIGH",
+                    status="OPEN",
+                    created_at=datetime.utcnow(),
+                    resolved_at=None,
+                )
+            )
+
+        db.add(shipment)
+
+    trip.status = "CANCELLED"
+    trip.updated_at = datetime.utcnow()
+    db.add(trip)
 
 
 def ensure_no_overlap(
@@ -333,6 +426,9 @@ def update_trip(
             if trip.actual_arrival is None:
                 trip.actual_arrival = datetime.utcnow()
 
+        elif new_status == "CANCELLED":
+            cancel_trip_state(db, trip)
+
         trip.status = new_status
 
     departure = trip_data.planned_departure or trip.planned_departure
@@ -395,13 +491,6 @@ def cancel_trip(
             detail="Trip not found.",
         )
 
-    if trip.status in {"COMPLETED", "CANCELLED"}:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Trip is already completed or cancelled.",
-        )
-
-    trip.status = "CANCELLED"
-    trip.updated_at = datetime.utcnow()
+    cancel_trip_state(db, trip)
 
     db.commit()

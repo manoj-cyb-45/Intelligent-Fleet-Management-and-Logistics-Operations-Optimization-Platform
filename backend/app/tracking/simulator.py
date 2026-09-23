@@ -744,6 +744,7 @@ class AutomaticShipmentSimulator:
 
                 if vehicle:
                     vehicle.current_status = "AVAILABLE"
+                    vehicle.current_location = shipment.destination
 
             shipment.updated_at = datetime.utcnow()
 

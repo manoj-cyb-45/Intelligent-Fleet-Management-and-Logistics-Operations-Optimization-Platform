@@ -309,7 +309,18 @@ const submit = async (event) => {
                     <td>{trip.driver_id}</td>
                     <td>{new Date(trip.planned_departure).toLocaleString()}</td>
                     <td>{new Date(trip.planned_arrival).toLocaleString()}</td>
-                    <td>{trip.status}</td>
+                    <td>
+                      <span
+                        className={`trip-status-badge ${getTripStatusClass(
+                          trip.status
+                        )}`}
+                      >
+                        {String(trip.status || "UNKNOWN").replace(
+                          "_",
+                          " "
+                        )}
+                      </span>
+                    </td>
                     {canManage && (
                       <td>
                         {trip.status === "SCHEDULED" && (
@@ -341,6 +352,23 @@ const submit = async (event) => {
       </section>
     </div>
   );
+}
+
+function getTripStatusClass(status) {
+  switch (status) {
+    case "SCHEDULED":
+      return "scheduled";
+    case "IN_PROGRESS":
+      return "in-progress";
+    case "COMPLETED":
+      return "completed";
+    case "CANCELLED":
+      return "cancelled";
+    case "DELAYED":
+      return "delayed";
+    default:
+      return "unknown";
+  }
 }
 
 export default Trips;

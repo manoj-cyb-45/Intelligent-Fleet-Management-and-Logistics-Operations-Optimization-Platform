@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -42,4 +44,11 @@ class VehicleResponse(BaseModel):
     current_location: str | None
     fuel_level: float | None
     mileage: float | None
+    latitude: float | None = None
+    longitude: float | None = None
+    gps_speed: float | None = None
+    gps_heading: float | None = None
+    gps_accuracy: float | None = None
+    gps_altitude: float | None = None
+    last_gps_update: datetime | None = None
     driver_id: str | None = None

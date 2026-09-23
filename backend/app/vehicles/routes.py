@@ -107,6 +107,13 @@ def build_vehicle_response(
         current_location=vehicle.current_location,
         fuel_level=vehicle.fuel_level,
         mileage=vehicle.mileage,
+        latitude=vehicle.latitude,
+        longitude=vehicle.longitude,
+        gps_speed=vehicle.gps_speed,
+        gps_heading=vehicle.gps_heading,
+        gps_accuracy=vehicle.gps_accuracy,
+        gps_altitude=vehicle.gps_altitude,
+        last_gps_update=vehicle.last_gps_update,
         driver_id=(
             assignment.driver_id
             if assignment

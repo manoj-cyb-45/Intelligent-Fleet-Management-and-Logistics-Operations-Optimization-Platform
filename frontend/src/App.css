@@ -2194,6 +2194,9 @@ textarea {
 
 .shipment-status{display:inline-flex;align-items:center;justify-content:center;min-width:86px;height:25px;padding:4px 11px;border-radius:999px;font-size:11px!important;line-height:1;font-weight:800!important;letter-spacing:.02em;white-space:nowrap}
 .shipment-status.pending{color:#fbbf24!important;background:rgba(245,158,11,.11)!important;border:1px solid rgba(245,158,11,.35)!important}
+.shipment-status.created{color:#60a5fa!important;background:rgba(59,130,246,.11)!important;border:1px solid rgba(59,130,246,.30)!important}
+.shipment-status.assigned{color:#a78bfa!important;background:rgba(139,92,246,.11)!important;border:1px solid rgba(139,92,246,.30)!important}
+.shipment-status.delayed{color:#fbbf24!important;background:rgba(245,158,11,.11)!important;border:1px solid rgba(245,158,11,.35)!important}
 .shipment-status.in_transit{color:#c084fc!important;background:rgba(126,34,206,.15)!important;border:1px solid rgba(168,85,247,.40)!important}
 .shipment-status.delivered{color:#34d399!important;background:rgba(16,185,129,.12)!important;border:1px solid rgba(16,185,129,.35)!important}
 .shipment-status.cancelled{color:#fb7185!important;background:rgba(239,68,68,.11)!important;border:1px solid rgba(239,68,68,.35)!important}
@@ -2203,10 +2206,14 @@ textarea {
 .shipment-progress{width:125px;height:7px;overflow:hidden;border-radius:999px;background:#1c2b42;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
 .shipment-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#3b82f6,#06b6d4);transition:width .3s ease}
 .shipment-progress-text{min-width:38px;color:#8fa3c4!important;font-size:12px!important;font-weight:700!important}
+.shipment-progress.cancelled .shipment-progress-fill{background:#64748b!important}
+.shipment-progress.delivered .shipment-progress-fill{background:linear-gradient(90deg,#10b981,#34d399)!important}
 
 .shipment-actions{display:flex;align-items:center;gap:7px;white-space:nowrap}
 .shipment-btn{height:34px;padding:6px 12px;border-radius:8px;background:transparent;font-size:12px!important;font-weight:700!important;cursor:pointer;transition:.16s ease;white-space:nowrap}
 .shipment-btn:hover{transform:translateY(-1px)}
+.shipment-btn-track{color:#7dd3fc!important;border:1px solid rgba(14,165,233,.38)!important;background:rgba(14,165,233,.09)!important}
+.shipment-btn-track:hover{color:#bae6fd!important;border-color:rgba(56,189,248,.65)!important;background:rgba(14,165,233,.16)!important}
 .shipment-btn-edit{color:#d5e1f2!important;border:1px solid #33445f!important;background:#121e31!important}
 .shipment-btn-edit:hover{background:#182942!important;border-color:#4a6285!important}
 .shipment-btn-history{color:#72a7ff!important;border:1px solid rgba(59,130,246,.40)!important;background:rgba(37,99,235,.08)!important}
@@ -5442,5 +5449,167 @@ body,
 
   .form-grid {
     padding: 15px;
+  }
+}
+
+/* =========================================================
+   TRIP STATUS BADGES
+   ========================================================= */
+
+.trip-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.trip-status-badge.scheduled {
+  color: #60a5fa;
+  background: rgba(59, 130, 246, .12);
+  border-color: rgba(59, 130, 246, .25);
+}
+
+.trip-status-badge.in-progress {
+  color: #34d399;
+  background: rgba(16, 185, 129, .12);
+  border-color: rgba(16, 185, 129, .25);
+}
+
+.trip-status-badge.completed {
+  color: #22c55e;
+  background: rgba(34, 197, 94, .12);
+  border-color: rgba(34, 197, 94, .25);
+}
+
+.trip-status-badge.cancelled {
+  color: #f87171;
+  background: rgba(239, 68, 68, .12);
+  border-color: rgba(239, 68, 68, .28);
+}
+
+.trip-status-badge.delayed {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, .12);
+  border-color: rgba(245, 158, 11, .28);
+}
+
+.trip-status-badge.unknown {
+  color: #94a3b8;
+  background: rgba(100, 116, 139, .12);
+  border-color: rgba(100, 116, 139, .24);
+}
+
+/* =========================================================
+   SHIPMENT TRACKING MODAL
+   ========================================================= */
+
+.shipment-tracking-modal {
+  max-width: 1120px !important;
+  width: min(1120px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 32px) !important;
+  height: auto !important;
+  overflow: hidden !important;
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.shipment-tracking-modal .shipment-modal-header {
+  flex-shrink: 0;
+}
+
+.shipment-tracking-modal .shipment-modal-title {
+  font-size: 20px;
+}
+
+.shipment-tracking-modal .shipment-modal-description {
+  margin-top: 3px;
+}
+
+.shipment-tracking-modal .shipment-tracking-map-wrap {
+  flex-shrink: 1;
+  min-height: 0;
+  margin-top: 12px;
+}
+
+.shipment-tracking-modal .shipment-map-container,
+.shipment-tracking-modal .shipment-map,
+.shipment-tracking-modal .shipment-map .leaflet-container {
+  height: 275px !important;
+  min-height: 275px !important;
+}
+
+.shipment-tracking-route {
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding: 12px !important;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: #070f1d;
+}
+
+.shipment-tracking-route > div {
+  gap: 10px !important;
+}
+
+.shipment-tracking-route .shipment-form-label {
+  margin-bottom: 4px;
+}
+
+.shipment-tracking-route .shipment-form-control {
+  min-height: 34px;
+}
+
+.shipment-tracking-route .shipment-btn {
+  min-height: 32px;
+}
+
+.shipment-tracking-modal .shipment-history-close-wrap {
+  flex-shrink: 0;
+  margin-top: 10px;
+}
+
+.shipment-tracking-modal .shipment-history-close-wrap .shipment-btn {
+  min-height: 34px;
+}
+
+@media (max-height: 820px) {
+  .shipment-tracking-modal {
+    padding: 16px !important;
+  }
+
+  .shipment-tracking-modal .shipment-map-container,
+  .shipment-tracking-modal .shipment-map,
+  .shipment-tracking-modal .shipment-map .leaflet-container {
+    height: 230px !important;
+    min-height: 230px !important;
+  }
+
+  .shipment-tracking-route {
+    margin-top: 8px;
+    padding: 9px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .shipment-tracking-modal {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    padding: 14px !important;
+  }
+
+  .shipment-tracking-modal .shipment-map-container,
+  .shipment-tracking-modal .shipment-map,
+  .shipment-tracking-modal .shipment-map .leaflet-container {
+    height: 210px !important;
+    min-height: 210px !important;
   }
 }

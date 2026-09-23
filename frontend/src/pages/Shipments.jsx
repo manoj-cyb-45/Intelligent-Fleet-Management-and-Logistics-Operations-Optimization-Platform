@@ -119,6 +119,23 @@ function Shipments() {
   }, [isDriver]);
 
   // =========================================================
+  // TRACKING MODAL SCROLL LOCK
+  // =========================================================
+
+  useEffect(() => {
+    if (!showTrackingModal) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showTrackingModal]);
+
+  // =========================================================
   // REAL-TIME SHIPMENT TRACKING
   // =========================================================
 
@@ -1156,7 +1173,11 @@ useEffect(() => {
 
                     <td className="shipment-td shipment-progress-cell">
                       <div className="shipment-progress-wrap">
-                        <div className="shipment-progress">
+                        <div
+                          className={`shipment-progress ${String(
+                            shipment.status || ""
+                          ).toLowerCase()}`}
+                        >
                           <div
                             className="shipment-progress-fill"
                             style={{
@@ -1215,32 +1236,38 @@ useEffect(() => {
 
                     <td className="shipment-td">
                       <div className="shipment-actions">
-                        <button
-                          onClick={() =>
-                            openTracking(shipment)
-                          }
-                          className="shipment-btn shipment-btn-track"
-                        >
-                          Track
-                        </button>
+                        {!["DELIVERED", "CANCELLED"].includes(
+                          shipment.status
+                        ) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openTracking(shipment)
+                            }
+                            className="shipment-btn shipment-btn-track"
+                          >
+                            Track
+                          </button>
+                        )}
 
-                        {shipment.status !==
-                          "DELIVERED" &&
-                          shipment.status !==
-                            "CANCELLED" && (
-                            <button
-                              onClick={() =>
-                                openEditModal(
-                                  shipment
-                                )
-                              }
-                              className="shipment-btn shipment-btn-edit"
-                            >
-                              Edit
-                            </button>
-                          )}
+                        {!["DELIVERED", "CANCELLED"].includes(
+                          shipment.status
+                        ) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openEditModal(
+                                shipment
+                              )
+                            }
+                            className="shipment-btn shipment-btn-edit"
+                          >
+                            Edit
+                          </button>
+                        )}
 
                         <button
+                          type="button"
                           onClick={() =>
                             openHistory(shipment)
                           }
@@ -1266,11 +1293,7 @@ useEffect(() => {
         selectedTrackingShipment && (
           <div className="shipment-modal-overlay">
             <div
-              className="shipment-modal"
-              style={{
-                maxWidth: "1100px",
-                width: "95%",
-              }}
+              className="shipment-modal shipment-tracking-modal"
             >
               <ModalHeader
                 title={`Live Tracking — ${selectedTrackingShipment.shipment_id}`}
@@ -1422,7 +1445,7 @@ useEffect(() => {
 
               {/* MAP */}
 
-              <div className="mt-5">
+              <div className="shipment-tracking-map-wrap">
                 <ShipmentMap
                   shipment={
                     selectedTrackingShipment
@@ -1433,7 +1456,7 @@ useEffect(() => {
 
               {/* ROUTE OPTIMIZATION */}
 
-              <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
+              <div className="shipment-tracking-route">
                 <div className="flex flex-col gap-4">
                   <div>
                     <p className="text-sm font-semibold text-slate-200">
