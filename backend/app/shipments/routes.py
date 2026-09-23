@@ -11,6 +11,8 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+
+from app.models.trip import Trip
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
@@ -739,7 +741,15 @@ def update_shipment(
             )
             .first()
         )
+        # =================================================
+        # LINKED TRIP
+        # =================================================
 
+        linked_trip = (
+            db.query(Trip)
+            .filter(Trip.shipment_id == shipment.shipment_id)
+            .first()
+        )
         # =================================================
         # ASSIGNED
         # =================================================
@@ -844,6 +854,27 @@ def update_shipment(
             if shipment.delivery_progress < 10:
                 shipment.delivery_progress = 10.0
 
+            if linked_trip:
+                if linked_trip.status == "CANCELLED":
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="A cancelled trip cannot be started.",
+                    )
+
+                if linked_trip.status == "COMPLETED":
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="A completed trip cannot return to IN_PROGRESS.",
+                    )
+
+                if linked_trip.status == "SCHEDULED":
+                    linked_trip.status = "IN_PROGRESS"
+                    linked_trip.actual_departure = (
+                        linked_trip.actual_departure
+                        or datetime.utcnow()
+                    )
+                    linked_trip.updated_at = datetime.utcnow()
+
         # =================================================
         # DELAYED
         # =================================================
@@ -893,6 +924,25 @@ def update_shipment(
 
         elif new_status == "DELIVERED":
 
+            if linked_trip:
+                if linked_trip.status == "CANCELLED":
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="A cancelled trip cannot be completed.",
+                    )
+
+                if linked_trip.status in {"SCHEDULED", "IN_PROGRESS"}:
+                    linked_trip.status = "COMPLETED"
+                    linked_trip.actual_departure = (
+                        linked_trip.actual_departure
+                        or datetime.utcnow()
+                    )
+                    linked_trip.actual_arrival = (
+                        linked_trip.actual_arrival
+                        or datetime.utcnow()
+                    )
+                    linked_trip.updated_at = datetime.utcnow()
+
             shipment.delivery_progress = 100.0
             shipment.current_location = (
                 shipment.destination
@@ -936,6 +986,17 @@ def update_shipment(
                         "be cancelled"
                     ),
                 )
+
+            if linked_trip:
+                if linked_trip.status == "COMPLETED":
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="A completed trip cannot be cancelled.",
+                    )
+
+                if linked_trip.status in {"SCHEDULED", "IN_PROGRESS"}:
+                    linked_trip.status = "CANCELLED"
+                    linked_trip.updated_at = datetime.utcnow()
 
             if vehicle:
                 vehicle.current_status = "AVAILABLE"

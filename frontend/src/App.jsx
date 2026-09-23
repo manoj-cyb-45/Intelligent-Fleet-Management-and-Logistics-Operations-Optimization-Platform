@@ -22,6 +22,7 @@ import Tracking from "./pages/Tracking";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
+import Trips from "./pages/Trips";
 
 
 // ============================================================
@@ -330,7 +331,7 @@ const navigation = [
     ],
   },
 
-  {
+    {
     name: "Alerts",
     icon: "alerts",
     path: "/alerts",
@@ -340,16 +341,29 @@ const navigation = [
       "DISPATCHER",
     ],
   },
+
   {
-  name: "Live Tracking",
-  icon: "truck",
-  path: "/tracking",
-  roles: [
-    "ADMIN",
-    "MANAGER",
-    "DISPATCHER",
-  ],
-},
+    name: "Trips",
+    icon: "shipment",
+    path: "/trips",
+    roles: [
+      "ADMIN",
+      "MANAGER",
+      "DISPATCHER",
+      "DRIVER",
+    ],
+  },
+
+  {
+    name: "Live Tracking",
+    icon: "truck",
+    path: "/tracking",
+    roles: [
+      "ADMIN",
+      "MANAGER",
+      "DISPATCHER",
+    ],
+  },
 ];
 
 
@@ -656,21 +670,42 @@ const {
                 />
 
 
-                {/* =================================================
-                    UNKNOWN ROUTE
-                   ================================================= */}
+{/* =================================================
+    TRIPS
+   ================================================= */}
 
-                <Route
-                  path="*"
-                  element={
-                    <Navigate
-                      to="/"
-                      replace
-                    />
-                  }
-                />
+<Route
+  path="/trips"
+  element={
+    <ProtectedRoute
+      allowedRoles={[
+        "ADMIN",
+        "MANAGER",
+        "DISPATCHER",
+        "DRIVER",
+      ]}
+    >
+      <Trips />
+    </ProtectedRoute>
+  }
+/>
 
-              </Routes>
+{/* =================================================
+    UNKNOWN ROUTE
+   ================================================= */}
+<Route
+  path="*"
+  element={
+    <Navigate
+      to="/"
+      replace
+    />
+  }
+/>
+
+</Routes>
+               
+                  
 
             </main>
         </div>

@@ -6,3 +6,4 @@ from app.models.shipment_history import ShipmentHistory
 from app.models.alert import Alert
 from app.models.maintenance_record import MaintenanceRecord
 from app.models.fuel_record import FuelRecord
+from app.models.trip import Trip

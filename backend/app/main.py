@@ -14,6 +14,7 @@ from app.fuel.routes import router as fuel_router
 from app.tracking.routes import router as tracking_router
 from app.route_optimizer.routes import router as route_optimizer_router
 from app.tracking.simulator import automatic_shipment_simulator
+from app.trips.routes import router as trips_router
 
 
 @asynccontextmanager
@@ -55,6 +56,7 @@ app.include_router(maintenance_router)
 app.include_router(fuel_router)
 app.include_router(tracking_router)
 app.include_router(route_optimizer_router)
+app.include_router(trips_router)
 
 
 @app.get("/health")

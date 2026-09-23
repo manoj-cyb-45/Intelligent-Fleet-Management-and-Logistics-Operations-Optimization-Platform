@@ -10,7 +10,16 @@ from typing import Any
 import requests
 
 from app.database.database import SessionLocal
-from app.models import Alert, DriverVehicleAssignment, Shipment, ShipmentHistory, User, Vehicle
+from app.models import (
+    Alert,
+    DriverVehicleAssignment,
+    Shipment,
+    ShipmentHistory,
+    Trip,
+    User,
+    Vehicle,
+)
+from app.models.trip import Trip
 from app.shipments.websocket import shipment_connection_manager
 
 
@@ -246,13 +255,62 @@ class AutomaticShipmentSimulator:
     @staticmethod
     def _active_shipment_ids() -> list[str]:
         db = SessionLocal()
+
         try:
-            rows = (
-                db.query(Shipment.shipment_id)
-                .filter(Shipment.status.in_(ACTIVE_STATUSES))
+            shipments = (
+                db.query(Shipment)
+                .filter(
+                    Shipment.status.in_(ACTIVE_STATUSES)
+                )
                 .all()
             )
-            return [shipment_id for shipment_id, in rows]
+
+            active_ids = []
+
+            for shipment in shipments:
+                trip = (
+                    db.query(Trip)
+                    .filter(
+                        Trip.shipment_id
+                        == shipment.shipment_id
+                    )
+                    .order_by(
+                        Trip.created_at.desc()
+                    )
+                    .first()
+                )
+
+                # =================================================
+                # TRIP CONTROL
+                # =================================================
+                #
+                # Shipment movement is controlled by its Trip.
+                #
+                # No Trip
+                #     -> DO NOT MOVE
+                #
+                # SCHEDULED
+                #     -> DO NOT MOVE
+                #
+                # IN_PROGRESS
+                #     -> START GPS MOVEMENT
+                #
+                # COMPLETED / CANCELLED
+                #     -> DO NOT MOVE
+                # =================================================
+
+                if not trip:
+                    continue
+
+                if trip.status != "IN_PROGRESS":
+                    continue
+
+                active_ids.append(
+                    shipment.shipment_id
+                )
+
+            return active_ids
+
         finally:
             db.close()
 
@@ -662,6 +720,28 @@ class AutomaticShipmentSimulator:
                 shipment.delivered_at = (
                     shipment.delivered_at or datetime.utcnow()
                 )
+
+                # -------------------------------------------------
+                # COMPLETE LINKED TRIP
+                # -------------------------------------------------
+
+                trip = (
+                    db.query(Trip)
+                    .filter(
+                        Trip.shipment_id == shipment.shipment_id,
+                        Trip.status == "IN_PROGRESS",
+                    )
+                    .order_by(Trip.created_at.desc())
+                    .first()
+                )
+
+                if trip:
+                    trip.status = "COMPLETED"
+                    trip.actual_arrival = (
+                        trip.actual_arrival or datetime.utcnow()
+                    )
+                    trip.updated_at = datetime.utcnow()
+
                 if vehicle:
                     vehicle.current_status = "AVAILABLE"
 

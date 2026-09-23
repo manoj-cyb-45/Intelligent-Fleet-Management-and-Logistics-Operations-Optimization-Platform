@@ -5014,3 +5014,433 @@ body,
   background: rgba(15, 23, 42, 0.82);
   pointer-events: none;
 }
+
+
+/* =========================================================
+   FLEETFLOW - TRIPS MODULE
+   Trips page visual styling only
+   ========================================================= */
+
+.page-container {
+  width: 100%;
+  color: #e8eefc;
+}
+
+/* ---------- Page Header ---------- */
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 20px 0 22px;
+}
+
+.page-header h1 {
+  margin: 4px 0 6px;
+  color: #f8fafc !important;
+  font-size: 30px !important;
+  line-height: 1.15;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em;
+}
+
+.page-header p {
+  margin: 0;
+  max-width: 760px;
+  color: #7f93b5 !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+
+.page-header .eyebrow {
+  color: #60a5fa !important;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .13em;
+}
+
+/* ---------- Buttons ---------- */
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  border-radius: 9px !important;
+  font-family: inherit;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.primary-button {
+  min-height: 40px;
+  padding: 0 17px;
+  border: 1px solid #4f6fff !important;
+  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  box-shadow: 0 7px 18px rgba(37, 99, 235, .22);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, .30);
+}
+
+.primary-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #243451 !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(17, 30, 51, .98),
+      rgba(9, 18, 32, .98)
+    ) !important;
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, .18),
+    inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.card-header {
+  min-height: 68px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #1f3049;
+}
+
+.card-header h2 {
+  margin: 4px 0 0;
+  color: #f1f5fb !important;
+  font-size: 17px !important;
+  line-height: 1.25;
+  font-weight: 750 !important;
+}
+
+.card-header > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(59, 130, 246, .25);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .10);
+  color: #8db8ff !important;
+  font-size: 11px !important;
+  font-weight: 700;
+}
+
+/* ---------- Trip Form ---------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 20px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #aebed4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.form-grid select,
+.form-grid input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #2a3b56 !important;
+  border-radius: 9px !important;
+  outline: none;
+  background: #07101f !important;
+  color: #f8fafc !important;
+  font-family: inherit;
+  font-size: 12px !important;
+  transition: .16s ease;
+}
+
+.form-grid select:focus,
+.form-grid input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .11);
+}
+
+.form-grid option {
+  background: #0b1424;
+  color: #f8fafc;
+}
+
+.form-info {
+  grid-column: 1 / -1;
+  padding: 14px 16px;
+  border: 1px solid rgba(59, 130, 246, .20);
+  border-radius: 10px;
+  background: rgba(37, 99, 235, .07);
+  color: #9fb2ce;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.form-info strong {
+  color: #dbeafe;
+}
+
+/* ---------- Form Create Button ---------- */
+
+.form-grid > div:last-child {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ---------- Messages ---------- */
+
+.error-message,
+.success-message {
+  margin: 0 0 18px;
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.error-message {
+  border: 1px solid rgba(248, 113, 113, .30);
+  background: rgba(127, 29, 29, .18);
+  color: #fca5a5;
+}
+
+.success-message {
+  border: 1px solid rgba(74, 222, 128, .28);
+  background: rgba(20, 83, 45, .18);
+  color: #86efac;
+}
+
+/* ---------- Table Container ---------- */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* ---------- Trips Table ---------- */
+
+.table-container table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+  color: #dbe7f7;
+}
+
+.table-container thead {
+  background:
+    linear-gradient(
+      180deg,
+      #17243b,
+      #131f34
+    ) !important;
+}
+
+.table-container th {
+  height: 44px;
+  padding: 0 15px !important;
+  border-bottom: 1px solid #263752;
+  color: #7890b4 !important;
+  text-align: left;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table-container td {
+  height: 62px;
+  padding: 10px 15px !important;
+  border-bottom: 1px solid #1b2a42;
+  color: #b9c7dd !important;
+  font-size: 13px !important;
+  line-height: 1.4;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table-container tbody tr {
+  background: transparent;
+  transition: background .16s ease;
+}
+
+.table-container tbody tr:hover {
+  background: rgba(37, 99, 235, .055) !important;
+}
+
+.table-container tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---------- Table Column Formatting ---------- */
+
+/* Trip */
+.table-container th:nth-child(1),
+.table-container td:nth-child(1) {
+  min-width: 90px;
+}
+
+/* Shipment */
+.table-container th:nth-child(2),
+.table-container td:nth-child(2) {
+  min-width: 105px;
+}
+
+/* Vehicle */
+.table-container th:nth-child(3),
+.table-container td:nth-child(3) {
+  min-width: 105px;
+}
+
+/* Driver */
+.table-container th:nth-child(4),
+.table-container td:nth-child(4) {
+  min-width: 125px;
+}
+
+/* Departure / Arrival */
+.table-container th:nth-child(5),
+.table-container td:nth-child(5),
+.table-container th:nth-child(6),
+.table-container td:nth-child(6) {
+  min-width: 210px;
+}
+
+/* Status */
+.table-container th:nth-child(7),
+.table-container td:nth-child(7) {
+  min-width: 125px;
+}
+
+/* Actions */
+.table-container th:last-child,
+.table-container td:last-child {
+  min-width: 180px;
+}
+
+/* ---------- Trip ID ---------- */
+
+.table-container td:first-child {
+  color: #f1f5fb !important;
+  font-weight: 750 !important;
+}
+
+/* ---------- Status ---------- */
+
+.table-container td:nth-child(7) {
+  color: #fbbf24 !important;
+  font-weight: 750 !important;
+}
+
+.table-container td:nth-child(7)::first-letter {
+  color: inherit;
+}
+
+/* ---------- Action Buttons ---------- */
+
+.table-container td:last-child {
+  white-space: nowrap;
+}
+
+.secondary-button,
+.danger-button {
+  min-height: 32px;
+  padding: 0 11px;
+  margin-right: 7px;
+  font-size: 10px !important;
+}
+
+.secondary-button {
+  border: 1px solid rgba(59, 130, 246, .35) !important;
+  background: rgba(37, 99, 235, .12) !important;
+  color: #60a5fa !important;
+}
+
+.secondary-button:hover {
+  background: rgba(37, 99, 235, .22) !important;
+  border-color: rgba(96, 165, 250, .55) !important;
+  transform: translateY(-1px);
+}
+
+.danger-button {
+  border: 1px solid rgba(239, 68, 68, .30) !important;
+  background: rgba(239, 68, 68, .08) !important;
+  color: #f87171 !important;
+}
+
+.danger-button:hover {
+  background: rgba(239, 68, 68, .16) !important;
+  border-color: rgba(239, 68, 68, .50) !important;
+  transform: translateY(-1px);
+}
+
+/* ---------- Loading / Empty ---------- */
+
+.card > p {
+  margin: 0;
+  padding: 25px 20px;
+  color: #8190a8 !important;
+  font-size: 12px !important;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-top: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-info {
+    grid-column: auto;
+  }
+
+  .form-grid > div:last-child {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .page-header h1 {
+    font-size: 26px !important;
+  }
+
+  .page-header p {
+    font-size: 12px !important;
+  }
+
+  .card-header {
+    padding: 15px;
+  }
+
+  .form-grid {
+    padding: 15px;
+  }
+}
