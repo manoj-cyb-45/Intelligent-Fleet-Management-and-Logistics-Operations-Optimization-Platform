@@ -589,6 +589,26 @@ useEffect(() => {
   };
 
   // =========================================================
+  // SHIPMENT KPI DATA
+  // =========================================================
+
+  const shipmentKpis = {
+    total: shipments.length,
+
+    pending: shipments.filter(
+      (shipment) => String(shipment.status).toUpperCase() === "PENDING"
+    ).length,
+
+    inTransit: shipments.filter(
+      (shipment) => String(shipment.status).toUpperCase() === "IN_TRANSIT"
+    ).length,
+
+    delivered: shipments.filter(
+      (shipment) => String(shipment.status).toUpperCase() === "DELIVERED"
+    ).length,
+  };
+
+  // =========================================================
   // STATUS CLASS
   // =========================================================
 
@@ -1017,6 +1037,50 @@ useEffect(() => {
               + Add Shipment
             </button>
           )}
+        </div>
+      </div>
+
+      {/* KPI CARDS */}
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Total Shipments
+          </span>
+
+          <strong className="ff-kpi-value">
+            {shipmentKpis.total}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Pending
+          </span>
+
+          <strong className="ff-kpi-value">
+            {shipmentKpis.pending}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            In Transit
+          </span>
+
+          <strong className="ff-kpi-value">
+            {shipmentKpis.inTransit}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Delivered
+          </span>
+
+          <strong className="ff-kpi-value">
+            {shipmentKpis.delivered}
+          </strong>
         </div>
       </div>
 

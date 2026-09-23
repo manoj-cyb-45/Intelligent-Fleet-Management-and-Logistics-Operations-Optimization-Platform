@@ -147,6 +147,33 @@ function Vehicles() {
     );
   };
 
+
+  // =========================================================
+  // VEHICLE KPI DATA
+  // =========================================================
+
+  const vehicleKpis = {
+    total: vehicles.length,
+
+    available: vehicles.filter(
+      (vehicle) =>
+        String(vehicle.current_status).toUpperCase() ===
+        "AVAILABLE"
+    ).length,
+
+    assigned: vehicles.filter(
+      (vehicle) =>
+        String(vehicle.current_status).toUpperCase() ===
+        "ASSIGNED"
+    ).length,
+
+    inTransit: vehicles.filter(
+      (vehicle) =>
+        String(vehicle.current_status).toUpperCase() ===
+        "IN_TRANSIT"
+    ).length,
+  };
+
   // =========================================================
   // CHECK WHETHER DRIVER IS ALREADY ASSIGNED
   // =========================================================
@@ -785,6 +812,50 @@ function Vehicles() {
                 + Add Vehicle
               </button>
             )}
+        </div>
+      </div>
+
+      {/* KPI CARDS */}
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Total Vehicles
+          </span>
+
+          <strong className="ff-kpi-value">
+            {vehicleKpis.total}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Available
+          </span>
+
+          <strong className="ff-kpi-value">
+            {vehicleKpis.available}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Assigned
+          </span>
+
+          <strong className="ff-kpi-value">
+            {vehicleKpis.assigned}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            In Transit
+          </span>
+
+          <strong className="ff-kpi-value">
+            {vehicleKpis.inTransit}
+          </strong>
         </div>
       </div>
 

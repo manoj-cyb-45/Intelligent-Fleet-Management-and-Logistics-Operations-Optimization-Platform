@@ -323,6 +323,25 @@ function Alerts() {
 
 
   // =========================================================
+  // ALERT KPI DATA
+  // =========================================================
+
+  const alertKpis = {
+    total: alerts.length,
+
+    open: openAlerts,
+
+    critical: alerts.filter(
+      (alert) =>
+        alert.severity?.toUpperCase() ===
+        "CRITICAL"
+    ).length,
+
+    resolved: resolvedAlerts,
+  };
+
+
+  // =========================================================
   // LOADING
   // =========================================================
 
@@ -409,6 +428,53 @@ function Alerts() {
 
         </div>
 
+      </div>
+
+
+      {/* =====================================================
+          KPI CARDS
+          ===================================================== */}
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Total Alerts
+          </span>
+
+          <strong className="ff-kpi-value">
+            {alertKpis.total}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Open
+          </span>
+
+          <strong className="ff-kpi-value">
+            {alertKpis.open}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Critical
+          </span>
+
+          <strong className="ff-kpi-value">
+            {alertKpis.critical}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Resolved
+          </span>
+
+          <strong className="ff-kpi-value">
+            {alertKpis.resolved}
+          </strong>
+        </div>
       </div>
 
 

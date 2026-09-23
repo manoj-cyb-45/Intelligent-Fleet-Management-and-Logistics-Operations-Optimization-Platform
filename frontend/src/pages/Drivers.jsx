@@ -261,6 +261,38 @@ function Drivers() {
   };
 
   // =========================================================
+  // DRIVER KPI DATA
+  // =========================================================
+
+  const driverKpis = {
+    total: drivers.length,
+
+    active: drivers.filter(
+      (driver) =>
+        String(driver.account_status).toUpperCase() ===
+        "ACTIVE"
+    ).length,
+
+    assigned: drivers.filter(
+      (driver) =>
+        Boolean(
+          driver.assigned_vehicle_id ||
+          getCurrentVehicle(driver)
+        )
+    ).length,
+
+    available: drivers.filter(
+      (driver) =>
+        String(driver.account_status).toUpperCase() ===
+          "ACTIVE" &&
+        !(
+          driver.assigned_vehicle_id ||
+          getCurrentVehicle(driver)
+        )
+    ).length,
+  };
+
+  // =========================================================
   // FORM CHANGE
   // =========================================================
 
@@ -1051,6 +1083,50 @@ function Drivers() {
               + Add Driver
             </button>
           )}
+        </div>
+      </div>
+
+      {/* KPI CARDS */}
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Total Drivers
+          </span>
+
+          <strong className="ff-kpi-value">
+            {driverKpis.total}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Active
+          </span>
+
+          <strong className="ff-kpi-value">
+            {driverKpis.active}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Assigned
+          </span>
+
+          <strong className="ff-kpi-value">
+            {driverKpis.assigned}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Available
+          </span>
+
+          <strong className="ff-kpi-value">
+            {driverKpis.available}
+          </strong>
         </div>
       </div>
 

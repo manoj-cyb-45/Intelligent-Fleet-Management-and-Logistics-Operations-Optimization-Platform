@@ -503,6 +503,32 @@ const openEditModal = (record) => {
     };
 
   // =========================================================
+  // MAINTENANCE KPI DATA
+  // =========================================================
+
+  const maintenanceKpis = {
+    total: records.length,
+
+    scheduled: records.filter(
+      (record) =>
+        String(record.status).toUpperCase() ===
+        "SCHEDULED"
+    ).length,
+
+    inProgress: records.filter(
+      (record) =>
+        String(record.status).toUpperCase() ===
+        "IN_PROGRESS"
+    ).length,
+
+    completed: records.filter(
+      (record) =>
+        String(record.status).toUpperCase() ===
+        "COMPLETED"
+    ).length,
+  };
+
+  // =========================================================
   // STATUS STYLE
   // =========================================================
 
@@ -589,6 +615,50 @@ const openEditModal = (record) => {
           >
             + Add Maintenance
           </button>
+        </div>
+      </div>
+
+      {/* KPI CARDS */}
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Total Records
+          </span>
+
+          <strong className="ff-kpi-value">
+            {maintenanceKpis.total}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Scheduled
+          </span>
+
+          <strong className="ff-kpi-value">
+            {maintenanceKpis.scheduled}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            In Progress
+          </span>
+
+          <strong className="ff-kpi-value">
+            {maintenanceKpis.inProgress}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Completed
+          </span>
+
+          <strong className="ff-kpi-value">
+            {maintenanceKpis.completed}
+          </strong>
         </div>
       </div>
 

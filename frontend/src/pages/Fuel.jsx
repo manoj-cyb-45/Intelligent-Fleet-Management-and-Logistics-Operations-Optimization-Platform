@@ -47,6 +47,40 @@ function Fuel() {
     useState(emptyForm);
 
   // =========================================================
+  // FUEL KPI DATA
+  // =========================================================
+
+  const fuelKpis = {
+    records: records.length,
+
+    quantity: records.reduce(
+      (total, record) => total + (Number(record.quantity) || 0),
+      0
+    ),
+
+    totalCost: records.reduce(
+      (total, record) => total + (Number(record.total_cost) || 0),
+      0
+    ),
+
+    averageCostPerUnit: (() => {
+      const totalQuantity = records.reduce(
+        (total, record) => total + (Number(record.quantity) || 0),
+        0
+      );
+
+      const totalCost = records.reduce(
+        (total, record) => total + (Number(record.total_cost) || 0),
+        0
+      );
+
+      return totalQuantity > 0
+        ? totalCost / totalQuantity
+        : 0;
+    })(),
+  };
+
+  // =========================================================
   // LOAD FUEL + VEHICLES
   // =========================================================
 
@@ -847,6 +881,52 @@ function Fuel() {
 
         </div>
 
+      </div>
+
+      {/* KPI CARDS */}
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Fuel Records
+          </span>
+
+          <strong className="ff-kpi-value">
+            {fuelKpis.records}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Fuel Quantity
+          </span>
+
+          <strong className="ff-kpi-value">
+            {fuelKpis.quantity.toLocaleString("en-IN", {
+              maximumFractionDigits: 2,
+            })} L
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Total Cost
+          </span>
+
+          <strong className="ff-kpi-value">
+            {formatCurrency(fuelKpis.totalCost)}
+          </strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">
+            Avg. Cost/L
+          </span>
+
+          <strong className="ff-kpi-value">
+            {formatCurrency(fuelKpis.averageCostPerUnit)}
+          </strong>
+        </div>
       </div>
 
       {/* =====================================================

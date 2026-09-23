@@ -145,6 +145,19 @@ const submit = async (event) => {
     }
   };
 
+  const tripKpis = {
+    total: trips.length,
+    scheduled: trips.filter(
+      (trip) => String(trip.status).toUpperCase() === "SCHEDULED"
+    ).length,
+    inProgress: trips.filter(
+      (trip) => String(trip.status).toUpperCase() === "IN_PROGRESS"
+    ).length,
+    completed: trips.filter(
+      (trip) => String(trip.status).toUpperCase() === "COMPLETED"
+    ).length,
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -181,6 +194,28 @@ const submit = async (event) => {
             {showForm ? "Close" : "Schedule Trip"}
           </button>
         )}
+      </div>
+
+      <div className="ff-kpi-grid">
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">Total Trips</span>
+          <strong className="ff-kpi-value">{tripKpis.total}</strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">Scheduled</span>
+          <strong className="ff-kpi-value">{tripKpis.scheduled}</strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">In Progress</span>
+          <strong className="ff-kpi-value">{tripKpis.inProgress}</strong>
+        </div>
+
+        <div className="ff-kpi-card">
+          <span className="ff-kpi-label">Completed</span>
+          <strong className="ff-kpi-value">{tripKpis.completed}</strong>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
