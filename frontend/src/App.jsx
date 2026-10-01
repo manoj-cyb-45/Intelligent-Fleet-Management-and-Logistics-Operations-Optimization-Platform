@@ -8,6 +8,7 @@ import {
   Routes,
 } from "react-router-dom";
 
+
 import { useAuth } from "./context/AuthContext";
 import api from "./services/api";
 import { useTheme } from "./context/ThemeContext";
@@ -19,6 +20,7 @@ import Maintenance from "./pages/Maintenance";
 import Fuel from "./pages/Fuel";
 import Alerts from "./pages/Alerts";
 import Tracking from "./pages/Tracking";
+import Notifications from "./pages/Notifications";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -332,15 +334,27 @@ const navigation = [
   },
 
     {
-    name: "Alerts",
-    icon: "alerts",
-    path: "/alerts",
-    roles: [
-      "ADMIN",
-      "MANAGER",
-      "DISPATCHER",
-    ],
-  },
+  name: "Alerts",
+  icon: "alerts",
+  path: "/alerts",
+  roles: [
+    "ADMIN",
+    "MANAGER",
+    "DISPATCHER",
+  ],
+},
+
+{
+  name: "Notifications",
+  icon: "alerts",
+  path: "/notifications",
+  roles: [
+    "ADMIN",
+    "MANAGER",
+    "DISPATCHER",
+    "DRIVER",
+  ],
+},
 
   {
     name: "Trips",
@@ -668,6 +682,21 @@ const {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+  path="/notifications"
+  element={
+    <ProtectedRoute
+      allowedRoles={[
+        "ADMIN",
+        "MANAGER",
+        "DISPATCHER",
+        "DRIVER",
+      ]}
+    >
+      <Notifications />
+    </ProtectedRoute>
+  }
+/>
 
 
 {/* =================================================

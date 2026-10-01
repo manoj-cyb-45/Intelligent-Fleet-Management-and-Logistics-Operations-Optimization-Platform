@@ -2,7 +2,11 @@ import logging
 from typing import Any
 
 import requests
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.database.database import get_db
+from app.models import Shipment, Notification
 
 from .schemas import RouteRequest, RouteResponse
 
@@ -302,11 +306,28 @@ def optimize_route(
 )
 def recalculate_route(
     request: RouteRequest,
+    shipment_id: str,
+    db: Session = Depends(get_db),
 ) -> RouteResponse:
     """
     Recalculate a route from the vehicle's current
-    GPS position to the destination.
+    GPS position to the destination and notify the
+    assigned driver.
     """
+
+    shipment = (
+        db.query(Shipment)
+        .filter(
+            Shipment.shipment_id == shipment_id
+        )
+        .first()
+    )
+
+    if not shipment:
+        raise HTTPException(
+            status_code=404,
+            detail="Shipment not found.",
+        )
 
     routes = fetch_osrm_routes(
         start=(
@@ -325,8 +346,25 @@ def recalculate_route(
         traffic_level=request.traffic_level,
     )
 
-    return build_route_response(
+    response = build_route_response(
         route=optimal_route,
         optimize_by=request.optimize_by,
         traffic_level=request.traffic_level,
     )
+
+    if shipment.driver_id:
+        notification = Notification(
+            user_id=shipment.driver_id,
+            notification_type="ROUTE_CHANGE",
+            title="Route Updated",
+            message=(
+                f"The route for shipment "
+                f"{shipment.shipment_id} has been recalculated."
+            ),
+            is_read=False,
+        )
+
+        db.add(notification)
+        db.commit()
+
+    return response
