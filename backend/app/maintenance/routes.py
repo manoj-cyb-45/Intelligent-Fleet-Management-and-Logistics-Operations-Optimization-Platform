@@ -170,6 +170,62 @@ def database_date(
 
 
 # =========================================================
+# UPCOMING MAINTENANCE
+# =========================================================
+
+@router.get(
+    "/schedule/upcoming",
+    response_model=list[MaintenanceResponse],
+)
+def get_upcoming_maintenance(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "ADMIN",
+            "MANAGER",
+            "DISPATCHER",
+        )
+    ),
+):
+    """
+    Return scheduled maintenance ordered by the nearest
+    maintenance date.
+    """
+
+    today = date.today()
+
+    records = (
+        db.query(MaintenanceRecord)
+        .filter(
+            MaintenanceRecord.status == "SCHEDULED"
+        )
+        .all()
+    )
+
+    upcoming = []
+
+    for record in records:
+        maintenance_date = database_date(
+            record.maintenance_date
+        )
+
+        if maintenance_date is not None and maintenance_date >= today:
+            upcoming.append(record)
+
+    upcoming.sort(
+        key=lambda record: database_date(
+            record.maintenance_date
+        )
+    )
+
+    return [
+        build_maintenance_response(record)
+        for record in upcoming
+    ]
+
+
+
+# =========================================================
 # DATE VALIDATION
 # =========================================================
 
@@ -412,10 +468,6 @@ def create_maintenance(
 # LIST MAINTENANCE
 # =========================================================
 
-@router.get(
-    "",
-    response_model=list[MaintenanceResponse],
-)
 @router.get(
     "",
     response_model=list[MaintenanceResponse],
