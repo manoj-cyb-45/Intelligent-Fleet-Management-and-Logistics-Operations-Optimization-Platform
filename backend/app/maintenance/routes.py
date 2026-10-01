@@ -14,6 +14,7 @@ from app.models import (
 from app.maintenance.schemas import (
     MaintenanceCreate,
     MaintenanceResponse,
+    MaintenanceReportResponse,
 )
 
 
@@ -222,6 +223,80 @@ def get_upcoming_maintenance(
         build_maintenance_response(record)
         for record in upcoming
     ]
+# =========================================================
+# MAINTENANCE REPORT
+# =========================================================
+
+@router.get(
+    "/report/summary",
+    response_model=MaintenanceReportResponse,
+)
+def get_maintenance_report(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "ADMIN",
+            "MANAGER",
+        )
+    ),
+):
+
+    records = db.query(MaintenanceRecord).all()
+
+    today = date.today()
+
+    scheduled = 0
+    in_progress = 0
+    completed = 0
+    cancelled = 0
+    upcoming = 0
+    overdue = 0
+    total_cost = 0.0
+
+    for record in records:
+
+        if record.status == "SCHEDULED":
+            scheduled += 1
+
+        elif record.status == "IN_PROGRESS":
+            in_progress += 1
+
+        elif record.status == "COMPLETED":
+            completed += 1
+
+        elif record.status == "CANCELLED":
+            cancelled += 1
+
+        total_cost += record.cost or 0.0
+
+        maintenance_date = database_date(
+            record.maintenance_date
+        )
+
+        if maintenance_date is not None:
+
+            if (
+                record.status == "SCHEDULED"
+                and maintenance_date >= today
+            ):
+                upcoming += 1
+
+            elif (
+                record.status == "SCHEDULED"
+                and maintenance_date < today
+            ):
+                overdue += 1
+
+    return MaintenanceReportResponse(
+        total_records=len(records),
+        scheduled=scheduled,
+        in_progress=in_progress,
+        completed=completed,
+        cancelled=cancelled,
+        upcoming=upcoming,
+        overdue=overdue,
+        total_cost=total_cost,
+    )
 
 
 

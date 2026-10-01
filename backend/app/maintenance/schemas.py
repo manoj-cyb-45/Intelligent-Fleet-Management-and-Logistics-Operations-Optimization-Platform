@@ -44,3 +44,18 @@ class MaintenanceResponse(BaseModel):
     cost: float
 
     status: str
+
+
+# =========================================================
+# MAINTENANCE REPORT
+# =========================================================
+
+class MaintenanceReportResponse(BaseModel):
+    total_records: int
+    scheduled: int
+    in_progress: int
+    completed: int
+    cancelled: int
+    upcoming: int
+    overdue: int
+    total_cost: float
