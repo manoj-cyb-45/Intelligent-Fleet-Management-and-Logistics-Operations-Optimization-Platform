@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
 from app.database.database import get_db
-from app.models import Notification, User
+from app.models import Notification, User, DeviceToken
 
 from app.notifications.schemas import (
     NotificationCreate,
@@ -152,18 +152,74 @@ def create_notification(
     # PUSH NOTIFICATION
     # --------------------------------------------------------
 
-    send_push_notification(
-        user_id=user.user_id,
-        title=notification.title,
-        message=notification.message,
+    device_token = (
+        db.query(DeviceToken)
+        .filter(DeviceToken.user_id == user.user_id)
+        .first()
     )
+
+    if device_token:
+        send_push_notification(
+            token=device_token.token,
+            title=notification.title,
+            message=notification.message,
+        )
+    else:
+        print(
+            f"Push notification skipped: "
+            f"no device token registered for {user.user_id}"
+        )
 
     # --------------------------------------------------------
     # Return created notification
     # --------------------------------------------------------
 
     return build_notification_response(notification)
+    return build_notification_response(notification)
 
+
+
+# ============================================================
+# REGISTER DEVICE TOKEN
+# ============================================================
+
+@router.post(
+    "/device-token",
+)
+def register_device_token(
+    token: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "ADMIN",
+            "MANAGER",
+            "DISPATCHER",
+            "DRIVER",
+        )
+    ),
+):
+    user_id = current_user.get("user_id")
+
+    existing_token = (
+        db.query(DeviceToken)
+        .filter(DeviceToken.token == token)
+        .first()
+    )
+
+    if existing_token:
+        existing_token.user_id = user_id
+    else:
+        device_token = DeviceToken(
+            user_id=user_id,
+            token=token,
+        )
+        db.add(device_token)
+
+    db.commit()
+
+    return {
+        "message": "Device token registered successfully"
+    }
 
 # ============================================================
 # MARK NOTIFICATION AS READ

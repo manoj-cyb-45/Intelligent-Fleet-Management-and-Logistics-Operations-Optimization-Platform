@@ -8,3 +8,4 @@ from app.models.maintenance_record import MaintenanceRecord
 from app.models.fuel_record import FuelRecord
 from app.models.trip import Trip
 from app.models.notification import Notification
+from app.models.device_token import DeviceToken

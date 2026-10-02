@@ -2,6 +2,11 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 
+from dotenv import load_dotenv
+from app.notifications.firebase_service import send_fcm_notification
+
+load_dotenv()
+
 
 # ============================================================
 # EMAIL NOTIFICATION
@@ -21,9 +26,12 @@ def send_email_notification(
     smtp_username = os.getenv("SMTP_USERNAME")
     smtp_password = os.getenv("SMTP_PASSWORD")
 
-    # If SMTP is not configured, don't crash the application.
     if not all([smtp_host, smtp_username, smtp_password]):
         print("Email notification skipped: SMTP is not configured.")
+        return
+
+    if not recipient_email:
+        print("Email notification skipped: recipient email not available.")
         return
 
     email = MIMEText(message)
@@ -52,20 +60,43 @@ def send_sms_notification(
     message: str,
 ):
     """
-    Send an SMS notification.
-
-    Currently implemented as a provider integration point.
-    Replace the print statement with the selected SMS
-    provider API when provider credentials are available.
+    Send an SMS notification using Twilio.
     """
 
     if not phone_number:
         print("SMS notification skipped: phone number not available.")
         return
 
-    print(
-        f"SMS notification sent to {phone_number}: {message}"
-    )
+    twilio_account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    twilio_phone_number = os.getenv("TWILIO_PHONE_NUMBER")
+
+    if not all([
+        twilio_account_sid,
+        twilio_auth_token,
+        twilio_phone_number
+    ]):
+        print("SMS notification skipped: Twilio is not configured.")
+        return
+
+    try:
+        from twilio.rest import Client
+
+        client = Client(
+            twilio_account_sid,
+            twilio_auth_token
+        )
+
+        client.messages.create(
+            body=message,
+            from_=twilio_phone_number,
+            to=phone_number
+        )
+
+        print(f"SMS notification sent to {phone_number}")
+
+    except Exception as e:
+        print(f"SMS notification failed: {e}")
 
 
 # ============================================================
@@ -73,22 +104,24 @@ def send_sms_notification(
 # ============================================================
 
 def send_push_notification(
-    user_id: str,
+    token: str,
     title: str,
     message: str,
 ):
     """
-    Send a push notification.
-
-    Currently implemented as a push-service integration point.
-    A Firebase/FCM or other push provider can be connected here.
+    Send a push notification using Firebase Cloud Messaging.
     """
 
-    if not user_id:
-        print("Push notification skipped: user ID not available.")
+    if not token:
+        print("Push notification skipped: device token not available.")
         return
 
-    print(
-        f"Push notification sent to {user_id}: "
-        f"{title} - {message}"
-    )
+    try:
+        send_fcm_notification(
+            token=token,
+            title=title,
+            message=message,
+        )
+
+    except Exception as e:
+        print(f"Push notification failed: {e}")
