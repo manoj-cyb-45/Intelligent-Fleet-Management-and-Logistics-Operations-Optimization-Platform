@@ -26,6 +26,7 @@ from app.models import (
     ShipmentHistory,
     Alert,
     DriverVehicleAssignment,
+    Notification,
 )
 
 from app.shipments.websocket import shipment_connection_manager
@@ -1052,6 +1053,19 @@ def update_shipment(
 
         shipment.status = new_status
 
+        notification = Notification(
+        user_id=shipment.driver_id,
+        notification_type="SHIPMENT_STATUS",
+        title="Shipment Status Updated",
+        message=(
+            f"Shipment {shipment.shipment_id} "
+            f"status changed to {new_status}."
+        ),
+        is_read=False,
+        )
+
+        db.add(notification)
+
         # Only use default status progress when there
         # is no meaningful GPS progress yet.
         if new_status == "CREATED":
@@ -1077,6 +1091,18 @@ def update_shipment(
 
         elif new_status == "DELIVERED":
             shipment.delivery_progress = 100.0
+
+            notification = Notification(
+                user_id=shipment.driver_id,
+                notification_type="DELIVERY",
+                title="Shipment Delivered",
+                message=(
+                    f"Shipment {shipment.shipment_id} "
+                    f"has been delivered successfully."
+                ),
+                is_read=False,
+            )
+            db.add(notification)
 
         elif new_status == "CANCELLED":
             shipment.delivery_progress = (

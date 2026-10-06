@@ -18,6 +18,10 @@ class Alert(Base):
         ForeignKey("shipments.shipment_id"),
         nullable=True,
     )
+    maintenance_id: Mapped[int | None] = mapped_column(
+        ForeignKey("maintenance_records.maintenance_id"),
+        nullable=True,
+    )
 
     alert_type: Mapped[str] = mapped_column(
         String(30),

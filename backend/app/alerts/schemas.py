@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class AlertResponse(BaseModel):
     alert_id: int
     shipment_id: str | None
+    maintenance_id: int | None
     alert_type: str
     message: str
     severity: str

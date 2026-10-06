@@ -1,6 +1,5 @@
 import axios from "axios";
 
-
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000",
 
@@ -9,32 +8,19 @@ const api = axios.create({
   },
 });
 
-
 api.interceptors.request.use(
   (config) => {
-
-    const token =
-      localStorage.getItem(
-        "fleetflow_token"
-      );
-
+    const token = localStorage.getItem("fleetflow_token");
 
     if (token) {
-
-      config.headers =
-        config.headers || {};
-
-      config.headers.Authorization =
-        `Bearer ${token}`;
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
 
     return config;
   },
 
-  (error) =>
-    Promise.reject(error)
+  (error) => Promise.reject(error)
 );
-
 
 export default api;

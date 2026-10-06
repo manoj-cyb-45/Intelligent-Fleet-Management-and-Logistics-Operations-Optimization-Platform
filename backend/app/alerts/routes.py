@@ -3,10 +3,11 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.alerts.schemas import AlertResponse
+from app.alerts.service import monitor_maintenance_alerts
 from app.auth.dependencies import require_roles
 from app.database.database import get_db
 from app.models import Alert
-from app.alerts.schemas import AlertResponse
 
 
 router = APIRouter(
@@ -23,6 +24,7 @@ def build_alert_response(alert: Alert):
     return AlertResponse(
         alert_id=alert.alert_id,
         shipment_id=alert.shipment_id,
+        maintenance_id=alert.maintenance_id,
         alert_type=alert.alert_type,
         message=alert.message,
         severity=alert.severity,
@@ -90,6 +92,32 @@ def list_alerts(
     return [
         build_alert_response(alert)
         for alert in alerts
+    ]
+
+
+# =========================================================
+# MONITOR MAINTENANCE
+# =========================================================
+
+@router.post(
+    "/monitor-maintenance",
+    response_model=list[AlertResponse],
+)
+def monitor_maintenance(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "ADMIN",
+            "MANAGER",
+        )
+    ),
+):
+
+    generated_alerts = monitor_maintenance_alerts(db)
+
+    return [
+        build_alert_response(alert)
+        for alert in generated_alerts
     ]
 
 

@@ -12,6 +12,7 @@ from app.models import (
     Vehicle,
     DriverVehicleAssignment,
     Shipment,
+    Notification,
 )
 
 from app.drivers.schemas import (
@@ -628,6 +629,19 @@ def assign_vehicle(
 
     db.add(assignment)
     db.add(vehicle)
+
+    notification = Notification(
+        user_id=driver_id,
+        notification_type="DRIVER_ASSIGNMENT",
+        title="Vehicle Assigned",
+        message=(
+            f"Vehicle {vehicle.vehicle_id} has been assigned "
+            f"to you."
+        ),
+        is_read=False,
+    )
+
+    db.add(notification)
 
     db.commit()
     db.refresh(assignment)
