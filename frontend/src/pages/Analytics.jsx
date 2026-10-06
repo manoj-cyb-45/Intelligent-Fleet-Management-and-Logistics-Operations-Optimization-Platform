@@ -1,10 +1,307 @@
 import { useEffect, useState } from "react";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import api from "../services/api";
 import { useTheme } from "../context/ThemeContext";
 
 export default function Analytics() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+
+    let y = 20;
+
+    const addSectionTitle = (title) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, 14, y);
+      y += 9;
+    };
+
+    const addRow = (label, value) => {
+      if (y > 285) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${label}: ${value ?? 0}`, 18, y);
+      y += 6;
+    };
+
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Fleet Analytics Report", 14, y);
+    y += 8;
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Generated: ${new Date().toLocaleString()}`,
+      14,
+      y
+    );
+    y += 12;
+
+    addSectionTitle("Operational Analytics");
+
+    addRow("Total Trips", operational?.total_trips);
+    addRow("Scheduled Trips", operational?.scheduled_trips);
+    addRow(
+      "In Progress Trips",
+      operational?.in_progress_trips
+    );
+    addRow("Completed Trips", operational?.completed_trips);
+    addRow("Cancelled Trips", operational?.cancelled_trips);
+    addRow(
+      "Completion Rate",
+      `${operational?.completion_rate ?? 0}%`
+    );
+
+    y += 5;
+
+    addSectionTitle("Fleet Performance");
+
+    addRow("Total Vehicles", fleet?.total_vehicles);
+    addRow("Available Vehicles", fleet?.available_vehicles);
+    addRow("Active Vehicles", fleet?.active_vehicles);
+    addRow(
+      "Maintenance Vehicles",
+      fleet?.maintenance_vehicles
+    );
+    addRow("Average Mileage", fleet?.average_mileage);
+    addRow(
+      "Average Fuel Level",
+      `${fleet?.average_fuel_level ?? 0}%`
+    );
+
+    y += 5;
+
+    addSectionTitle("Fuel Analytics");
+
+    addRow("Total Fuel Quantity", fuel?.total_quantity);
+    addRow(
+      "Total Fuel Cost",
+      `₹${fuel?.total_cost ?? 0}`
+    );
+    addRow(
+      "Average Cost Per Unit",
+      `₹${fuel?.average_cost_per_unit ?? 0}`
+    );
+
+    y += 5;
+
+    addSectionTitle("Delivery Performance");
+
+    addRow(
+      "Total Shipments",
+      delivery?.total_shipments
+    );
+    addRow(
+      "Delivered Shipments",
+      delivery?.delivered_shipments
+    );
+    addRow(
+      "In Transit Shipments",
+      delivery?.in_transit_shipments
+    );
+    addRow(
+      "Pending Shipments",
+      delivery?.pending_shipments
+    );
+    addRow(
+      "Cancelled Shipments",
+      delivery?.cancelled_shipments
+    );
+    addRow(
+      "Delivery Rate",
+      `${delivery?.delivery_rate ?? 0}%`
+    );
+
+    y += 5;
+
+    addSectionTitle("Fuel Consumption");
+
+    fuelConsumption.forEach((item) => {
+      addRow("Vehicle ID", item.vehicle_id);
+      addRow("Fuel Records", item.fuel_records);
+      addRow("Quantity", item.total_quantity);
+      addRow(
+        "Total Cost",
+        `₹${item.total_cost ?? 0}`
+      );
+      y += 3;
+    });
+
+    addSectionTitle("Driver Performance");
+
+    driverPerformance.forEach((driver) => {
+      addRow("Driver ID", driver.driver_id);
+      addRow("Total Trips", driver.total_trips);
+      addRow(
+        "Completed Trips",
+        driver.completed_trips
+      );
+      addRow(
+        "Cancelled Trips",
+        driver.cancelled_trips
+      );
+      addRow(
+        "Completion Rate",
+        `${driver.completion_rate ?? 0}%`
+      );
+      y += 3;
+    });
+
+    doc.save(
+      `fleet-analytics-${new Date()
+        .toISOString()
+        .slice(0, 10)}.pdf`
+    );
+  };
+
+  const exportExcel = () => {
+    const workbook = XLSX.utils.book_new();
+
+    const operationalSheet = XLSX.utils.json_to_sheet([
+      {
+        "Total Trips": operational?.total_trips ?? 0,
+        "Scheduled Trips":
+          operational?.scheduled_trips ?? 0,
+        "In Progress Trips":
+          operational?.in_progress_trips ?? 0,
+        "Completed Trips":
+          operational?.completed_trips ?? 0,
+        "Cancelled Trips":
+          operational?.cancelled_trips ?? 0,
+        "Completion Rate":
+          `${operational?.completion_rate ?? 0}%`,
+      },
+    ]);
+
+    const fleetSheet = XLSX.utils.json_to_sheet([
+      {
+        "Total Vehicles": fleet?.total_vehicles ?? 0,
+        "Available Vehicles":
+          fleet?.available_vehicles ?? 0,
+        "Active Vehicles":
+          fleet?.active_vehicles ?? 0,
+        "Maintenance Vehicles":
+          fleet?.maintenance_vehicles ?? 0,
+        "Average Mileage":
+          fleet?.average_mileage ?? 0,
+        "Average Fuel Level":
+          `${fleet?.average_fuel_level ?? 0}%`,
+      },
+    ]);
+
+    const fuelSheet = XLSX.utils.json_to_sheet([
+      {
+        "Total Fuel Quantity":
+          fuel?.total_quantity ?? 0,
+        "Total Fuel Cost":
+          fuel?.total_cost ?? 0,
+        "Average Cost Per Unit":
+          fuel?.average_cost_per_unit ?? 0,
+      },
+    ]);
+
+    const deliverySheet = XLSX.utils.json_to_sheet([
+      {
+        "Total Shipments":
+          delivery?.total_shipments ?? 0,
+        "Delivered Shipments":
+          delivery?.delivered_shipments ?? 0,
+        "In Transit Shipments":
+          delivery?.in_transit_shipments ?? 0,
+        "Pending Shipments":
+          delivery?.pending_shipments ?? 0,
+        "Cancelled Shipments":
+          delivery?.cancelled_shipments ?? 0,
+        "Delivery Rate":
+          `${delivery?.delivery_rate ?? 0}%`,
+      },
+    ]);
+
+    const fuelConsumptionSheet =
+      XLSX.utils.json_to_sheet(
+        fuelConsumption.map((item) => ({
+          "Vehicle ID": item.vehicle_id,
+          "Fuel Records":
+            item.fuel_records ?? 0,
+          Quantity:
+            item.total_quantity ?? 0,
+          "Total Cost":
+            item.total_cost ?? 0,
+        }))
+      );
+
+    const driverSheet =
+      XLSX.utils.json_to_sheet(
+        driverPerformance.map((driver) => ({
+          "Driver ID": driver.driver_id,
+          "Total Trips":
+            driver.total_trips ?? 0,
+          "Completed Trips":
+            driver.completed_trips ?? 0,
+          "Cancelled Trips":
+            driver.cancelled_trips ?? 0,
+          "Completion Rate":
+            `${driver.completion_rate ?? 0}%`,
+        }))
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      operationalSheet,
+      "Operational"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      fleetSheet,
+      "Fleet Performance"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      fuelSheet,
+      "Fuel Analytics"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      deliverySheet,
+      "Delivery Performance"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      fuelConsumptionSheet,
+      "Fuel Consumption"
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      driverSheet,
+      "Driver Performance"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      `fleet-analytics-${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`
+    );
+  };
 
   const [operational, setOperational] = useState(null);
   const [fleet, setFleet] = useState(null);
@@ -84,18 +381,37 @@ export default function Analytics() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>
-            Fleet Analytics
-          </h1>
+        <div style={styles.header}>
+          <div>
+            <h1 style={styles.title}>
+              Fleet Analytics
+            </h1>
 
-          <p style={styles.subtitle}>
-            Operational performance, fleet utilization, fuel monitoring,
-            driver performance and delivery insights.
-          </p>
+            <p style={styles.subtitle}>
+              Operational performance, fleet utilization,
+              fuel monitoring, driver performance and
+              delivery insights.
+            </p>
+          </div>
+
+          <div style={styles.exportActions}>
+            <button
+              type="button"
+              onClick={exportPDF}
+              style={styles.exportButton}
+            >
+              Export PDF
+            </button>
+
+            <button
+              type="button"
+              onClick={exportExcel}
+              style={styles.exportButton}
+            >
+              Export Excel
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* KPI CARDS */}
       <div style={styles.cardGrid}>
@@ -476,6 +792,25 @@ const getStyles = (theme) => {
     header: {
       marginBottom: "24px",
     },
+exportActions: {
+  display: "flex",
+  gap: "10px",
+  alignItems: "center",
+  flexWrap: "wrap",
+},
+
+exportButton: {
+  marginTop: "12px",
+  padding: "10px 16px",
+  border: "none",
+  borderRadius: "8px",
+  background: dark ? "#2563eb" : "#1d4ed8",
+  color: "#ffffff",
+  fontSize: "14px",
+  fontWeight: 600,
+  cursor: "pointer",
+},
+
 
     title: {
       margin: 0,
