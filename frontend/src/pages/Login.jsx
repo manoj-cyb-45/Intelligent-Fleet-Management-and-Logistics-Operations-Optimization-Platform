@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 function Login() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -70,8 +71,15 @@ function Login() {
         <section className="login-card">
           <div className="login-card-header">
             <span className="login-eyebrow">SECURE ACCESS</span>
-            <h2>Welcome back</h2>
-            <p>Sign in to access your FleetFlow workspace.</p>
+            <div className="login-title-row">
+              <div>
+                <h2>Welcome back</h2>
+                <p>Sign in to access your FleetFlow workspace.</p>
+              </div>
+              <span className="login-status-pill">
+                <i aria-hidden="true" /> Secure
+              </span>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
@@ -90,15 +98,26 @@ function Login() {
 
             <div className="login-field">
               <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter your password"
-                required
-                autoComplete="current-password"
-              />
+              <div className="login-password-wrap">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
             {error && (
@@ -113,13 +132,27 @@ function Login() {
               disabled={loading}
               className="login-submit"
             >
-              {loading ? "Signing in..." : "Sign In"}
-              {!loading && <span className="login-submit-arrow">→</span>}
+              {loading ? (
+                <>
+                  <span className="login-submit-spinner" aria-hidden="true" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <span className="login-submit-arrow">→</span>
+                </>
+              )}
             </button>
           </form>
 
+          <div className="login-security-note">
+            <span className="login-security-icon" aria-hidden="true">✓</span>
+            <span>Authorized FleetFlow users only</span>
+          </div>
+
           <p className="login-footer">
-            Authorized users only
+            Fleet operations • Shipment visibility • Asset intelligence
           </p>
         </section>
       </main>

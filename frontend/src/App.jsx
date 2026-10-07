@@ -106,6 +106,10 @@ function Icon({ name, size = 20 }) {
       </>
     ),
 
+    chevronLeft: <path d="m15 18-6-6 6-6" />,
+    chevronRight: <path d="m9 18 6-6-6-6" />,
+    chevronDown: <path d="m6 9 6 6 6-6" />,
+
     arrow: (
       <>
         <path d="M5 12h14M13 6l6 6-6 6" />
@@ -113,6 +117,27 @@ function Icon({ name, size = 20 }) {
     ),
 
     check: <path d="m5 12 4 4L19 6" />,
+
+    user: (
+      <>
+        <circle cx="12" cy="8" r="3.2" />
+        <path d="M5.5 20c.8-3.7 3-5.5 6.5-5.5s5.7 1.8 6.5 5.5" />
+      </>
+    ),
+
+    settings: (
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-2.5V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H6v-2.5h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V5h2.5v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v2.5h-.1a1.7 1.7 0 0 0-1.6 1Z" />
+      </>
+    ),
+
+    logout: (
+      <>
+        <path d="M10 5H5v14h5" />
+        <path d="M14 8l4 4-4 4M18 12H8" />
+      </>
+    ),
   };
 
   return (
@@ -539,10 +564,19 @@ function ShipmentTable({
             {shipments
               .slice(0, 5)
               .map((shipment) => {
-                const progress =
-                  Number(
-                    shipment.delivery_progress || 0
-                  );
+                const progress = Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    Number(
+                      shipment.delivery_progress || 0
+                    )
+                  )
+                );
+
+                const progressLabel = Number.isFinite(progress)
+                  ? `${Number.isInteger(progress) ? progress : progress.toFixed(1)}%`
+                  : "0%";
 
                 const status =
                   shipment.status?.replace(
@@ -616,7 +650,7 @@ function ShipmentTable({
                         </div>
 
                         <span>
-                          {progress}%
+                          {progressLabel}
                         </span>
                       </div>
                     </td>
@@ -845,6 +879,56 @@ function App() {
     toggleTheme,
   } = useTheme();
 
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("fleetflow-sidebar-collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("fleetflow-sidebar-collapsed", String(sidebarCollapsed));
+    } catch {
+      // Ignore storage failures; sidebar state remains usable for this session.
+    }
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    if (!mobileNavOpen && !profileOpen) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMobileNavOpen(false);
+        setProfileOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileNavOpen, profileOpen]);
+
+  useEffect(() => {
+    document.body.classList.toggle("mobile-nav-open", mobileNavOpen);
+    return () => document.body.classList.remove("mobile-nav-open");
+  }, [mobileNavOpen]);
+
+
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (!event.target.closest(".profile-menu-wrap")) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [profileOpen]);
 
   useEffect(() => {
     if (!user?.user_id) {
@@ -889,7 +973,14 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="fleet-app">
+      <div className={`fleet-app ${mobileNavOpen ? "mobile-nav-open" : ""} ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+
+        <button
+          type="button"
+          className="mobile-nav-backdrop"
+          aria-label="Close navigation"
+          onClick={() => setMobileNavOpen(false)}
+        />
 
         <aside className="app-sidebar">
           <div className="brand-block">
@@ -901,7 +992,6 @@ function App() {
               Fleet Management Platform
             </p>
           </div>
-
 
           <nav className="app-nav">
             {navigation
@@ -917,6 +1007,7 @@ function App() {
                   end={
                     item.path === "/"
                   }
+                  onClick={() => setMobileNavOpen(false)}
                   className={({
                     isActive,
                   }) =>
@@ -926,6 +1017,8 @@ function App() {
                         : ""
                     }`
                   }
+                  title={sidebarCollapsed ? item.name : undefined}
+                  aria-label={item.name}
                 >
                   <span className="nav-icon">
                     <Icon
@@ -942,35 +1035,6 @@ function App() {
           </nav>
 
 
-          <div className="sidebar-footer-card">
-            <div className="footer-card-top">
-              <span className="footer-truck">
-                <Icon
-                  name="truck"
-                  size={22}
-                />
-              </span>
-
-              <span className="online-dot" />
-            </div>
-
-            <strong>
-              FleetFlow
-            </strong>
-
-            <p>
-              Keep your fleet moving
-            </p>
-
-            <div className="mini-chart">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
         </aside>
 
 
@@ -979,6 +1043,29 @@ function App() {
           <header className="app-header">
 
             <div className="header-left">
+              <button
+                type="button"
+                className="sidebar-toggle-button"
+                onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-expanded={!sidebarCollapsed}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <Icon
+                  name={sidebarCollapsed ? "chevronRight" : "chevronLeft"}
+                  size={19}
+                />
+              </button>
+
+              <button
+                type="button"
+                className="mobile-menu-button"
+                onClick={() => setMobileNavOpen((open) => !open)}
+                aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
+                aria-expanded={mobileNavOpen}
+              >
+                <Icon name="menu" size={20} />
+              </button>
               <div className="header-brand-mark">
                 FF
               </div>
@@ -994,58 +1081,104 @@ function App() {
 
             <div className="user-area">
 
-              <button
-                type="button"
-                className="theme-toggle"
-                onClick={toggleTheme}
-                aria-label={`Switch to ${
-                  theme === "dark"
-                    ? "light"
-                    : "dark"
-                } mode`}
-                title={`Switch to ${
-                  theme === "dark"
-                    ? "light"
-                    : "dark"
-                } mode`}
-              >
-                <span className="theme-toggle-icon">
-                  {theme === "dark"
-                    ? "☀"
-                    : "☾"}
-                </span>
+              <div className="profile-menu-wrap">
+                <button
+                  type="button"
+                  className={`profile-trigger ${profileOpen ? "is-open" : ""}`}
+                  onClick={() => setProfileOpen((open) => !open)}
+                  aria-label="Open profile menu"
+                  aria-expanded={profileOpen}
+                  aria-haspopup="menu"
+                >
+                  <span className="profile-avatar">
+                    {user.user_id?.charAt(0)?.toUpperCase() || "U"}
+                  </span>
 
-                <span className="theme-toggle-text">
-                  {theme === "dark"
-                    ? "Light"
-                    : "Dark"}
-                </span>
-              </button>
+                  <span className="profile-trigger-copy">
+                    <strong>{user.user_id}</strong>
+                    <small>{user.role}</small>
+                  </span>
 
+                  <Icon
+                    name={profileOpen ? "chevronRight" : "chevronDown"}
+                    size={15}
+                  />
+                </button>
 
-              <div className="user-copy">
-                <strong>
-                  {user.user_id}
-                </strong>
+                {profileOpen && (
+                  <div className="profile-menu" role="menu">
+                    <div className="profile-menu-header">
+                      <span className="profile-menu-avatar">
+                        {user.user_id?.charAt(0)?.toUpperCase() || "U"}
+                      </span>
+                      <div>
+                        <strong>{user.user_id}</strong>
+                        <span>FleetFlow account</span>
+                      </div>
+                    </div>
 
-                <span>
-                  {user.role}
-                </span>
+                    <div className="profile-account-grid">
+                      <div>
+                        <span>Role</span>
+                        <strong>{user.role}</strong>
+                      </div>
+                      <div>
+                        <span>Workspace</span>
+                        <strong>Operations Center</strong>
+                      </div>
+                      <div>
+                        <span>Account</span>
+                        <strong className="profile-status">
+                          <i /> Active
+                        </strong>
+                      </div>
+                      <div>
+                        <span>Access</span>
+                        <strong>Authorized</strong>
+                      </div>
+                    </div>
+
+                    <div className="profile-menu-divider" />
+
+                    <div className="profile-menu-section-label">Preferences</div>
+                    <button
+                      type="button"
+                      className="profile-menu-item profile-theme-item"
+                      onClick={toggleTheme}
+                      role="menuitem"
+                    >
+                      <span className="profile-menu-item-icon">
+                        {theme === "dark" ? "☀" : "☾"}
+                      </span>
+                      <span>
+                        <strong>Appearance</strong>
+                        <small>{theme === "dark" ? "Dark mode" : "Light mode"}</small>
+                      </span>
+                      <span className="profile-theme-pill">
+                        {theme === "dark" ? "Dark" : "Light"}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="profile-menu-item profile-logout-item"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        logout();
+                      }}
+                      role="menuitem"
+                    >
+                      <span className="profile-menu-item-icon">
+                        <Icon name="logout" size={17} />
+                      </span>
+                      <span>
+                        <strong>Sign out</strong>
+                        <small>End this FleetFlow session</small>
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
-
-
-              <div className="avatar">
-                {user.user_id?.charAt(0) ||
-                  "U"}
-              </div>
-
-
-              <button
-                className="logout-button"
-                onClick={logout}
-              >
-                Logout
-              </button>
 
             </div>
           </header>

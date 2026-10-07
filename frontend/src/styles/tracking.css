@@ -1462,3 +1462,531 @@
     grid-column: auto;
   }
 }
+
+/* =========================================================
+   FLEETFLOW DESIGN SYSTEM — TRACKING BATCH 1
+   Align Live Tracking with the global page-header/card system.
+   ========================================================= */
+
+.tracking-page {
+  max-width: 1440px;
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.tracking-page-header {
+  min-height: 64px;
+  margin: 0 0 18px;
+  padding: 0;
+  align-items: flex-start;
+}
+
+.tracking-page-header h1 {
+  margin: 0 0 7px !important;
+  font-size: 30px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -.02em;
+}
+
+.tracking-page-header p {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+:root[data-theme="light"] .tracking-page-header h1 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .tracking-page-header p {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .tracking-summary-card,
+:root[data-theme="light"] .tracking-map-panel,
+:root[data-theme="light"] .tracking-vehicles-panel {
+  border-color: #d8e0ea !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .055) !important;
+}
+
+@media (max-width: 720px) {
+  .tracking-page-header h1 {
+    font-size: 26px !important;
+  }
+}
+
+
+/* =========================================================
+   FLEETFLOW — BATCH 1.5 TRACKING LIGHT SURFACE NORMALIZATION
+   ========================================================= */
+
+:root[data-theme="light"] .tracking-page {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .tracking-page .tracking-summary-card,
+:root[data-theme="light"] .tracking-page .tracking-map-panel,
+:root[data-theme="light"] .tracking-page .tracking-vehicles-panel {
+  background: #ffffff !important;
+  border-color: #d8e0ea !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .055) !important;
+}
+
+:root[data-theme="light"] .tracking-page .tracking-summary-card strong,
+:root[data-theme="light"] .tracking-page .tracking-map-header h2,
+:root[data-theme="light"] .tracking-page .tracking-section-header h2 {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .tracking-page .tracking-summary-label,
+:root[data-theme="light"] .tracking-page .tracking-summary-subtext,
+:root[data-theme="light"] .tracking-page .tracking-map-header p {
+  color: #64748b !important;
+}
+
+/* ============================================================================
+   BATCH 7 — TRACKING POPUP / LIGHT THEME TYPOGRAPHY POLISH
+   ============================================================================ */
+
+/* Leaflet's popup chrome can otherwise retain theme-inconsistent text colors. */
+.tracking-popup {
+  min-width: 220px !important;
+  color: #172033 !important;
+  line-height: 1.4 !important;
+}
+
+.tracking-popup > strong {
+  color: #111827 !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+.tracking-popup > span,
+.tracking-popup-grid small,
+.tracking-popup-shipment span {
+  color: #64748b !important;
+}
+
+.tracking-popup-grid b,
+.tracking-popup-shipment strong {
+  color: #334155 !important;
+}
+
+.tracking-popup-grid {
+  gap: 10px 12px !important;
+  margin-top: 11px !important;
+}
+
+.tracking-popup-shipment {
+  margin-top: 11px !important;
+  padding-top: 9px !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+:root[data-theme="dark"] .tracking-popup {
+  color: #e5edf7 !important;
+}
+
+:root[data-theme="dark"] .tracking-popup > strong {
+  color: #f8fafc !important;
+}
+
+:root[data-theme="dark"] .tracking-popup-grid b,
+:root[data-theme="dark"] .tracking-popup-shipment strong {
+  color: #dbe7f7 !important;
+}
+
+:root[data-theme="dark"] .tracking-popup > span,
+:root[data-theme="dark"] .tracking-popup-grid small,
+:root[data-theme="dark"] .tracking-popup-shipment span {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme="dark"] .tracking-popup-shipment {
+  border-top-color: #2b405d !important;
+}
+
+
+/* ============================================================================
+   FLEETFLOW — BATCH 11 TRACKING REDESIGN
+   Reduce density, remove duplicate KPI layer and make the workspace adaptive.
+   ============================================================================ */
+
+.tracking-page {
+  width: 100% !important;
+  max-width: 1500px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin-inline: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, .85fr) !important;
+  grid-template-rows: auto auto minmax(440px, 56vh) !important;
+  gap: 16px !important;
+  overflow: visible !important;
+}
+
+.tracking-page-header,
+.tracking-summary-grid {
+  grid-column: 1 / -1 !important;
+}
+
+.tracking-page-header {
+  grid-row: 1 !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  padding: 0 2px !important;
+}
+
+.tracking-page-header h1 {
+  margin: 0 !important;
+  font-size: clamp(26px, 2vw, 31px) !important;
+  line-height: 1.12 !important;
+}
+
+.tracking-page-header > div:first-child {
+  min-width: 0 !important;
+}
+
+.tracking-status {
+  min-height: 34px !important;
+  padding: 7px 11px !important;
+  border-radius: 10px !important;
+  font-size: 9px !important;
+}
+
+.tracking-summary-grid {
+  grid-row: 2 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin: 0 !important;
+}
+
+/* Tracking KPIs now share the same geometry as the dashboard KPI family. */
+.tracking-summary-card {
+  position: relative !important;
+  min-width: 0 !important;
+  min-height: 108px !important;
+  height: 108px !important;
+  padding: 17px 18px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  border: 1px solid #d7e0ec !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .05) !important;
+}
+
+.tracking-summary-card::after {
+  content: "";
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  right: -34px;
+  bottom: -54px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, .09);
+  pointer-events: none;
+}
+
+.tracking-summary-label {
+  position: relative !important;
+  z-index: 1 !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  font-weight: 750 !important;
+  letter-spacing: .07em !important;
+}
+
+.tracking-summary-card strong {
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 10px !important;
+  color: #0f172a !important;
+  font-size: clamp(24px, 2vw, 30px) !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+}
+
+.tracking-summary-subtext {
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 8px !important;
+  color: #8a9ab1 !important;
+  font-size: 10px !important;
+}
+
+.tracking-summary-card.blue strong { color: #2563eb !important; }
+.tracking-summary-card.green strong { color: #059669 !important; }
+.tracking-summary-card.cyan strong { color: #0891b2 !important; }
+.tracking-summary-card.amber strong { color: #d97706 !important; }
+
+.tracking-map-panel,
+.tracking-vehicles-panel {
+  grid-row: 3 !important;
+  height: 100% !important;
+  min-height: 440px !important;
+  max-height: none !important;
+  border-radius: 16px !important;
+  border: 1px solid #d7e0ec !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .055) !important;
+}
+
+.tracking-map-panel {
+  grid-column: 1 !important;
+}
+
+.tracking-vehicles-panel {
+  grid-column: 2 !important;
+  padding: 16px !important;
+}
+
+.tracking-map-header {
+  padding: 15px 17px !important;
+  min-height: 72px !important;
+  background: transparent !important;
+  border-bottom: 1px solid #e6ebf2 !important;
+}
+
+.tracking-map-header h2,
+.tracking-section-header h2 {
+  margin: 4px 0 0 !important;
+  color: #0f172a !important;
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+  font-weight: 780 !important;
+}
+
+.tracking-map-header p,
+.tracking-section-header p {
+  margin-top: 5px !important;
+  color: #71829a !important;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.tracking-map-legend {
+  gap: 9px 12px !important;
+  max-width: 55% !important;
+}
+
+.map-legend-item {
+  font-size: 9px !important;
+}
+
+.tracking-map-container {
+  min-height: 0 !important;
+  height: calc(100% - 72px) !important;
+}
+
+.tracking-vehicles-panel {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.tracking-section-header {
+  flex: 0 0 auto !important;
+  margin-bottom: 12px !important;
+}
+
+.tracking-device-count {
+  padding: 7px 10px !important;
+  border-radius: 9px !important;
+  background: #f8fafc !important;
+  border-color: #dbe3ed !important;
+  color: #60728a !important;
+  font-size: 9px !important;
+}
+
+.tracking-vehicle-list {
+  flex: 1 1 auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  gap: 8px !important;
+  padding: 1px 2px 2px 0 !important;
+}
+
+.tracking-vehicle-row {
+  min-height: 72px !important;
+  grid-template-columns: minmax(0, 1.15fr) auto minmax(76px, .85fr) !important;
+  grid-auto-rows: auto !important;
+  gap: 7px 10px !important;
+  padding: 11px 12px !important;
+  border: 1px solid #e0e7ef !important;
+  border-radius: 11px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, .025) !important;
+}
+
+.tracking-vehicle-row:hover {
+  border-color: #b9c9de !important;
+  background: #fbfdff !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .055) !important;
+}
+
+.tracking-vehicle-main strong,
+.tracking-vehicle-detail strong {
+  color: #26364d !important;
+}
+
+.tracking-vehicle-main span,
+.tracking-vehicle-detail small {
+  color: #7a8aa0 !important;
+}
+
+.tracking-vehicle-status {
+  font-size: 10px !important;
+  padding: 5px 8px !important;
+  border-radius: 999px !important;
+}
+
+/* Dark theme: preserve the exact geometry, only swap surfaces and contrast. */
+html[data-theme="dark"] .tracking-summary-card,
+html[data-theme="dark"] .tracking-map-panel,
+html[data-theme="dark"] .tracking-vehicles-panel {
+  border-color: #263854 !important;
+  background: #101d31 !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.22) !important;
+}
+
+html[data-theme="dark"] .tracking-summary-card::after {
+  background: rgba(59, 130, 246, .13);
+}
+
+html[data-theme="dark"] .tracking-summary-label,
+html[data-theme="dark"] .tracking-summary-subtext {
+  color: #8fa3bf !important;
+}
+
+html[data-theme="dark"] .tracking-summary-card strong {
+  color: #f3f7ff !important;
+}
+
+html[data-theme="dark"] .tracking-map-header,
+html[data-theme="dark"] .tracking-section-header {
+  border-color: #263854 !important;
+}
+
+html[data-theme="dark"] .tracking-map-header h2,
+html[data-theme="dark"] .tracking-section-header h2 {
+  color: #f3f7ff !important;
+}
+
+html[data-theme="dark"] .tracking-map-header p,
+html[data-theme="dark"] .tracking-section-header p {
+  color: #8195b2 !important;
+}
+
+html[data-theme="dark"] .tracking-device-count {
+  background: #14243b !important;
+  border-color: #304665 !important;
+  color: #9db0c9 !important;
+}
+
+html[data-theme="dark"] .tracking-vehicle-row {
+  border-color: #293d5a !important;
+  background: #111f34 !important;
+}
+
+html[data-theme="dark"] .tracking-vehicle-row:hover {
+  border-color: #3b567c !important;
+  background: #14253e !important;
+}
+
+html[data-theme="dark"] .tracking-vehicle-main strong,
+html[data-theme="dark"] .tracking-vehicle-detail strong {
+  color: #e9f0fb !important;
+}
+
+html[data-theme="dark"] .tracking-vehicle-main span,
+html[data-theme="dark"] .tracking-vehicle-detail small {
+  color: #8297b5 !important;
+}
+
+@media (max-width: 1180px) {
+  .tracking-page {
+    grid-template-columns: minmax(0, 1.35fr) minmax(290px, .9fr) !important;
+  }
+
+  .tracking-map-legend {
+    max-width: 48% !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .tracking-page {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto 390px 390px !important;
+  }
+
+  .tracking-map-panel,
+  .tracking-vehicles-panel {
+    grid-column: 1 !important;
+    min-height: 390px !important;
+  }
+
+  .tracking-map-panel { grid-row: 3 !important; }
+  .tracking-vehicles-panel { grid-row: 4 !important; }
+
+  .tracking-map-legend {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .tracking-page {
+    gap: 12px !important;
+    grid-template-rows: auto auto 340px 360px !important;
+  }
+
+  .tracking-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .tracking-summary-card {
+    height: 98px !important;
+    min-height: 98px !important;
+    padding: 14px !important;
+  }
+
+  .tracking-summary-card strong {
+    font-size: 22px !important;
+  }
+
+  .tracking-summary-subtext {
+    font-size: 9px !important;
+  }
+
+  .tracking-map-header {
+    padding: 13px 14px !important;
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .tracking-map-container {
+    height: calc(100% - 104px) !important;
+  }
+
+  .tracking-vehicle-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .tracking-vehicle-row > .tracking-vehicle-detail:nth-child(4),
+  .tracking-vehicle-row > .tracking-vehicle-detail:nth-child(5) {
+    grid-column: auto !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .tracking-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tracking-summary-card {
+    height: 88px !important;
+    min-height: 88px !important;
+  }
+}

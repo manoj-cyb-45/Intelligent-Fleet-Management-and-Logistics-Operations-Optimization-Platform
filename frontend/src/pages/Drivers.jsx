@@ -1508,7 +1508,8 @@ function Drivers() {
 
               <button
                 onClick={closeModal}
-                className="driver-modal-close"
+                className="driver-modal-close ff-modal-close"
+              aria-label="Close driver dialog"
               >
                 ×
               </button>

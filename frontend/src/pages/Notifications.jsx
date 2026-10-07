@@ -158,11 +158,6 @@ function Notifications() {
         </div>
 
         <div className="notification-header-actions">
-          <div className="notification-count">
-            <strong>{unreadCount}</strong>
-            <span>Unread</span>
-          </div>
-
           {unreadCount > 0 && (
             <button
               type="button"
@@ -174,6 +169,38 @@ function Notifications() {
           )}
         </div>
       </div>
+
+      {!error && (
+        <section className="notification-kpi-grid" aria-label="Notification overview">
+          <article className="notification-kpi-card">
+            <span className="notification-kpi-label">Total notifications</span>
+            <strong className="notification-kpi-value">{notifications.length}</strong>
+            <span className="notification-kpi-note">All recorded fleet activity</span>
+          </article>
+
+          <article className="notification-kpi-card">
+            <span className="notification-kpi-label">Unread</span>
+            <strong className="notification-kpi-value">{unreadCount}</strong>
+            <span className="notification-kpi-note">Requires your attention</span>
+          </article>
+
+          <article className="notification-kpi-card">
+            <span className="notification-kpi-label">Read</span>
+            <strong className="notification-kpi-value">{notifications.length - unreadCount}</strong>
+            <span className="notification-kpi-note">Already reviewed</span>
+          </article>
+
+          <article className="notification-kpi-card">
+            <span className="notification-kpi-label">Latest activity</span>
+            <strong className="notification-kpi-value">
+              {notifications.length > 0
+                ? getTypeLabel(notifications[0].notification_type)
+                : "—"}
+            </strong>
+            <span className="notification-kpi-note">Most recent notification type</span>
+          </article>
+        </section>
+      )}
 
       {error && (
         <div className="notification-error">

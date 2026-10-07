@@ -37,6 +37,7 @@ function Shipments() {
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [modalError, setModalError] = useState("");
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -608,6 +609,32 @@ useEffect(() => {
     ).length,
   };
 
+  const formatStatusLabel = (status) => {
+    if (!status) return "Unknown";
+    return String(status)
+      .toLowerCase()
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  const formatLocationLabel = (location) => {
+    if (!location) return "Not available";
+
+    const normalized = String(location).trim();
+    const key = normalized.toLowerCase();
+
+    const aliases = {
+      mysore: "Mysuru",
+      mysuru: "Mysuru",
+      bengaluru: "Bengaluru",
+      bangalore: "Bengaluru",
+      mandya: "Mandya",
+    };
+
+    return aliases[key] || normalized;
+  };
+
   // =========================================================
   // STATUS CLASS
   // =========================================================
@@ -654,6 +681,7 @@ useEffect(() => {
 
     setError("");
     setSuccessMessage("");
+    setModalError("");
   };
 
   // =========================================================
@@ -670,6 +698,7 @@ useEffect(() => {
 
     setError("");
     setSuccessMessage("");
+    setModalError("");
 
     setShowAddModal(true);
   };
@@ -685,7 +714,7 @@ useEffect(() => {
       description: shipment.description || "",
       origin: shipment.origin || "",
       destination: shipment.destination || "",
-      due_date: formatDateTimeForInput(
+      due_date: formatDateForInput(
         shipment.due_date
       ),
       vehicle_id: shipment.vehicle_id || "",
@@ -693,16 +722,15 @@ useEffect(() => {
       status: shipment.status || "PENDING",
       current_location:
         shipment.current_location || "",
-      expected_delivery_at:
-        shipment.expected_delivery_at
-          ? formatDateTimeForInput(
-              shipment.expected_delivery_at
-            )
-          : "",
+      expected_delivery_at: formatDateForInput(
+        shipment.expected_delivery_at ||
+          shipment.due_date
+      ),
     });
 
     setError("");
     setSuccessMessage("");
+    setModalError("");
 
     setShowEditModal(true);
   };
@@ -724,6 +752,7 @@ useEffect(() => {
     setShipmentForm(emptyForm);
 
     setError("");
+    setModalError("");
   };
 
   // =========================================================
@@ -793,6 +822,13 @@ useEffect(() => {
 
     if (!shipmentForm.due_date) {
       setError("Due date is required.");
+      return false;
+    }
+
+    if (shipmentForm.expected_delivery_at &&
+        shipmentForm.due_date &&
+        shipmentForm.expected_delivery_at < shipmentForm.due_date) {
+      setError("Expected delivery cannot be earlier than the shipment due date.");
       return false;
     }
 
@@ -877,6 +913,7 @@ useEffect(() => {
 
     setError("");
     setSuccessMessage("");
+    setModalError("");
 
     try {
       setSaving(true);
@@ -920,9 +957,9 @@ useEffect(() => {
       );
 
       if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
+        setModalError(err.response.data.detail);
       } else {
-        setError("Unable to update shipment.");
+        setModalError("Unable to update shipment.");
       }
     } finally {
       setSaving(false);
@@ -1088,7 +1125,7 @@ useEffect(() => {
           ERROR
           ===================================================== */}
 
-      {error && (
+      {error && !showAddModal && !showEditModal && !showHistoryModal && (
         <div className="shipment-message shipment-error">
           <div className="shipment-message-inner">
             <p className="shipment-error-text">
@@ -1179,6 +1216,10 @@ useEffect(() => {
                   </th>
 
                   <th className="shipment-th">
+                    Expected Delivery
+                  </th>
+
+                  <th className="shipment-th">
                     Actions
                   </th>
                 </tr>
@@ -1226,10 +1267,7 @@ useEffect(() => {
                       <span
                         className={`shipment-status ${shipment.status.toLowerCase()}`}
                       >
-                        {shipment.status.replace(
-                          "_",
-                          " "
-                        )}
+                        {formatStatusLabel(shipment.status)}
                       </span>
                     </td>
 
@@ -1268,8 +1306,7 @@ useEffect(() => {
                     {/* LOCATION */}
 
                     <td className="shipment-td shipment-muted-cell">
-                      {shipment.current_location ||
-                        "Not available"}
+                      {formatLocationLabel(shipment.current_location)}
                     </td>
 
                     {/* VEHICLE */}
@@ -1290,9 +1327,17 @@ useEffect(() => {
 
                     {/* DUE DATE */}
 
-                    <td className="shipment-td shipment-muted-cell">
+                    <td className="shipment-td shipment-muted-cell shipment-date-cell">
                       {formatDate(
                         shipment.due_date
+                      )}
+                    </td>
+
+                    {/* EXPECTED DELIVERY */}
+
+                    <td className="shipment-td shipment-muted-cell shipment-date-cell">
+                      {formatDate(
+                        shipment.expected_delivery_at
                       )}
                     </td>
 
@@ -1391,14 +1436,16 @@ useEffect(() => {
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-200">
+                    <p className="text-sm font-semibold shipment-panel-heading">
                       Live GPS Connection
                     </p>
 
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs shipment-panel-muted">
                       {webSocketStatus ===
                         "CONNECTED" &&
-                        "Real-time location updates are active."}
+                        (hasValidGpsCoordinates()
+                          ? "Real-time location updates are active."
+                          : "Tracking connected; waiting for the first GPS position.")}
 
                       {webSocketStatus ===
                         "CONNECTING" &&
@@ -1452,7 +1499,7 @@ useEffect(() => {
 
               {/* SHIPMENT INFO */}
 
-              <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3">
                 <InfoItem
                   label="Shipment"
                   value={
@@ -1463,7 +1510,7 @@ useEffect(() => {
                 <InfoItem
                   label="Status"
                   value={
-                    selectedTrackingShipment.status
+                    formatStatusLabel(selectedTrackingShipment.status)
                   }
                 />
 
@@ -1473,10 +1520,19 @@ useEffect(() => {
                 />
 
                 <InfoItem
+                  label="Due Date"
+                  value={formatDate(selectedTrackingShipment.due_date)}
+                />
+
+                <InfoItem
+                  label="Expected Delivery"
+                  value={formatDate(selectedTrackingShipment.expected_delivery_at)}
+                />
+
+                <InfoItem
                   label="Location"
                   value={
-                    selectedTrackingShipment.current_location ||
-                    "Waiting for GPS"
+                    formatLocationLabel(selectedTrackingShipment.current_location)
                   }
                 />
               </div>
@@ -1490,7 +1546,7 @@ useEffect(() => {
                     hasValidGpsCoordinates()
                       ? Number(
                           selectedTrackingShipment.latitude
-                        ).toFixed(6)
+                        ).toFixed(4)
                       : "Waiting for GPS"
                   }
                 />
@@ -1501,7 +1557,7 @@ useEffect(() => {
                     hasValidGpsCoordinates()
                       ? Number(
                           selectedTrackingShipment.longitude
-                        ).toFixed(6)
+                        ).toFixed(4)
                       : "Waiting for GPS"
                   }
                 />
@@ -1523,11 +1579,11 @@ useEffect(() => {
               <div className="shipment-tracking-route">
                 <div className="flex flex-col gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-200">
+                    <p className="text-sm font-semibold shipment-panel-heading">
                       Route Optimization
                     </p>
 
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs shipment-panel-muted">
                       Generate or recalculate the road route using
                       live GPS data and the coordinates stored with
                       the shipment.
@@ -1683,6 +1739,14 @@ useEffect(() => {
               onSubmit={handleAddShipment}
               className="mt-6"
             >
+              {error && (
+                <div className="shipment-message shipment-error mb-5">
+                  <div className="shipment-message-inner">
+                    <p className="shipment-error-text">{error}</p>
+                    <button type="button" onClick={() => setError("")} className="shipment-dismiss">Dismiss</button>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div className="md:col-span-2">
                   <FormInput
@@ -1807,7 +1871,7 @@ useEffect(() => {
               onClose={closeModal}
             />
 
-            <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
+            <div className="shipment-info-panel mt-5 rounded-lg border px-4 py-4">
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <InfoItem
                   label="Shipment"
@@ -1843,6 +1907,14 @@ useEffect(() => {
               onSubmit={handleUpdateShipment}
               className="mt-6"
             >
+              {modalError && (
+                <div className="shipment-message shipment-error mb-5">
+                  <div className="shipment-message-inner">
+                    <p className="shipment-error-text">{modalError}</p>
+                    <button type="button" onClick={() => setModalError("")} className="shipment-dismiss">Dismiss</button>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <FormSelect
                   label="Status *"
@@ -1891,6 +1963,14 @@ useEffect(() => {
                   placeholder="Current location"
                 />
 
+                <FormInput
+                  label="Due Date"
+                  type="date"
+                  name="due_date"
+                  value={shipmentForm.due_date}
+                  readOnly
+                />
+
                 {!isDriver && (
                   <FormInput
                     label="Expected Delivery"
@@ -1900,22 +1980,22 @@ useEffect(() => {
                       shipmentForm.expected_delivery_at
                     }
                     onChange={handleChange}
-                    min={getTodayDate()}
+                    min={shipmentForm.due_date || getTodayDate()}
                   />
                 )}
               </div>
 
-              <div className="mt-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-4">
+              <div className="shipment-info-panel mt-5 rounded-lg border px-4 py-4">
                 {shipmentForm.status ===
                   "PENDING" && (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs shipment-panel-muted">
                     Shipment is waiting to begin.
                   </p>
                 )}
 
                 {shipmentForm.status ===
                   "CREATED" && (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs shipment-panel-muted">
                     Shipment has been created and
                     is waiting for assignment.
                   </p>
@@ -1965,7 +2045,7 @@ useEffect(() => {
               </div>
 
               {isDriver && (
-                <div className="mt-5 rounded-lg border border-blue-700 bg-blue-950/40 px-4 py-3">
+                <div className="shipment-driver-note mt-5 rounded-lg border px-4 py-3">
                   <p className="text-xs text-blue-300">
                     Drivers can update the status
                     and current location of their
@@ -2029,10 +2109,7 @@ useEffect(() => {
                             item.status
                           )}`}
                         >
-                          {item.status.replace(
-                            "_",
-                            " "
-                          )}
+                          {formatStatusLabel(item.status)}
                         </span>
 
                         <p className="shipment-history-title">
@@ -2042,8 +2119,7 @@ useEffect(() => {
 
                         <p className="shipment-history-location">
                           Location:{" "}
-                          {item.location ||
-                            "Not specified"}
+                          {formatLocationLabel(item.location)}
                         </p>
                       </div>
 
@@ -2097,7 +2173,8 @@ function ModalHeader({
 
       <button
         onClick={onClose}
-        className="shipment-modal-close"
+        className="shipment-modal-close ff-modal-close"
+        aria-label="Close shipment dialog"
       >
         ×
       </button>
@@ -2317,7 +2394,36 @@ function formatDateTime(value) {
     return "—";
   }
 
-  return date.toLocaleString();
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+
+// =========================================================
+// DATE INPUT FORMAT
+// =========================================================
+
+function formatDateForInput(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 

@@ -198,28 +198,6 @@ function Tracking() {
         />
       </div>
 
-      <div className="ff-kpi-grid">
-        <div className="ff-kpi-card">
-          <span className="ff-kpi-label">Total Vehicles</span>
-          <strong className="ff-kpi-value">{trackingKpis.totalVehicles}</strong>
-        </div>
-
-        <div className="ff-kpi-card">
-          <span className="ff-kpi-label">Active Vehicles</span>
-          <strong className="ff-kpi-value">{trackingKpis.activeVehicles}</strong>
-        </div>
-
-        <div className="ff-kpi-card">
-          <span className="ff-kpi-label">In Transit</span>
-          <strong className="ff-kpi-value">{trackingKpis.inTransitVehicles}</strong>
-        </div>
-
-        <div className="ff-kpi-card">
-          <span className="ff-kpi-label">GPS Tracked</span>
-          <strong className="ff-kpi-value">{trackingKpis.trackedVehicles}</strong>
-        </div>
-      </div>
-
       <section className="tracking-map-panel">
         <div className="tracking-map-header">
           <div>

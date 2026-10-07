@@ -1367,7 +1367,8 @@ function FuelModal({
             onClick={
               onCancel
             }
-            className="fuel-modal-close"
+            className="fuel-modal-close ff-modal-close"
+              aria-label="Close fuel dialog"
           >
             ×
           </button>

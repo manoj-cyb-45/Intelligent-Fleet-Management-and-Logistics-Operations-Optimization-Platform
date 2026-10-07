@@ -566,9 +566,6 @@ const openEditModal = (record) => {
           Maintenance
         </h1>
 
-        <p className="maintenance-page-subtitle">
-          Manage vehicle maintenance records.
-        </p>
 
         <div className="maintenance-loading-card">
           <p className="maintenance-loading-text">
@@ -593,9 +590,6 @@ const openEditModal = (record) => {
             Maintenance
           </h1>
 
-          <p className="maintenance-page-subtitle">
-            Manage vehicle maintenance records.
-          </p>
         </div>
 
         <div className="maintenance-header-actions">
@@ -927,7 +921,8 @@ function MaintenanceModal({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="maintenance-modal-close"
+            className="maintenance-modal-close ff-modal-close"
+              aria-label="Close maintenance dialog"
           >
             ×
           </button>

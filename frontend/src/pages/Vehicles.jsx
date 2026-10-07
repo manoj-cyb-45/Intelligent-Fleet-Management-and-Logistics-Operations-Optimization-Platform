@@ -2,6 +2,21 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
+const formatMetric = (value, maximumFractionDigits = 1) => {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits,
+    minimumFractionDigits: Number.isInteger(number) ? 0 : Math.min(1, maximumFractionDigits),
+  }).format(number);
+};
+
+const formatInputMetric = (value, maximumFractionDigits = 1) => {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return value ?? "";
+  return Number(number.toFixed(maximumFractionDigits));
+};
+
 function Vehicles() {
   const { user } = useAuth();
 
@@ -295,10 +310,10 @@ function Vehicles() {
         vehicle.vehicle_type || "TRUCK",
 
       capacity:
-        vehicle.capacity ?? "",
+        formatInputMetric(vehicle.capacity, 0),
 
       fuel_tank_capacity:
-        vehicle.fuel_tank_capacity ?? "",
+        formatInputMetric(vehicle.fuel_tank_capacity, 1),
 
       fuel_type:
         vehicle.fuel_type || "DIESEL",
@@ -310,10 +325,10 @@ function Vehicles() {
         vehicle.current_location || "",
 
       fuel_level:
-        vehicle.fuel_level ?? "",
+        formatInputMetric(vehicle.fuel_level, 1),
 
       mileage:
-        vehicle.mileage ?? "",
+        formatInputMetric(vehicle.mileage, 0),
 
       driver_id:
         vehicle.driver_id ||
@@ -807,7 +822,7 @@ function Vehicles() {
           {!isDispatcher && (
               <button
                 onClick={openAddModal}
-                className="primary-action rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                className="primary-action vehicle-add-button"
               >
                 + Add Vehicle
               </button>
@@ -901,7 +916,7 @@ function Vehicles() {
           {!isDispatcher && (
               <button
                 onClick={openAddModal}
-                className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                className="mt-4 vehicle-add-button"
               >
                 + Add First Vehicle
               </button>
@@ -1006,9 +1021,7 @@ function Vehicles() {
                         {/* CAPACITY */}
 
                         <td className="px-5 py-5 text-sm text-slate-600">
-                          {
-                            vehicle.capacity
-                          }
+                          {formatMetric(vehicle.capacity, 0)}
                         </td>
 
                         {/* FUEL */}
@@ -1031,7 +1044,7 @@ function Vehicles() {
                                     : "fuel-good"
                                 }`}
                               >
-                                Fuel: {vehicle.fuel_level}%
+                                Fuel: {formatMetric(vehicle.fuel_level, 1)}%
                               </p>
                             )}
                         </td>
@@ -1109,7 +1122,7 @@ function Vehicles() {
                                 onClick={() =>
                                   openEditModal(vehicle)
                                 }
-                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                className="vehicle-action-button vehicle-action-edit"
                               >
                                 Edit
                               </button>
@@ -1130,7 +1143,7 @@ function Vehicles() {
                                       ? "Unassign driver first"
                                       : "Delete vehicle"
                                 }
-                                className="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="vehicle-action-button vehicle-action-delete"
                               >
                                 Delete
                               </button>
@@ -1161,16 +1174,13 @@ function Vehicles() {
                     : "Edit Vehicle"}
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-400">
-                  {showAddModal
-                    ? "Register a new fleet vehicle."
-                    : "Update vehicle information and assignment."}
-                </p>
               </div>
 
               <button
                 onClick={closeModal}
-                className="text-3xl leading-none text-slate-400 hover:text-white"
+                className="vehicle-modal-close ff-modal-close"
+                type="button"
+                aria-label="Close vehicle dialog"
               >
                 ×
               </button>
@@ -1476,7 +1486,7 @@ function Vehicles() {
                   type="button"
                   onClick={closeModal}
                   disabled={saving}
-                  className="rounded-lg border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                  className="vehicle-modal-secondary"
                 >
                   Cancel
                 </button>
@@ -1484,7 +1494,7 @@ function Vehicles() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="vehicle-modal-primary"
                 >
                   {saving
                     ? "Saving..."
