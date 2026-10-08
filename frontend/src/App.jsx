@@ -10,7 +10,6 @@ import {
 
 import { useAuth } from "./context/AuthContext";
 import api from "./services/api";
-import { registerFirebaseToken } from "./services/firebase";
 import { useTheme } from "./context/ThemeContext";
 
 import Login from "./pages/Login";
@@ -929,15 +928,6 @@ function App() {
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [profileOpen]);
-
-  useEffect(() => {
-    if (!user?.user_id) {
-      return;
-    }
-
-    registerFirebaseToken();
-  }, [user?.user_id]);
-
 
   // ==========================================================
   // NOT LOGGED IN

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
 from app.auth.security import hash_password
+from app.notifications.service import send_email_notification
 from app.database.database import get_db
 
 from app.models import (
@@ -645,6 +646,13 @@ def assign_vehicle(
 
     db.commit()
     db.refresh(assignment)
+
+    # Vehicle assignment uses in-app notification + email only.
+    send_email_notification(
+        recipient_email=driver.email,
+        title=notification.title,
+        message=notification.message,
+    )
 
     return assignment
 

@@ -1,9 +1,10 @@
+import html
 import os
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from dotenv import load_dotenv
-from app.notifications.firebase_service import send_fcm_notification
 
 load_dotenv()
 
@@ -17,9 +18,7 @@ def send_email_notification(
     title: str,
     message: str,
 ):
-    """
-    Send an email notification using SMTP configuration.
-    """
+    """Send a professional HTML email notification using SMTP."""
 
     smtp_host = os.getenv("SMTP_HOST")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -34,10 +33,69 @@ def send_email_notification(
         print("Email notification skipped: recipient email not available.")
         return
 
-    email = MIMEText(message)
+    safe_title = html.escape(title or "FleetFlow Notification")
+    safe_message = html.escape(message or "").replace("\n", "<br>")
+
+    plain_text = (
+        f"{title or 'FleetFlow Notification'}\n\n"
+        f"{message or ''}\n\n"
+        "FleetFlow Intelligent Fleet Management\n"
+        "This is an automated notification. Please do not reply to this email."
+    )
+
+    html_body = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{safe_title}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 16px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+                    <tr>
+                        <td style="background:#0f172a;padding:22px 28px;">
+                            <div style="font-size:22px;font-weight:700;color:#ffffff;">FleetFlow</div>
+                            <div style="font-size:13px;color:#cbd5e1;margin-top:4px;">Intelligent Fleet Management</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px 28px 20px;">
+                            <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-bottom:10px;">Notification</div>
+                            <h1 style="margin:0;font-size:24px;line-height:1.3;color:#111827;">{safe_title}</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0 28px 30px;">
+                            <div style="font-size:16px;line-height:1.7;color:#374151;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:20px;">
+                                {safe_message}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:18px 28px;border-top:1px solid #e5e7eb;background:#fafafa;">
+                            <div style="font-size:12px;line-height:1.6;color:#64748b;">
+                                This is an automated notification from FleetFlow. Please do not reply to this email.
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
+
+    email = MIMEMultipart("alternative")
     email["Subject"] = title
     email["From"] = smtp_username
     email["To"] = recipient_email
+    email.attach(MIMEText(plain_text, "plain", "utf-8"))
+    email.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:
         with smtplib.SMTP(smtp_host, smtp_port) as server:
@@ -49,79 +107,3 @@ def send_email_notification(
 
     except Exception as e:
         print(f"Email notification failed: {e}")
-
-
-# ============================================================
-# SMS NOTIFICATION
-# ============================================================
-
-def send_sms_notification(
-    phone_number: str,
-    message: str,
-):
-    """
-    Send an SMS notification using Twilio.
-    """
-
-    if not phone_number:
-        print("SMS notification skipped: phone number not available.")
-        return
-
-    twilio_account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-    twilio_auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-    twilio_phone_number = os.getenv("TWILIO_PHONE_NUMBER")
-
-    if not all([
-        twilio_account_sid,
-        twilio_auth_token,
-        twilio_phone_number
-    ]):
-        print("SMS notification skipped: Twilio is not configured.")
-        return
-
-    try:
-        from twilio.rest import Client
-
-        client = Client(
-            twilio_account_sid,
-            twilio_auth_token
-        )
-
-        client.messages.create(
-            body=message,
-            from_=twilio_phone_number,
-            to=phone_number
-        )
-
-        print(f"SMS notification sent to {phone_number}")
-
-    except Exception as e:
-        print(f"SMS notification failed: {e}")
-
-
-# ============================================================
-# PUSH NOTIFICATION
-# ============================================================
-
-def send_push_notification(
-    token: str,
-    title: str,
-    message: str,
-):
-    """
-    Send a push notification using Firebase Cloud Messaging.
-    """
-
-    if not token:
-        print("Push notification skipped: device token not available.")
-        return
-
-    try:
-        send_fcm_notification(
-            token=token,
-            title=title,
-            message=message,
-        )
-
-    except Exception as e:
-        print(f"Push notification failed: {e}")

@@ -12,8 +12,6 @@ from app.notifications.schemas import (
 
 from app.notifications.service import (
     send_email_notification,
-    send_sms_notification,
-    send_push_notification,
 )
 
 
@@ -140,41 +138,9 @@ def create_notification(
     )
 
     # --------------------------------------------------------
-    # SMS NOTIFICATION
-    # --------------------------------------------------------
-
-    send_sms_notification(
-        phone_number=user.phone,
-        message=notification.message,
-    )
-
-    # --------------------------------------------------------
-    # PUSH NOTIFICATION
-    # --------------------------------------------------------
-
-    device_token = (
-        db.query(DeviceToken)
-        .filter(DeviceToken.user_id == user.user_id)
-        .first()
-    )
-
-    if device_token:
-        send_push_notification(
-            token=device_token.token,
-            title=notification.title,
-            message=notification.message,
-        )
-    else:
-        print(
-            f"Push notification skipped: "
-            f"no device token registered for {user.user_id}"
-        )
-
-    # --------------------------------------------------------
     # Return created notification
     # --------------------------------------------------------
 
-    return build_notification_response(notification)
     return build_notification_response(notification)
 
 

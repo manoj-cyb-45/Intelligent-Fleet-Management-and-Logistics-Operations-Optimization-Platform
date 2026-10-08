@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models import Shipment, Notification
+from app.models import Shipment, Notification, User
+from app.notifications.service import send_email_notification
 
 from .schemas import RouteRequest, RouteResponse
 
@@ -366,5 +367,17 @@ def recalculate_route(
 
         db.add(notification)
         db.commit()
+
+        driver = (
+            db.query(User)
+            .filter(User.user_id == shipment.driver_id)
+            .first()
+        )
+        if driver:
+            send_email_notification(
+                recipient_email=driver.email,
+                title=notification.title,
+                message=notification.message,
+            )
 
     return response

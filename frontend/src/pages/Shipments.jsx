@@ -554,8 +554,10 @@ useEffect(() => {
         getStoredDestinationCoordinates();
 
       const response = await api.post(
-        "/route-optimizer/recalculate",
-        {
+  `/route-optimizer/recalculate?shipment_id=${encodeURIComponent(
+    selectedTrackingShipment.shipment_id
+  )}`,
+  {
           start_lat: currentLatitude,
           start_lng: currentLongitude,
           end_lat: destination.latitude,
@@ -1710,13 +1712,7 @@ useEffect(() => {
               {/* CLOSE */}
 
               <div className="shipment-history-close-wrap">
-                <button
-                  type="button"
-                  onClick={closeTracking}
-                  className="shipment-btn shipment-btn-close"
-                >
-                  Close Tracking
-                </button>
+
               </div>
             </div>
           </div>

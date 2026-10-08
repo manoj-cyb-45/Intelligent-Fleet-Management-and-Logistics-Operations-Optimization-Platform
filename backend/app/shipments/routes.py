@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import require_roles
 from app.auth.jwt import decode_access_token
 from app.database.database import get_db
+from app.notifications.service import send_email_notification
 
 from app.models import (
     Shipment,
@@ -1054,14 +1055,14 @@ def update_shipment(
         shipment.status = new_status
 
         notification = Notification(
-        user_id=shipment.driver_id,
-        notification_type="SHIPMENT_STATUS",
-        title="Shipment Status Updated",
-        message=(
-            f"Shipment {shipment.shipment_id} "
-            f"status changed to {new_status}."
-        ),
-        is_read=False,
+            user_id=shipment.driver_id,
+            notification_type="SHIPMENT_STATUS",
+            title="Shipment Status Updated",
+            message=(
+                f"Shipment {shipment.shipment_id} "
+                f"status changed to {new_status}."
+            ),
+            is_read=False,
         )
 
         db.add(notification)
@@ -1195,6 +1196,20 @@ def update_shipment(
 
     db.commit()
     db.refresh(shipment)
+
+    # Shipment status/delivery notifications use in-app + email only.
+    if shipment_data.status is not None and shipment.driver_id:
+        driver = (
+            db.query(User)
+            .filter(User.user_id == shipment.driver_id)
+            .first()
+        )
+        if driver:
+            send_email_notification(
+                recipient_email=driver.email,
+                title=notification.title,
+                message=notification.message,
+            )
 
     return build_shipment_response(
         shipment

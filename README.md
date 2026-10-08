@@ -16,8 +16,7 @@ notifications.
 -   **Real-Time:** WebSockets and GPS tracking/simulation
 -   **Background Processing:** Celery
 -   **Reports:** PDF and Excel export
--   **Notifications:** In-app, Gmail SMTP, Twilio SMS, Firebase Cloud
-    Messaging
+-   **Notifications:** In-app and Gmail SMTP email notifications
 -   **Version Control:** Git and GitHub
 
 ------------------------------------------------------------------------
@@ -103,12 +102,13 @@ notifications.
 -   Refined Tracking page alignment and layout.
 -   Improved profile and appearance controls.
 -   Configured Gmail SMTP email notifications.
--   Configured Twilio SMS notifications.
--   Configured Firebase Cloud Messaging push notifications.
--   Configured `firebase-messaging-sw.js` for browser background
-    notifications.
--   Configured browser notification token registration.
--   Verified email, SMS, and push notification workflows.
+-   Implemented in-app notifications.
+-   Implemented email notifications for vehicle assignment.
+-   Implemented email notifications for trip start events.
+-   Implemented email notifications for shipment status changes.
+-   Implemented email notifications for route changes and
+    recalculations.
+-   Verified in-app and email notification workflows.
 -   Documented notification environment configuration.
 
 ------------------------------------------------------------------------
@@ -136,7 +136,7 @@ notifications.
 
 # Notification Configuration
 
-FleetFlow supports four notification channels:
+FleetFlow supports two notification channels:
 
   ------------------------------------------------------------------------
   Channel                 Provider                Configuration
@@ -145,19 +145,15 @@ FleetFlow supports four notification channels:
                                                   records
 
   Email                   Gmail SMTP              `SMTP_*`
-
-  SMS                     Twilio                  `TWILIO_*`
-
-  Push                    Firebase Cloud          `VITE_FIREBASE_*` +
-                          Messaging               `FIREBASE_CREDENTIALS`
   ------------------------------------------------------------------------
 
-Typical events include driver assignment, maintenance alerts, shipment
-status changes, delivery updates, route changes, and operational alerts.
+Typical events include driver assignment, trip start, maintenance
+alerts, shipment status changes, delivery updates, route changes, and
+operational alerts.
 
 ## Backend Environment
 
-``` env
+```env
 DATABASE_URL=<postgresql-database-url>
 JWT_SECRET_KEY=<jwt-secret>
 
@@ -165,80 +161,3 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=<your-gmail-address>
 SMTP_PASSWORD=<your-google-app-password>
-
-TWILIO_ACCOUNT_SID=<your-twilio-account-sid>
-TWILIO_AUTH_TOKEN=<your-twilio-auth-token>
-TWILIO_PHONE_NUMBER=<your-twilio-phone-number>
-
-FIREBASE_CREDENTIALS=firebase-service-account.json
-```
-
-## Frontend Environment
-
-``` env
-VITE_FIREBASE_API_KEY=<your-firebase-web-api-key>
-VITE_FIREBASE_AUTH_DOMAIN=<your-firebase-auth-domain>
-VITE_FIREBASE_PROJECT_ID=<your-firebase-project-id>
-VITE_FIREBASE_STORAGE_BUCKET=<your-firebase-storage-bucket>
-VITE_FIREBASE_MESSAGING_SENDER_ID=<your-firebase-messaging-sender-id>
-VITE_FIREBASE_APP_ID=<your-firebase-app-id>
-VITE_FIREBASE_VAPID_KEY=<your-firebase-vapid-key>
-```
-
-Firebase messaging service worker:
-
-``` text
-frontend/public/firebase-messaging-sw.js
-```
-
-**Never commit `.env` files, Firebase service-account JSON files, or
-private credentials.**
-
-------------------------------------------------------------------------
-
-# Running the Application
-
-## Backend
-
-``` powershell
-cd backend
-.\\.venv\\Scripts\\Activate.ps1
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-## Frontend
-
-``` powershell
-cd frontend
-npm install
-npm run dev
-```
-
-## Celery Worker
-
-``` powershell
-celery -A app.celery_app:celery_app worker --loglevel=INFO --pool=solo
-```
-
-## Celery Beat
-
-``` powershell
-celery -A app.celery_app:celery_app beat --loglevel=INFO
-```
-
-------------------------------------------------------------------------
-
-# Project Status
-
-``` text
-Milestone 1    COMPLETED
-Milestone 2    COMPLETED
-Milestone 3    COMPLETED
-Milestone 4    COMPLETED
-```
-
-The completed scope covers the application functionality delivered
-across Milestones 1--4.
-

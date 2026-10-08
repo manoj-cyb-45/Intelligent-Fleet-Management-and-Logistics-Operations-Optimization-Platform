@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import require_roles
 from app.database.database import get_db
-from app.models import Alert, DriverVehicleAssignment, Shipment, User, Vehicle
+from app.models import Alert, DriverVehicleAssignment, Shipment, User, Vehicle, Notification
 from app.models.trip import Trip
+from app.notifications.service import send_email_notification
 from app.trips.schemas import TripCreate, TripResponse, TripUpdate
 
 router = APIRouter(
@@ -431,6 +432,26 @@ def update_trip(
 
         trip.status = new_status
 
+        if new_status == "IN_PROGRESS":
+            driver = (
+                db.query(User)
+                .filter(User.user_id == trip.driver_id)
+                .first()
+            )
+
+            if driver:
+                trip_started_notification = Notification(
+                    user_id=driver.user_id,
+                    notification_type="TRIP_STARTED",
+                    title="Trip Started",
+                    message=(
+                        f"Trip {trip.trip_id} has started. "
+                        f"Vehicle {trip.vehicle_id} is now in transit."
+                    ),
+                    is_read=False,
+                )
+                db.add(trip_started_notification)
+
     departure = trip_data.planned_departure or trip.planned_departure
     arrival = trip_data.planned_arrival or trip.planned_arrival
 
@@ -468,6 +489,24 @@ def update_trip(
 
     db.commit()
     db.refresh(trip)
+
+    if trip_data.status is not None and trip_data.status.strip().upper() == "IN_PROGRESS":
+        driver = (
+            db.query(User)
+            .filter(User.user_id == trip.driver_id)
+            .first()
+        )
+
+        if driver:
+            message = (
+                f"Trip {trip.trip_id} has started. "
+                f"Vehicle {trip.vehicle_id} is now in transit."
+            )
+            send_email_notification(
+                recipient_email=driver.email,
+                title="Trip Started",
+                message=message,
+            )
 
     return response(trip)
 

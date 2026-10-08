@@ -29,5 +29,3 @@ tzdata==2026.3
 uvicorn==0.52.4
 celery==5.6.3
 redis==8.1.0
-firebase-admin==7.7.0
-twilio==9.11.2
