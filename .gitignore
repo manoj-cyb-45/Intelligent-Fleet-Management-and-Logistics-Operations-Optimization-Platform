@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Firebase private credentials
+firebase-service-account.json
+
 # Python
 __pycache__/
 *.py[cod]

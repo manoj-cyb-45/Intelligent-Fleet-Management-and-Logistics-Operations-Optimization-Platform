@@ -40,15 +40,21 @@ export async function registerFirebaseToken() {
       return null;
     }
 
-    const messaging = getMessaging(app);
+const registration =
+  await navigator.serviceWorker.register(
+    "/firebase-messaging-sw.js"
+  );
 
-    const token = await getToken(
-      messaging,
-      {
-        vapidKey:
-          import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      }
-    );
+const messaging = getMessaging(app);
+
+const token = await getToken(
+  messaging,
+  {
+    vapidKey:
+      import.meta.env.VITE_FIREBASE_VAPID_KEY,
+    serviceWorkerRegistration: registration,
+  }
+);
 
     if (!token) {
       console.log(
