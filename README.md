@@ -529,7 +529,7 @@ alembic upgrade head
 Start the FastAPI development server:
 
 ```powershell
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 The backend will normally be available at:
