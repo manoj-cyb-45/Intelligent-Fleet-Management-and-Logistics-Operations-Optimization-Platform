@@ -387,8 +387,6 @@ Intelligent-Fleet-Management-and-Logistics-Operations-Optimization-Platform/
 - Improved email notification formatting
 - Verified in-app notification workflows
 - Verified email notification workflows
-- Removed obsolete SMS/Twilio notification integration
-- Removed obsolete Firebase/FCM notification integration
 
 ---
 
