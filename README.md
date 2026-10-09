@@ -387,8 +387,6 @@ Intelligent-Fleet-Management-and-Logistics-Operations-Optimization-Platform/
 - Improved email notification formatting
 - Verified in-app notification workflows
 - Verified email notification workflows
-- Removed obsolete SMS/Twilio notification integration
-- Removed obsolete Firebase/FCM notification integration
 
 ---
 
@@ -531,7 +529,7 @@ alembic upgrade head
 Start the FastAPI development server:
 
 ```powershell
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 The backend will normally be available at:
